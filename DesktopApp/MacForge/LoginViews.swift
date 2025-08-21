@@ -56,74 +56,74 @@ struct JamfAuthSheet: View {
                     Text("Client ID + Secret").tag(0)
                     Text("Username + Password").tag(1)
                 }
-                .pickerStyle(.segmented)
-
-                // Credentials
-                if mode == 0 {
-                    ThemedField(title: "Client ID", text: $clientID)
-                    ThemedField(title: "Client Secret", text: $clientSecret, secure: true)
-                } else {
-                    ThemedField(title: "Username", text: $username)
-                    ThemedField(title: "Password", text: $password, secure: true)
-                }
-
-                // Inline error
-                if let err = errorMessage {
-                    Text(err).foregroundStyle(.red).font(.footnote)
-                }
-
-                // Footer actions
-                HStack {
-                    Button("Cancel") {
-                        dismiss()
-                        onComplete(.cancelled)
+                // ...existing code...
+                private func connect() {
+                    guard let base = connectURL() else {
+                        errorMessage = "Please enter a valid Jamf server (e.g. zappi or zappi.jamfcloud.com)."
+                        return
                     }
-                    Spacer()
-                    Button("Connect") { connect() }
-                        .buttonStyle(.borderedProminent)
-                        .disabled(server.isEmpty || (mode == 0 ? (clientID.isEmpty || clientSecret.isEmpty) : (username.isEmpty || password.isEmpty)))
-                }
-            }
-            .padding(20)
-            .navigationTitle("Authenticate with Jamf")
-        }
-    }
 
-    // Attempt to authenticate with Jamf.
-    private func connect() {
-        guard let base = connectURL() else {
-            errorMessage = "Please enter a valid Jamf server (e.g. zappi or zappi.jamfcloud.com)."
-            return
-        }
-        let client = JamfClient(baseURL: base)
+                    let client = JamfClient(baseURL: base)
 
-        Task {
-            do {
-                switch mode {
-                case 0:
-                    try await client.authenticate(clientID: clientID, clientSecret: clientSecret)
-                    errorMessage = nil
-                    onComplete(.success(client))
-                    dismiss()
-                default:
-                    try await client.authenticateBasic(username: username, password: password)
-                    errorMessage = nil
-                    onComplete(.success(client))
-                    dismiss()
+                    Task {
+                        do {
+                            // Test connection first
+                            let testResult = try await client.testConnection()
+                            print("🔍 Connection test: \(testResult)")
+
+                            // Then try authentication
+                            switch mode {
+                            case 0:
+                                try await client.authenticate(clientID: clientID, clientSecret: clientSecret)
+                            default:
+                                try await client.authenticateBasic(username: username, password: password)
+                            }
+
+                            await MainActor.run {
+                                errorMessage = nil
+                                onComplete(.success(client))
+                                dismiss()
+                            }
+
+                        } catch let JamfClient.JamfError.http(code, message) {
+                            await MainActor.run {
+                                switch code {
+                                case 400:
+                                    errorMessage = "Bad request. Check your credentials format."
+                                case 401:
+                                    errorMessage = "Authentication failed. Verify your credentials."
+                                case 403:
+                                    errorMessage = "Access denied. Check API permissions."
+                                case 404:
+                                    errorMessage = "API endpoint not found. Verify server URL."
+                                case 500:
+                                    errorMessage = "Jamf server error. Try again later."
+                                default:
+                                    errorMessage = "Jamf returned HTTP \(code)\(message != nil ? ": \(message!)" : "")"
+                                }
+                            }
+                        } catch let urlError as URLError {
+                            await MainActor.run {
+                                switch urlError.code {
+                                case .cannotFindHost:
+                                    errorMessage = "Cannot find server. Check the hostname: \(base.host ?? "unknown")"
+                                case .notConnectedToInternet:
+                                    errorMessage = "No internet connection."
+                                case .timedOut:
+                                    errorMessage = "Connection timed out. Check firewall/VPN."
+                                case .secureConnectionFailed:
+                                    errorMessage = "SSL/TLS connection failed. Check certificates."
+                                default:
+                                    errorMessage = "Network error: \(urlError.localizedDescription)"
+                                }
+                            }
+                        } catch {
+                            await MainActor.run {
+                                errorMessage = "Unexpected error: \(error.localizedDescription)"
+                            }
+                        }
+                    }
                 }
-            } catch {
-                // Prefer readable URLErrors when possible
-                if let uerr = error as? URLError {
-                    switch uerr.code {
-                    case .cannotFindHost:
-                        errorMessage = "Cannot find server (\(base.host ?? "unknown")). Check the hostname."
-                    case .notConnectedToInternet:
-                        errorMessage = "No internet connection."
-                    case .timedOut:
-                        errorMessage = "Connection timed out."
-                    case .userAuthenticationRequired, .userCancelledAuthentication:
-                        errorMessage = "Authentication failed. Check your credentials."
-                    default:
                         errorMessage = uerr.localizedDescription
                     }
                 } else {

@@ -52,7 +52,7 @@ public final class JamfClient {
         case invalidResponse
         case noToken
 
-        public var errorDescription: String? {
+        // ...existing code...
             switch self {
             case .http(let code, let message):
                 if let message = message {
