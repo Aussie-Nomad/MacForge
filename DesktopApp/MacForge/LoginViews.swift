@@ -7,6 +7,8 @@
 // V3
 
 import SwiftUI
+// If JamfClient is in another module, import that module here. Otherwise, ensure JamfClient is public and available.
+// Removed incorrect import
 
 // MARK: - Jamf auth result wrapper used by sheets
 enum JamfAuthResult {
@@ -57,7 +59,7 @@ struct JamfAuthSheet: View {
                     Text("Username + Password").tag(1)
                 }
                 // ...existing code...
-                private func connect() {
+                func connect() {
                     guard let base = connectURL() else {
                         errorMessage = "Please enter a valid Jamf server (e.g. zappi or zappi.jamfcloud.com)."
                         return
@@ -83,7 +85,6 @@ struct JamfAuthSheet: View {
                                 errorMessage = nil
                                 onComplete(.success(client))
                                 dismiss()
-                            }
 
                         } catch let JamfClient.JamfError.http(code, message) {
                             await MainActor.run {
@@ -104,63 +105,63 @@ struct JamfAuthSheet: View {
                             }
                         } catch let urlError as URLError {
                             await MainActor.run {
-                                switch urlError.code {
-                                case .cannotFindHost:
-                                    errorMessage = "Cannot find server. Check the hostname: \(base.host ?? "unknown")"
-                                case .notConnectedToInternet:
-                                    errorMessage = "No internet connection."
-                                case .timedOut:
-                                    errorMessage = "Connection timed out. Check firewall/VPN."
-                                case .secureConnectionFailed:
-                                    errorMessage = "SSL/TLS connection failed. Check certificates."
-                                default:
-                                    errorMessage = "Network error: \(urlError.localizedDescription)"
+                                do {
+                                    // Test connection first
+                                    let testResult = try await client.testConnection()
+                                    print("🔍 Connection test: \(testResult)")
+
+                                    // Then try authentication
+                                    switch mode {
+                                    case 0:
+                                        try await client.authenticate(clientID: clientID, clientSecret: clientSecret)
+                                    default:
+                                        try await client.authenticateBasic(username: username, password: password)
+                                    }
+
+                                    await MainActor.run {
+                                        errorMessage = nil
+                                        onComplete(.success(client))
+                                        dismiss()
+                                    }
+
+                                } catch JamfClient.JamfError.http(let code, let message) {
+                                    await MainActor.run {
+                                        switch code {
+                                        case 400:
+                                            errorMessage = "Bad request. Check your credentials format."
+                                        case 401:
+                                            errorMessage = "Authentication failed. Verify your credentials."
+                                        case 403:
+                                            errorMessage = "Access denied. Check API permissions."
+                                        case 404:
+                                            errorMessage = "API endpoint not found. Verify server URL."
+                                        case 500:
+                                            errorMessage = "Jamf server error. Try again later."
+                                        default:
+                                            errorMessage = "Jamf returned HTTP \(code)\(message != nil ? ": \(message!)" : "")"
+                                        }
+                                    }
+                                } catch let urlError as URLError {
+                                    await MainActor.run {
+                                        switch urlError.code {
+                                        case .cannotFindHost:
+                                            errorMessage = "Cannot find server. Check the hostname: \(base.host ?? "unknown")"
+                                        case .notConnectedToInternet:
+                                            errorMessage = "No internet connection."
+                                        case .timedOut:
+                                            errorMessage = "Connection timed out. Check firewall/VPN."
+                                        case .secureConnectionFailed:
+                                            errorMessage = "SSL/TLS connection failed. Check certificates."
+                                        default:
+                                            errorMessage = "Network error: \(urlError.localizedDescription)"
+                                        }
+                                    }
+                                } catch {
+                                    await MainActor.run {
+                                        errorMessage = "Unexpected error: \(error.localizedDescription)"
+                                    }
                                 }
                             }
-                        } catch {
-                            await MainActor.run {
-                                errorMessage = "Unexpected error: \(error.localizedDescription)"
-                            }
-                        }
-                    }
-                }
-                        errorMessage = uerr.localizedDescription
-                    }
-                } else {
-                    errorMessage = error.localizedDescription
-                }
-            }
-        }
-    }
-}
-
-// MARK: - Jamf Login View (inline)
-// Legacy inline version used in some flows; emits a simple onConnect callback.
-struct JamfLoginView: View {
-    @State private var serverURL: String = ""
-    @State private var clientID: String = ""
-    @State private var clientSecret: String = ""
-    @State private var username: String = ""
-    @State private var password: String = ""
-    @State private var useClientAuth: Bool = true
-
-    /// Called with three strings. For client auth: (serverURL, clientID, clientSecret)
-    /// For username/password: (serverURL, username, password)
-    var onConnect: (String, String, String) -> Void
-
-    var body: some View {
-        VStack(spacing: 16) {
-            // Server URL
-            ThemedField(title: "Server URL", text: $serverURL)
-
-            // Auth toggle
-            Picker("Authentication Method", selection: $useClientAuth) {
-                Text("Client ID + Secret").tag(true)
-                Text("Username + Password").tag(false)
-            }
-            .pickerStyle(.segmented)
-
-            // Credentials
             if useClientAuth {
                 ThemedField(title: "Client ID", text: $clientID)
                 ThemedField(title: "Client Secret", text: $clientSecret, secure: true)

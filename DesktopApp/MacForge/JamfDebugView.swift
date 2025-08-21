@@ -1,4 +1,6 @@
 import SwiftUI
+// If JamfClient is in another module, import that module here. Otherwise, ensure JamfClient is public and available.
+// Removed incorrect import
 
 struct JamfDebugView: View {
     @State private var serverURL = ""
@@ -41,7 +43,7 @@ struct JamfDebugView: View {
     private func testConnection() {
         results.removeAll()
         
-        guard let url = JamfClient.normalizeBaseURL(from: serverURL) else {
+    guard let url = JamfClient.normalizeBaseURL(from: serverURL) else {
             results.append("❌ Invalid server URL")
             return
         }

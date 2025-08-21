@@ -9,7 +9,7 @@
 import Foundation
 
 // Support both token response formats from Jamf
-private struct JamfTokenResponse: Decodable {
+public struct JamfTokenResponse: Decodable {
     let token: String?
     let access_token: String? // OAuth format
     
