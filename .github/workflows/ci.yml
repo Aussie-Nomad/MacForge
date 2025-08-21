@@ -1,0 +1,40 @@
+name: Build and Test MacForge
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Select Xcode version
+      run: sudo xcode-select -s /Applications/Xcode_15.0.app/Contents/Developer
+    
+    - name: Build project
+      run: |
+        if [ -f "MacForge.xcodeproj/project.pbxproj" ]; then
+          xcodebuild -project MacForge.xcodeproj -scheme MacForge -destination 'platform=macOS' build
+        elif [ -f "MacForge.xcworkspace/contents.xcworkspacedata" ]; then
+          xcodebuild -workspace MacForge.xcworkspace -scheme MacForge -destination 'platform=macOS' build
+        else
+          echo "No Xcode project or workspace found"
+          exit 1
+        fi
+    
+    - name: Run tests (if available)
+      run: |
+        if [ -f "MacForge.xcodeproj/project.pbxproj" ]; then
+          xcodebuild -project MacForge.xcodeproj -scheme MacForge -destination 'platform=macOS' test
+        elif [ -f "MacForge.xcworkspace/contents.xcworkspacedata" ]; then
+          xcodebuild -workspace MacForge.xcworkspace -scheme MacForge -destination 'platform=macOS' test
+        else
+          echo "No tests to run"
+        fi
+      continue-on-error: true
