@@ -6,7 +6,8 @@
 //
 // V3
 
-import Foundation
+import SwiftUI
+
 
 // MARK: - Core Data Models
 struct Payload: Identifiable, Hashable, Codable {
@@ -233,19 +234,7 @@ final class BuilderModel: ObservableObject {
         return pppcServices.contains { $0.decision != .ask }
     }
 
-    // Save profile to Downloads folder
-    func saveProfileToDownloads() {
-        do {
-            let data = try exportMobileConfig()
-            let downloadsURL = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first!
-            let filename = "\(settings.name).mobileconfig"
-            let fileURL = downloadsURL.appendingPathComponent(filename)
-            try data.write(to: fileURL)
-            print("Profile saved to: \(fileURL.path)")
-        } catch {
-            print("Failed to save profile: \(error)")
-        }
-    }
+    // ...existing code...
 
     // Maps internal TCC service identifiers to human‑friendly names shown in summaries.
     private func friendlyName(_ id: String) -> String {
@@ -316,4 +305,18 @@ final class BuilderModel: ObservableObject {
         ]
         return try PropertyListSerialization.data(fromPropertyList: profile, format: .xml, options: 0)
     }
+    
+        // MARK: - BuilderModel extension for .mobileconfig export
+        func saveProfileToDownloads() {
+            do {
+                let data = try exportMobileConfig()
+                let downloadsURL = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first!
+                let filename = "\(settings.name).mobileconfig"
+                let fileURL = downloadsURL.appendingPathComponent(filename)
+                try data.write(to: fileURL)
+                print("Profile saved to: \(fileURL.path)")
+            } catch {
+                print("❌ Failed to export profile: \(error)")
+            }
+        }
 }

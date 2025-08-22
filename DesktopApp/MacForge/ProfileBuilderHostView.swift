@@ -10,6 +10,8 @@
 
 import SwiftUI
 
+// If these are not modules, ensure all files are in the same target and remove these imports.
+
 // MARK: - Builder Host (sidebar + center + detail)
 struct ProfileBuilderHostView: View {
     @ObservedObject var model: BuilderModel
@@ -55,9 +57,14 @@ struct ProfileBuilderHostView: View {
             // Placeholder auth sheet hook – supply your implementation.
             JamfAuthSheet { result in
                 switch result {
-                case .success(let client):
+                case .success(let baseURL, let clientID, let clientSecret):
                     Task {
                         do {
+                            let client = JamfClient(baseURL: baseURL)
+                            // Authenticate with clientID/clientSecret if provided
+                            if !clientID.isEmpty && !clientSecret.isEmpty {
+                                try await client.authenticateClientID(clientID: clientID, clientSecret: clientSecret)
+                            }
                             let data = try model.exportMobileConfig()
                             do {
                                 try await client.uploadOrUpdateComputerProfileXML(name: model.settings.name, xmlPlist: data)
@@ -386,9 +393,13 @@ struct ProfileCenterPane: View {
         .sheet(isPresented: $showJamfAuthSheet) {
             JamfAuthSheet { result in
                 switch result {
-                case .success(let client):
+                case .success(let baseURL, let clientID, let clientSecret):
                     Task {
                         do {
+                            let client = JamfClient(baseURL: baseURL)
+                            if !clientID.isEmpty && !clientSecret.isEmpty {
+                                try await client.authenticateClientID(clientID: clientID, clientSecret: clientSecret)
+                            }
                             let data = try model.exportMobileConfig()
                             do {
                                 try await client.uploadOrUpdateComputerProfileXML(name: model.settings.name, xmlPlist: data)

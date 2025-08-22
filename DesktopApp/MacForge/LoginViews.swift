@@ -7,19 +7,18 @@
 // V3
 
 import SwiftUI
-// If JamfClient is in another module, import that module here. Otherwise, ensure JamfClient is public and available.
-// Removed incorrect import
 
 // MARK: - Jamf auth result wrapper used by sheets
 enum JamfAuthResult {
-    case success(JamfClient)
+    /// success(baseURL, clientID, clientSecret) - clientID/clientSecret will be empty if username/password used
+    case success(URL, String, String)
     case failure(Error)
     case cancelled
 }
 
 // MARK: - Jamf Authentication Sheet
 /// Modal sheet for authenticating to Jamf. Supports client ID/secret today;
-/// username/password path is stubbed (Jamf’s modern API prefers OAuth clients).
+/// username/password path is provided but Jamf Pro typically prefers OAuth clients.
 struct JamfAuthSheet: View {
     @Environment(\.dismiss) private var dismiss
 
@@ -32,155 +31,192 @@ struct JamfAuthSheet: View {
     @State private var password = ""
 
     @State private var errorMessage: String?
+    @State private var isConnecting: Bool = false
     let onComplete: (JamfAuthResult) -> Void
 
     // Build a proper Jamf base URL from common user inputs.
     private func connectURL() -> URL? {
-        let raw = server.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !raw.isEmpty else { return nil }
-        // Prefer client utility to normalize the base URL robustly
-        if let url = JamfClient.normalizeBaseURL(from: raw) { return url }
-        // Fallback minimal handling
-        if raw.lowercased().hasPrefix("http") { return URL(string: raw) }
-        return URL(string: "https://\(raw)")
+        var s = server.trimmingCharacters(in: .whitespacesAndNewlines)
+        s = s.trimmingCharacters(in: CharacterSet(charactersIn: ",;"))
+        if s.hasSuffix("/api/doc") { s.removeLast("/api/doc".count) }
+        if s.hasSuffix("/api") { s.removeLast("/api".count) }
+        if !s.hasPrefix("http://") && !s.hasPrefix("https://") { s = "https://" + s }
+        guard var comps = URLComponents(string: s) else { return nil }
+        comps.path = ""
+        comps.query = nil
+        comps.fragment = nil
+        if let h = comps.host {
+            let allowed = CharacterSet(charactersIn: "abcdefghijklmnopqrstuvwxyz0123456789.-")
+            let cleaned = String(h.lowercased().unicodeScalars.filter { allowed.contains($0) })
+            comps.host = cleaned
+        }
+        return comps.url
     }
 
     var body: some View {
         NavigationStack {
             VStack(spacing: 16) {
-                // Server field
                 ThemedField(title: "Jamf Server",
                             text: $server,
                             placeholder: "zappi or zappi.jamfcloud.com")
 
-                // Auth method selector
                 Picker("Method", selection: $mode) {
                     Text("Client ID + Secret").tag(0)
                     Text("Username + Password").tag(1)
                 }
-                // ...existing code...
-                func connect() {
-                    guard let base = connectURL() else {
-                        errorMessage = "Please enter a valid Jamf server (e.g. zappi or zappi.jamfcloud.com)."
-                        return
-                    }
+                .pickerStyle(.segmented)
 
-                    let client = JamfClient(baseURL: base)
-
-                    Task {
-                        do {
-                            // Test connection first
-                            let testResult = try await client.testConnection()
-                            print("🔍 Connection test: \(testResult)")
-
-                            // Then try authentication
-                            switch mode {
-                            case 0:
-                                try await client.authenticate(clientID: clientID, clientSecret: clientSecret)
-                            default:
-                                try await client.authenticateBasic(username: username, password: password)
-                            }
-
-                            await MainActor.run {
-                                errorMessage = nil
-                                onComplete(.success(client))
-                                dismiss()
-
-                        } catch let JamfClient.JamfError.http(code, message) {
-                            await MainActor.run {
-                                switch code {
-                                case 400:
-                                    errorMessage = "Bad request. Check your credentials format."
-                                case 401:
-                                    errorMessage = "Authentication failed. Verify your credentials."
-                                case 403:
-                                    errorMessage = "Access denied. Check API permissions."
-                                case 404:
-                                    errorMessage = "API endpoint not found. Verify server URL."
-                                case 500:
-                                    errorMessage = "Jamf server error. Try again later."
-                                default:
-                                    errorMessage = "Jamf returned HTTP \(code)\(message != nil ? ": \(message!)" : "")"
-                                }
-                            }
-                        } catch let urlError as URLError {
-                            await MainActor.run {
-                                do {
-                                    // Test connection first
-                                    let testResult = try await client.testConnection()
-                                    print("🔍 Connection test: \(testResult)")
-
-                                    // Then try authentication
-                                    switch mode {
-                                    case 0:
-                                        try await client.authenticate(clientID: clientID, clientSecret: clientSecret)
-                                    default:
-                                        try await client.authenticateBasic(username: username, password: password)
-                                    }
-
-                                    await MainActor.run {
-                                        errorMessage = nil
-                                        onComplete(.success(client))
-                                        dismiss()
-                                    }
-
-                                } catch JamfClient.JamfError.http(let code, let message) {
-                                    await MainActor.run {
-                                        switch code {
-                                        case 400:
-                                            errorMessage = "Bad request. Check your credentials format."
-                                        case 401:
-                                            errorMessage = "Authentication failed. Verify your credentials."
-                                        case 403:
-                                            errorMessage = "Access denied. Check API permissions."
-                                        case 404:
-                                            errorMessage = "API endpoint not found. Verify server URL."
-                                        case 500:
-                                            errorMessage = "Jamf server error. Try again later."
-                                        default:
-                                            errorMessage = "Jamf returned HTTP \(code)\(message != nil ? ": \(message!)" : "")"
-                                        }
-                                    }
-                                } catch let urlError as URLError {
-                                    await MainActor.run {
-                                        switch urlError.code {
-                                        case .cannotFindHost:
-                                            errorMessage = "Cannot find server. Check the hostname: \(base.host ?? "unknown")"
-                                        case .notConnectedToInternet:
-                                            errorMessage = "No internet connection."
-                                        case .timedOut:
-                                            errorMessage = "Connection timed out. Check firewall/VPN."
-                                        case .secureConnectionFailed:
-                                            errorMessage = "SSL/TLS connection failed. Check certificates."
-                                        default:
-                                            errorMessage = "Network error: \(urlError.localizedDescription)"
-                                        }
-                                    }
-                                } catch {
-                                    await MainActor.run {
-                                        errorMessage = "Unexpected error: \(error.localizedDescription)"
-                                    }
-                                }
-                            }
-            if useClientAuth {
-                ThemedField(title: "Client ID", text: $clientID)
-                ThemedField(title: "Client Secret", text: $clientSecret, secure: true)
-            } else {
-                ThemedField(title: "Username", text: $username)
-                ThemedField(title: "Password", text: $password, secure: true)
-            }
-
-            // Action
-            Button("Connect") {
-                if useClientAuth {
-                    onConnect(serverURL, clientID, clientSecret)
+                if mode == 0 {
+                    ThemedField(title: "Client ID", text: $clientID)
+                    ThemedField(title: "Client Secret", text: $clientSecret, secure: true)
                 } else {
-                    onConnect(serverURL, username, password)
+                    ThemedField(title: "Username", text: $username)
+                    ThemedField(title: "Password", text: $password, secure: true)
+                }
+
+                if let err = errorMessage {
+                    Text(err)
+                        .font(.caption)
+                        .foregroundColor(.red)
+                        .multilineTextAlignment(.leading)
+                        .padding(.top, 4)
+                }
+
+                HStack {
+                    Button("Cancel") { dismiss() }
+                        .buttonStyle(.plain)
+
+                    Spacer()
+
+                    Button(action: { Task { await connect() } }) {
+                        if isConnecting {
+                            ProgressView().progressViewStyle(.circular)
+                        } else {
+                            Text("Connect")
+                        }
+                    }
+                    .disabled(isConnecting || !canConnect)
+                    .buttonStyle(.borderedProminent)
                 }
             }
-            .buttonStyle(.borderedProminent)
+            .padding()
+            .navigationTitle("Jamf Login")
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Close") { dismiss() } } }
         }
-        .padding()
+    }
+
+    var canConnect: Bool {
+        guard !server.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return false }
+        if mode == 0 { return !clientID.isEmpty && !clientSecret.isEmpty }
+        return !username.isEmpty && !password.isEmpty
+    }
+
+    @MainActor
+    private func connect() async {
+        guard !isConnecting else { return }
+        guard let base = connectURL() else {
+            errorMessage = "Please enter a valid Jamf server (e.g. zappi or zappi.jamfcloud.com)."
+            return
+        }
+
+        isConnecting = true
+        defer { isConnecting = false }
+        // Local helper: ping
+        func ping(_ base: URL) async throws {
+            var req = URLRequest(url: base.appendingPathComponent("api/v1/ping"))
+            req.httpMethod = "GET"
+            req.setValue("MacForge/1.0", forHTTPHeaderField: "User-Agent")
+            let (_, resp) = try await URLSession.shared.data(for: req)
+            guard let http = resp as? HTTPURLResponse, http.statusCode == 200 else {
+                throw URLError(.badServerResponse)
+            }
+        }
+
+        // Local helper: test auth endpoint
+        func testAuth(_ base: URL) async throws -> String {
+            let authURL = base.appendingPathComponent("api/v1/auth")
+            var req = URLRequest(url: authURL)
+            req.httpMethod = "GET"
+            req.setValue("MacForge/1.0", forHTTPHeaderField: "User-Agent")
+            let (_, resp) = try await URLSession.shared.data(for: req)
+            guard let http = resp as? HTTPURLResponse else { throw URLError(.badServerResponse) }
+            if http.statusCode == 401 { return "Connection successful - auth endpoint reachable" }
+            return "Unexpected response: \(http.statusCode)"
+        }
+
+        // Local helper: OAuth client credentials
+        func authenticateClientID(_ base: URL, clientID: String, clientSecret: String) async throws {
+            let endpoints = ["api/oauth/token", "api/v1/oauth/token"]
+            for endpoint in endpoints {
+                let url = base.appendingPathComponent(endpoint)
+                var req = URLRequest(url: url)
+                req.httpMethod = "POST"
+                req.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+                req.setValue("application/json", forHTTPHeaderField: "Accept")
+                req.setValue("MacForge/1.0", forHTTPHeaderField: "User-Agent")
+                req.timeoutInterval = 30.0
+                let basic = "\(clientID):\(clientSecret)".data(using: .utf8)!.base64EncodedString()
+                req.setValue("Basic \(basic)", forHTTPHeaderField: "Authorization")
+                req.httpBody = "grant_type=client_credentials".data(using: .utf8)
+
+                let (_, resp) = try await URLSession.shared.data(for: req)
+                guard let http = resp as? HTTPURLResponse else { continue }
+                if http.statusCode == 200 { return }
+            }
+            throw URLError(.userAuthenticationRequired)
+        }
+
+        // Local helper: basic username/password
+        func authenticateBasic(_ base: URL, username: String, password: String) async throws {
+            let endpoint = "api/v1/auth/token"
+            let url = base.appendingPathComponent(endpoint)
+            var req = URLRequest(url: url)
+            req.httpMethod = "POST"
+            req.setValue("MacForge/1.0", forHTTPHeaderField: "User-Agent")
+            req.setValue("application/json", forHTTPHeaderField: "Accept")
+            req.timeoutInterval = 30.0
+            let basic = "\(username):\(password)".data(using: .utf8)!.base64EncodedString()
+            req.setValue("Basic \(basic)", forHTTPHeaderField: "Authorization")
+
+            let (_, resp) = try await URLSession.shared.data(for: req)
+            guard let http = resp as? HTTPURLResponse else { throw URLError(.badServerResponse) }
+            guard http.statusCode == 200 else { throw URLError(.userAuthenticationRequired) }
+        }
+
+        do {
+            try await ping(base)
+            _ = try await testAuth(base)
+
+            if mode == 0 {
+                try await authenticateClientID(base, clientID: clientID, clientSecret: clientSecret)
+            } else {
+                try await authenticateBasic(base, username: username, password: password)
+            }
+
+            errorMessage = nil
+            if mode == 0 {
+                onComplete(.success(base, clientID, clientSecret))
+            } else {
+                onComplete(.success(base, username, password))
+            }
+            dismiss()
+
+        } catch let urlError as URLError {
+            switch urlError.code {
+            case .cannotFindHost:
+                errorMessage = "Cannot find server. Check the hostname: \(base.host ?? "unknown")"
+            case .notConnectedToInternet:
+                errorMessage = "No internet connection."
+            case .timedOut:
+                errorMessage = "Connection timed out. Check firewall/VPN."
+            case .userAuthenticationRequired:
+                errorMessage = "Authentication failed. Verify your credentials."
+            default:
+                errorMessage = "Network error: \(urlError.localizedDescription)"
+            }
+        } catch {
+            errorMessage = "Unexpected error: \(error.localizedDescription)"
+        }
     }
 }
 

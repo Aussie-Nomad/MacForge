@@ -5,8 +5,8 @@
 //  Created by Danny Mac on 13/08/2025.
 //
 // V3
+import SwiftUI
 
-import Foundation
 
 // Support both token response formats from Jamf
 public struct JamfTokenResponse: Decodable {
@@ -17,7 +17,6 @@ public struct JamfTokenResponse: Decodable {
         return token ?? access_token
     }
 }
-
 public final class JamfClient {
     /// Normalizes user input like "zappi.jamfcloud.com", "https://zappi.jamfcloud.com/", or
     /// accidental paths like "/api/doc" into a clean Jamf base URL.
@@ -52,7 +51,7 @@ public final class JamfClient {
         case invalidResponse
         case noToken
 
-        // ...existing code...
+        public var errorDescription: String? {
             switch self {
             case .http(let code, let message):
                 if let message = message {
@@ -87,6 +86,31 @@ public final class JamfClient {
         guard let http = resp as? HTTPURLResponse, http.statusCode == 200 else {
             throw JamfError.http((resp as? HTTPURLResponse)?.statusCode ?? -1, nil)
         }
+    }
+
+    // MARK: - Connection Test
+    /// Tests basic connectivity (ping) and auth endpoint reachability.
+    public func testConnection() async throws -> String {
+        // Ensure basic ping succeeds
+        try await ping()
+
+        // Test auth endpoint accessibility
+        let authURL = baseURL.appendingPathComponent("api/v1/auth")
+        var req = URLRequest(url: authURL)
+        req.httpMethod = "GET"
+        req.setValue("MacForge/1.0", forHTTPHeaderField: "User-Agent")
+
+        let (_, resp) = try await URLSession.shared.data(for: req)
+        guard let http = resp as? HTTPURLResponse else {
+            throw JamfError.invalidResponse
+        }
+
+        // 401 is expected without auth, but means the endpoint is reachable
+        if http.statusCode == 401 {
+            return "Connection successful - auth endpoint reachable"
+        }
+
+        return "Unexpected response: \(http.statusCode)"
     }
 
     // MARK: - Client ID + Secret (OAuth)
