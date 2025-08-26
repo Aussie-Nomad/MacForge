@@ -1,10 +1,9 @@
 //
-//  GlobalListeners.swift
+//  JamfDebugView.swift
 //  MacForge
 //
-//  Created by Danny Mac on 22/08/2025.
-//
-// V1
+//  Debug interface for JAMF Pro operations and authentication testing.
+//  Provides detailed logging and troubleshooting tools for development.
 // 
 import SwiftUI
 
@@ -13,6 +12,7 @@ struct JamfDebugView: View {
     @State private var clientID = ""
     @State private var clientSecret = ""
     @State private var results: [String] = []
+    @State private var authenticationService = JAMFAuthenticationService()
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -28,9 +28,10 @@ struct JamfDebugView: View {
                 testConnection()
             }
             .disabled(serverURL.isEmpty)
+            .contentShape(Rectangle())
             ScrollView {
                 VStack(alignment: .leading) {
-                    ForEach(Array(results.enumerated()), id: \ .offset) { index, result in
+                    ForEach(Array(results.enumerated()), id: \.offset) { index, result in
                         Text(result)
                             .font(.system(.caption, design: .monospaced))
                             .foregroundStyle(result.contains("❌") ? .red :
@@ -45,28 +46,31 @@ struct JamfDebugView: View {
 
     private func testConnection() {
         results.removeAll()
-        guard let url = JamfClient.normalizeBaseURL(from: serverURL) else {
-            results.append("❌ Invalid server URL")
+        
+        // Test 1: URL validation
+        guard let url = URL(string: serverURL) else {
+            results.append("❌ Invalid server URL format")
             return
         }
         results.append("🔍 Testing: \(url.absoluteString)")
+        
         Task {
             do {
-                let client = JamfClient(baseURL: url)
-                // Test 1: Basic connectivity
-                try await client.ping()
+                // Test 2: Connection validation
+                try await authenticationService.validateConnection(to: serverURL)
                 await MainActor.run {
                     results.append("✅ Server reachable")
                 }
-                // Test 2: Auth endpoint
-                let testResult = try await client.testConnection()
-                await MainActor.run {
-                    results.append("✅ Auth endpoint: \(testResult)")
-                }
+                
                 // Test 3: Authentication
                 if !clientID.isEmpty && !clientSecret.isEmpty {
                     do {
-                        try await client.authenticate(clientID: clientID, clientSecret: clientSecret)
+                        _ = try await authenticationService.authenticateOAuth(
+                            clientID: clientID,
+                            clientSecret: clientSecret,
+                            serverURL: serverURL
+                        )
+                        
                         await MainActor.run {
                             results.append("✅ Authentication successful")
                         }
@@ -74,6 +78,10 @@ struct JamfDebugView: View {
                         await MainActor.run {
                             results.append("❌ Authentication failed: \(error.localizedDescription)")
                         }
+                    }
+                } else {
+                    await MainActor.run {
+                        results.append("ℹ️ Skipping authentication test (no credentials provided)")
                     }
                 }
             } catch {
@@ -84,4 +92,3 @@ struct JamfDebugView: View {
         }
     }
 }
-// ...existing code ends here...

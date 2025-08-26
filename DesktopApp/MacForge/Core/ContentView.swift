@@ -1,9 +1,8 @@
 //  ContentView.swift
 //  MacForge
 //
-//  Created by Danny Mac on 11/08/2025.
-//
-// V3
+//  Main content view that manages the app's navigation structure.
+//  Contains the global sidebar and main content area with tool selection.
 
 import SwiftUI
 
@@ -23,7 +22,7 @@ struct ContentView: View {
         if let tool = selectedTool {
             switch tool {
             case .profileBuilder:
-                ProfileBuilderHostView(model: model, selectedMDM: selectedMDM, onHome: { resetTool() })
+                ProfileBuilderHostView(selectedMDM: selectedMDM, model: model, onHome: { resetTool() })
 
             case .packageSmelting:
                 PackageSmeltingHostView(model: model, selectedMDM: selectedMDM)
@@ -46,7 +45,7 @@ struct ContentView: View {
                 onPickMDM:   { selectedMDM = $0 },   // keep sidebar open
                 onHome:      { resetTool() }
             )
-            .background(LcarsTheme.bg)
+            .themeAwareBackground()
         }
     }
 
@@ -67,11 +66,11 @@ struct ContentView: View {
                 }
             )
             .frame(width: sidebarWidth)
-            .background(LcarsTheme.bg)
+            .themeAwareBackground()
 
         } detail: {
-            // RIGHT: Main canvas
-            ScalableContainer(base: kDesignBase) {
+            // RIGHT: Main canvas with responsive layout
+            VStack(spacing: 0) {
                 // Top Utility Bar
                 HStack(spacing: 12) {
                     Button("Change MDM") {
@@ -80,6 +79,7 @@ struct ContentView: View {
                         columnVisibility = .all
                     }
                     .buttonStyle(.borderedProminent)
+                    .contentShape(Rectangle())
 
                     Button("Change Tool") {
                         selectedTool = nil
@@ -87,6 +87,7 @@ struct ContentView: View {
                     }
                     .buttonStyle(.bordered)
                     .disabled(selectedTool == nil)
+                    .contentShape(Rectangle())
 
                     Spacer()
 
@@ -94,14 +95,19 @@ struct ContentView: View {
                         NotificationCenter.default.post(name: .jfReportBugRequested, object: nil)
                     }
                     .buttonStyle(.bordered)
+                    .contentShape(Rectangle())
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 10)
+                .padding(.bottom, 8)
                 .background(.ultraThinMaterial)
                 .overlay(Divider(), alignment: .bottom)
 
-                // Main Content
-                detailContent
+                // Main Content with proper scaling
+                ScalableContainer(base: kDesignBase) {
+                    detailContent
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
         .navigationSplitViewStyle(.balanced)
@@ -111,11 +117,17 @@ struct ContentView: View {
             if newValue != nil { columnVisibility = .detailOnly }
         }
 
-        .jamforgeGlobalListeners(
-            model: model,
-            selectedMDM: $selectedMDM,
-            selectedTool: $selectedTool
-        )
+        // Global event listeners for app-wide functionality
+        .onReceive(NotificationCenter.default.publisher(for: .jfHomeRequested)) { _ in
+            resetTool()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .jfChangeMDMRequested)) { _ in
+            resetMDM()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .jfReportBugRequested)) { _ in
+            // Handle bug reporting - could open email or GitHub issue
+            print("Bug report requested")
+        }
     }
 
     // MARK: - Reset helpers

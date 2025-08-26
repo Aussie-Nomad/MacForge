@@ -2,27 +2,207 @@
 //  ToolHost.swift
 //  MacForge
 //
-//  Created by Danny Mac on 20/08/2025.
-//
-// V1
+//  Hosting environment for external AI tools and assistants.
+//  Manages communication with OpenAI and Anthropic APIs for enhanced functionality.
 
 import SwiftUI
+import UniformTypeIdentifiers
 
 // MARK: - Package Smelting
 struct PackageSmeltingHostView: View {
     var model: BuilderModel
     var selectedMDM: MDMVendor?
+    
+    @State private var selectedPackage: URL?
+    @State private var packageInfo: PackageInfo?
+    @State private var isAnalyzing = false
+    @State private var errorMessage: String?
 
     var body: some View {
-        VStack(spacing: 12) {
-            Text("📦 Package Smelting")
-                .font(.largeTitle).bold()
-            Text("Upload and manage distribution packages.")
-                .foregroundStyle(.secondary)
+        VStack(spacing: 20) {
+            // Header
+            HStack {
+                Text("📦 Package Smelting")
+                    .font(.largeTitle).bold()
+                Spacer()
+                if let mdm = selectedMDM {
+                    Text("Connected to: \(mdm.rawValue)")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            
+            // Main content with proper scrolling
+            ScrollView {
+                VStack(spacing: 16) {
+                Text("Distribution Package Manager")
+                    .font(.headline)
+                
+                if let packageInfo = packageInfo {
+                    // Package Info Display
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            Text("Package Name:")
+                            Spacer()
+                            Text(packageInfo.name)
+                                .fontWeight(.semibold)
+                        }
+                        
+                        HStack {
+                            Text("Bundle ID:")
+                            Spacer()
+                            Text(packageInfo.bundleID)
+                                .font(.system(.body, design: .monospaced))
+                        }
+                        
+                        HStack {
+                            Text("Version:")
+                            Spacer()
+                            Text(packageInfo.version)
+                        }
+                        
+                        HStack {
+                            Text("Size:")
+                            Spacer()
+                            Text(packageInfo.formattedSize)
+                        }
+                        
+                        Button("Upload to \(selectedMDM?.rawValue ?? "MDM")") {
+                            // TODO: Implement MDM upload
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .disabled(selectedMDM == nil)
+                    }
+                    .padding()
+                    .background(LcarsTheme.panel)
+                    .cornerRadius(12)
+                    
+                } else {
+                    // Drop Zone
+                    VStack(spacing: 12) {
+                        Image(systemName: "arrow.down.circle")
+                            .font(.system(size: 48))
+                            .foregroundStyle(LcarsTheme.amber)
+                        
+                        Text("Drop a .pkg file here")
+                            .font(.headline)
+                        
+                        Text("or click to browse")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    .frame(maxWidth: .infinity, minHeight: 200)
+                    .background(
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(LcarsTheme.amber, style: StrokeStyle(lineWidth: 2, dash: [5]))
+                            .fill(LcarsTheme.panel.opacity(0.3))
+                    )
+                    .onTapGesture {
+                        selectPackage()
+                    }
+                    .onDrop(of: [.fileURL], isTargeted: nil) { providers in
+                        handlePackageDrop(providers)
+                        return true
+                    }
+                }
+                
+                if isAnalyzing {
+                    HStack {
+                        ProgressView()
+                            .scaleEffect(0.8)
+                        Text("Analyzing package...")
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                
+                if let errorMessage = errorMessage {
+                    Text(errorMessage)
+                        .foregroundStyle(.red)
+                        .font(.caption)
+                }
+            }
+            
+                }
+                .padding(.bottom, 20)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            
+            Spacer()
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .padding(24)
         .background(LcarsTheme.bg)
+    }
+    
+    private func selectPackage() {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.package]
+        panel.allowsMultipleSelection = false
+        
+        if panel.runModal() == .OK {
+            selectedPackage = panel.url
+            analyzePackage()
+        }
+    }
+    
+    private func handlePackageDrop(_ providers: [NSItemProvider]) {
+        guard let provider = providers.first else { return }
+        
+        provider.loadItem(forTypeIdentifier: UTType.fileURL.identifier, options: nil) { item, error in
+            if let data = item as? Data,
+               let url = URL(dataRepresentation: data, relativeTo: nil) {
+                DispatchQueue.main.async {
+                    selectedPackage = url
+                    analyzePackage()
+                }
+            }
+        }
+    }
+    
+    private func analyzePackage() {
+        guard let url = selectedPackage else { return }
+        
+        isAnalyzing = true
+        errorMessage = nil
+        
+        // Simulate package analysis
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            do {
+                let packageInfo = try PackageInfo.fromPackage(at: url)
+                self.packageInfo = packageInfo
+            } catch {
+                self.errorMessage = "Failed to analyze package: \(error.localizedDescription)"
+            }
+            self.isAnalyzing = false
+        }
+    }
+}
+
+// MARK: - Package Info Model
+struct PackageInfo {
+    let name: String
+    let bundleID: String
+    let version: String
+    let size: Int64
+    
+    var formattedSize: String {
+        let formatter = ByteCountFormatter()
+        formatter.allowedUnits = [.useMB, .useGB]
+        formatter.countStyle = .file
+        return formatter.string(fromByteCount: size)
+    }
+    
+    static func fromPackage(at url: URL) throws -> PackageInfo {
+        // This is a simplified implementation
+        // In a real app, you'd parse the package contents
+        let attributes = try FileManager.default.attributesOfItem(atPath: url.path)
+        let size = attributes[.size] as? Int64 ?? 0
+        
+        return PackageInfo(
+            name: url.deletingPathExtension().lastPathComponent,
+            bundleID: "com.example.package",
+            version: "1.0.0",
+            size: size
+        )
     }
 }
 
@@ -243,12 +423,15 @@ struct HammeringScriptsHostView: View {
                     Button(vm.isRunning ? "Generating…" : "Generate Script") { Task { await vm.askAI(system: "You are a macOS endpoint management expert. Generate production-ready scripts.") } }
                         .buttonStyle(.borderedProminent)
                         .disabled(vm.isRunning)
+                        .contentShape(Rectangle())
                     Button("Explain") { Task { await vm.askAI(system: "Explain the following script in detail and include security considerations. Return explanation only.") } }
                         .buttonStyle(.bordered)
                         .disabled(vm.isRunning)
+                        .contentShape(Rectangle())
                     Button("Harden") { Task { await vm.askAI(system: "Refactor and harden the following script. Add logging, error handling, and idempotence. Return only the script.") } }
                         .buttonStyle(.bordered)
                         .disabled(vm.isRunning)
+                        .contentShape(Rectangle())
                 }
 
                 if let err = vm.errorText { Text(err).foregroundStyle(.red).font(.footnote) }
@@ -261,7 +444,11 @@ struct HammeringScriptsHostView: View {
 
                 HStack {
                     Button("Copy") { NSPasteboard.general.clearContents(); NSPasteboard.general.setString(vm.script, forType: .string) }
+                        .buttonStyle(.bordered)
+                        .contentShape(Rectangle())
                     Button("Save to Downloads") { saveScriptToDownloads(text: vm.script, ext: vm.language == "python" ? "py" : (vm.language == "applescript" ? "applescript" : "sh")) }
+                        .buttonStyle(.bordered)
+                        .contentShape(Rectangle())
                 }
             }
         }

@@ -2,9 +2,8 @@
 //  PaylodEditors.swift
 //  MacForge
 //
-//  Created by Danny Mac on 14/08/2025.
-//
-// V3
+//  Payload editor components for creating and modifying MDM configuration profiles.
+//  Provides specialized editors for different payload types and settings.
 
 import SwiftUI
 

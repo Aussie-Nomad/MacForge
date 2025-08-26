@@ -2,7 +2,8 @@
 //  PPPCEditor.swift
 //  MacForge
 //
-//  Created by Assistant on 20/08/2025.
+//  Privacy Preferences Policy Control (PPPC) editor for managing app permissions.
+//  Allows administrators to configure which apps can access system resources.
 //
 
 import SwiftUI
@@ -33,6 +34,7 @@ struct AppTargetDropView: View {
                     .opacity(0.8)
                 Button("Choose App…") { chooseApp() }
                     .buttonStyle(.bordered)
+                    .contentShape(Rectangle())
             }
 
             DropTarget(acceptedTypes: [.fileURL], onDrop: handleDrop) {
@@ -134,39 +136,41 @@ struct PPPCServicesEditor: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("PERMISSIONS").font(.headline).foregroundStyle(LcarsTheme.amber)
-            ForEach(model.pppcServices.indices, id: \.self) { i in
-                let svc = model.pppcServices[i]
-                VStack(alignment: .leading, spacing: 8) {
-                    PermissionCard(title: svc.id, decision: $model.pppcServices[i].decision, highlight: model.suggestedServiceIDs.contains(svc.id))
-                    if svc.id == "AppleEvents" {
-                        HStack(spacing: 10) {
-                            ThemedField(title: "AE Receiver (Bundle ID)", text: Binding(
-                                get: { model.pppcServices[i].receiverBundleID ?? "" },
-                                set: { model.pppcServices[i].receiverBundleID = $0 }
-                            ))
-                            Picker("Identifier Type", selection: Binding(
-                                get: { model.pppcServices[i].receiverIdentifierType ?? "bundleID" },
-                                set: { model.pppcServices[i].receiverIdentifierType = $0 }
-                            )) {
-                                Text("Bundle ID").tag("bundleID")
-                                Text("Path").tag("path")
-                                Text("Code Requirement").tag("codeRequirement")
-                            }
-                            .pickerStyle(.menu)
-                            .frame(width: 200)
+            
+            if model.pppcConfigurations.isEmpty {
+                Text("No PPPC permissions configured. Use the Profile Builder to configure permissions.")
+                    .foregroundStyle(.secondary)
+                    .italic()
+            } else {
+                ForEach(model.pppcConfigurations) { config in
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Text(config.service.name)
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                            
+                            Spacer()
+                            
+                            Text(config.allowed ? "Allow" : "Deny")
+                                .font(.caption)
+                                .foregroundStyle(config.allowed ? .green : .red)
+                        }
+                        
+                        Text("Identifier: \(config.identifier)")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        
+                        if let comment = config.comment {
+                            Text("Comment: \(comment)")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
                         }
                     }
-                    if svc.id == "ScreenCapture" {
-                        Picker("Screen Capture Type", selection: Binding(
-                            get: { model.pppcServices[i].screenCaptureType ?? "All" },
-                            set: { model.pppcServices[i].screenCaptureType = $0 }
-                        )) {
-                            Text("All").tag("All")
-                            Text("Window Only").tag("WindowOnly")
-                        }
-                        .pickerStyle(.segmented)
-                        .frame(maxWidth: 360)
-                    }
+                    .padding(8)
+                    .background(
+                        RoundedRectangle(cornerRadius: 6)
+                            .fill(LcarsTheme.panel.opacity(0.3))
+                    )
                 }
             }
         }

@@ -2,34 +2,16 @@
 //  MacForgeApp.swift
 //  MacForge
 //
-//  Created by Danny Mac on 14/08/2025.
-//
-//  Entry point + global app wiring (orientation, window sizing, commands, events).
-//  Decoupled from the rest of the app via NotificationCenter.
-// V3
+//  Main application entry point and global configuration.
+//  Handles cross-platform orientation, window sizing, global commands, and app lifecycle events.
+//  Uses NotificationCenter for decoupled communication between app components.
 
 import SwiftUI
 
 
-// MARK: - Cross‑Platform Orientation
-#if canImport(UIKit)
-import UIKit
-
-/// Locks orientation by platform:
-/// - iPhone → Portrait
-/// - iPad   → Landscape
-final class OrientationDelegate: NSObject, UIApplicationDelegate {
-    func application(
-        _ application: UIApplication,
-        supportedInterfaceOrientationsFor window: UIWindow?
-    ) -> UIInterfaceOrientationMask {
-        switch UIDevice.current.userInterfaceIdiom {
-        case .phone: return [.portrait, .portraitUpsideDown]
-        default:     return [.landscapeLeft, .landscapeRight]
-        }
-    }
-}
-#endif
+// MARK: - macOS Application Configuration
+// MacForge is designed specifically for macOS MDM administration
+// No cross-platform support needed for this desktop tool
 
 // MARK: - App‑Wide Events (decoupled via NotificationCenter)
 extension Notification.Name {
@@ -55,10 +37,6 @@ private func jfPost(_ name: Notification.Name, _ payload: [AnyHashable: Any]? = 
 // MARK: - MacForge Application
 @main
 struct MacForgeApp: App {
-    #if canImport(UIKit)
-    @UIApplicationDelegateAdaptor(OrientationDelegate.self) var orientationDelegate
-    #endif
-
     // NOTE: We let ContentView own its own @StateObject private var model = BuilderModel()
     // Avoid injecting a second, competing instance here.
 
@@ -69,6 +47,7 @@ struct MacForgeApp: App {
         WindowGroup {
             ContentView()
                 .preferredColorScheme(.dark)
+                .environment(\.themeManager, ThemeManager.shared)
 
                 /// Scene phase → broadcast so models can refresh, invalidate tokens, etc.
                 .onChange(of: scenePhase, initial: true) { oldPhase, newPhase in
@@ -87,13 +66,12 @@ struct MacForgeApp: App {
                     jfPost(.jfOpenDeepLink, ["url": url])
                 }
         }
-        #if os(macOS)
-        // macOS window configuration: default 1440×900, content-size based resizing.
+        // macOS window configuration: responsive sizing with proper minimums
         .defaultSize(width: 1440, height: 900)
         .windowStyle(.titleBar)
         .windowToolbarStyle(.unifiedCompact)
-        .windowResizability(.contentSize)   // If your deployment target is < macOS 13, see notes below.
-        #endif
+        .windowResizability(.contentSize)
+        .frame(minWidth: 1000, minHeight: 700)
 
         // Global command menu (posted as notifications)
         .commands {
@@ -110,13 +88,11 @@ struct MacForgeApp: App {
         }
 
         // Settings / About
-        #if os(macOS)
         Settings {
             SettingsPane()
                 .frame(minWidth: 520, idealWidth: 620, maxWidth: 800,
                        minHeight: 360, idealHeight: 420, maxHeight: 600)
         }
-        #endif
     }
 }
 
@@ -164,9 +140,9 @@ private struct SettingsPane: View {
                         .foregroundStyle(.secondary)
                 }
                 GridRow {
-                    Text("Orientation (iOS)")
+                    Text("Platform")
                     Spacer()
-                    Text("iPhone: Portrait · iPad: Landscape")
+                    Text("macOS Native")
                         .foregroundStyle(.secondary)
                 }
             }

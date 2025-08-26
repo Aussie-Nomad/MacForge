@@ -2,9 +2,8 @@
 //  Theme.swift
 //  MacForge
 //
-//  Created by Danny Mac on 14/08/2025.
-//
-// V3
+//  LCARS-inspired color theme and design constants for the MacForge application.
+//  Provides consistent visual styling across all UI components.
 
 
 import SwiftUI
@@ -19,7 +18,7 @@ enum LcarsTheme {
     static let panel  = Color(red: 0.10, green: 0.10, blue: 0.10)
     
     enum Sidebar {
-        static let width: CGFloat = 480
+        static let width: CGFloat = 260
         static let sectionGap: CGFloat = 16
         static let outerPadding: CGFloat = 12
         static let cardCorner: CGFloat = 18

@@ -2,9 +2,8 @@
 //  Helpers.swift
 //  MacForge
 //
-//  Created by Danny Mac on 15/08/2025.
-//
-//  V3.1 – small URL/host helpers + tidy docs
+//  Utility functions and helper methods for common operations.
+//  Includes URL handling, host validation, and other reusable functionality.
 //
 
 import SwiftUI

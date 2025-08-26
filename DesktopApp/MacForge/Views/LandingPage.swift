@@ -2,20 +2,20 @@
 //  LandingPage.swift
 //  MacForge
 //
-//  Created by Danny Mac on 15/08/2025.
+//  Main landing page view that displays when no tool is selected.
+//  Provides information about the app, current work status, and contact details.
 //
-// V3
 
 import SwiftUI
 
 // MARK: - Main Landing View
 struct LandingPage: View {
     @ObservedObject var model: BuilderModel
+    @Environment(\.themeManager) var themeManager
     let selectedMDM: MDMVendor?                 // may be nil
     var onChangeMDM: () -> Void
     var onPickMDM: (MDMVendor) -> Void
     var onHome: () -> Void
-    var jamfClient: JamfClient?
     
     var body: some View {
         ZStack {
@@ -27,8 +27,11 @@ struct LandingPage: View {
                     // Hero Section
                     heroSection
                     
-                    // Two-column layout
-                    HStack(alignment: .top, spacing: 24) {
+                    // Responsive layout that adapts to window size
+                    LazyVGrid(columns: [
+                        GridItem(.flexible(), spacing: 24),
+                        GridItem(.flexible(), spacing: 24)
+                    ], spacing: 24) {
                         // Left Column
                         VStack(spacing: 20) {
                             authorsNotesSection
@@ -45,20 +48,21 @@ struct LandingPage: View {
                         .frame(maxWidth: .infinity)
                     }
                 }
-                .padding(32)
+                .padding(.horizontal, 32)
+                .padding(.vertical, 24)
+                .frame(maxWidth: .infinity, minHeight: 600)
             }
         }
-        .background(LcarsTheme.bg)
+        .themeAwareBackground()
     }
     
-    // MARK: - Links
-        private func openURL(_ s: String) {
-            #if os(macOS)
-            if let url = URL(string: s) { NSWorkspace.shared.open(url) }
-            #elseif canImport(UIKit)
-            if let url = URL(string: s) { UIApplication.shared.open(url) }
-            #endif
-        }
+    // MARK: - Utility Functions
+    private func openURL(_ s: String) {
+        #if os(macOS)
+        if let url = URL(string: s) { NSWorkspace.shared.open(url) }
+        #elseif canImport(UIKit)
+        if let url = URL(string: s) { UIApplication.shared.open(url) }
+        #endif
     }
     
     // MARK: - Hero Section
@@ -86,6 +90,10 @@ struct LandingPage: View {
             Text("Choose an MDM from the left to begin.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
+            
+            // Theme Switcher
+            ThemeSwitcher()
+                .frame(maxWidth: 400)
         }
     }
     
@@ -112,11 +120,13 @@ struct LandingPage: View {
                 sectionHeader("CURRENTLY WORKING ON", color: Color.blue)
                 
                 VStack(alignment: .leading, spacing: 8) {
-                    workItem("Jamf Pro Blueprints integration", status: "IN PROGRESS")
-                    workItem("Full PPPC parity with PPPC Utility", status: "PLANNING")
-                    workItem("Cross-MDM export adapters", status: "RESEARCH")
-                    workItem("Advanced certificate payload support", status: "BACKLOG")
-                    workItem("Custom payload template system", status: "CONCEPT")
+                    workItem("LCARS Theme System", status: "COMPLETED")
+                    workItem("Application Drop Zone", status: "COMPLETED")
+                    workItem("Working Download Button", status: "COMPLETED")
+                    workItem("Template System", status: "COMPLETED")
+                    workItem("MDM Authentication Flow", status: "IN PROGRESS")
+                    workItem("JAMF Pro Integration", status: "NEXT")
+                    workItem("UI Layout Improvements", status: "COMPLETED")
                 }
             }
         }
@@ -154,9 +164,10 @@ struct LandingPage: View {
                     .cornerRadius(8)
                 
                 VStack(alignment: .leading, spacing: 6) {
-                    issueItem("Some MDM image assets may not display correctly", severity: "LOW")
-                    issueItem("Profile validation needs enhancement", severity: "MEDIUM")
-                    issueItem("Export error handling improvements needed", severity: "LOW")
+                    issueItem("MDM Authentication not triggering", severity: "HIGH")
+                    issueItem("Tools remain disabled after MDM selection", severity: "HIGH")
+                    issueItem("Profile Builder navigation flow broken", severity: "MEDIUM")
+                    issueItem("Theme switching needs refinement", severity: "LOW")
                 }
                 
                 Text("Report bugs using the 'Report Bug' button when connected to an MDM.")
@@ -173,10 +184,10 @@ struct LandingPage: View {
                 sectionHeader("SYSTEM VERSION", color: LcarsTheme.amber)
                 
                 VStack(spacing: 8) {
-                    infoRow("VERSION", "1.0.0 (Beta)")
-                    infoRow("BUILD DATE", "August 15, 2025")
-                    infoRow("PLATFORMS", "macOS 12+, iOS 15+")
-                    infoRow("STATUS", "OPERATIONAL")
+                    infoRow("VERSION", "1.1.0 (Beta)")
+                    infoRow("BUILD DATE", "August 26, 2025")
+                    infoRow("PLATFORMS", "macOS 12+")
+                    infoRow("STATUS", "PARTIALLY OPERATIONAL")
                 }
             }
         }
@@ -187,7 +198,7 @@ struct LandingPage: View {
         HStack {
             Text(title)
                 .font(.system(size: 16, weight: .black, design: .monospaced))
-                .foregroundStyle(color)
+                .foregroundStyle(themeManager.isLCARSActive ? LCARSTheme.textPrimary : color)
             Spacer()
             Circle()
                 .fill(color)
@@ -257,6 +268,7 @@ struct LandingPage: View {
                 .shadow(color: color.opacity(0.4), radius: 4)
         }
         .buttonStyle(.plain)
+        .contentShape(Rectangle())
     }
 
     @ViewBuilder
@@ -265,7 +277,7 @@ struct LandingPage: View {
             .padding(20)
             .background(
                 RoundedRectangle(cornerRadius: 16)
-                    .fill(LcarsTheme.panel)
+                    .fill(themeManager.isLCARSActive ? LCARSTheme.panel : LcarsTheme.panel)
                     .shadow(color: color.opacity(0.3), radius: 8)
             )
             .overlay(
@@ -274,18 +286,19 @@ struct LandingPage: View {
                     .shadow(color: color.opacity(0.6), radius: 2)
             )
     }
-
+}
 
 // MARK: - Animated Components
 struct AnimatedHeader: View {
     let title: String
+    @Environment(\.themeManager) var themeManager
     @State private var isAnimating = false
     
     var body: some View {
         Text(title)
             .font(.system(size: 32, weight: .black, design: .monospaced))
-            .foregroundStyle(LcarsTheme.amber)
-            .shadow(color: LcarsTheme.amber.opacity(0.8), radius: isAnimating ? 12 : 4)
+            .foregroundStyle(themeManager.isLCARSActive ? LCARSTheme.primary : LcarsTheme.amber)
+            .shadow(color: (themeManager.isLCARSActive ? LCARSTheme.primary : LcarsTheme.amber).opacity(0.8), radius: isAnimating ? 12 : 4)
             .scaleEffect(isAnimating ? 1.02 : 1.0)
             .animation(.easeInOut(duration: 2.0).repeatForever(autoreverses: true), value: isAnimating)
             .onAppear {
@@ -295,6 +308,7 @@ struct AnimatedHeader: View {
 }
 
 struct AnimatedBackground: View {
+    @Environment(\.themeManager) var themeManager
     @State private var animationPhase = 0.0
     
     var body: some View {
@@ -313,7 +327,7 @@ struct AnimatedBackground: View {
                             path.addLine(to: CGPoint(x: size.width, y: y))
                         }
                     },
-                    with: .color(LcarsTheme.amber.opacity(0.05)),
+                    with: .color((themeManager.isLCARSActive ? LCARSTheme.primary : LcarsTheme.amber).opacity(0.05)),
                     lineWidth: 1
                 )
             }
@@ -325,7 +339,7 @@ struct AnimatedBackground: View {
                         LinearGradient(
                             colors: [
                                 .clear,
-                                LcarsTheme.amber.opacity(0.1),
+                                (themeManager.isLCARSActive ? LCARSTheme.primary : LcarsTheme.amber).opacity(0.1),
                                 .clear
                             ],
                             startPoint: .leading,
@@ -364,157 +378,3 @@ struct SelectMDMPlaceholder: View {
         .background(LcarsTheme.bg)
     }
 }
-
-//V1 Landing Page
-//  Created by Danny Mac on 11/08/2025.
-//
-//import SwiftUI
-
-// MARK: - Main Landing View
-//struct LandingHomeView: View {
-//    @ObservedObject var model: BuilderModel
-//    let selectedMDM: MDMVendor
-//    let onChangeMDM: () -> Void
-//    let onPickMDM: (MDMVendor) -> Void
-//    let onHome: () -> Void
-//    var jamfClient: JamfClient?
-//    
-//    var body: some View {
-//        ScrollView {
-//            VStack(spacing: 16) {
-//                LcarsHeader(title: "WELCOME TO MACFORGE")
-//                
-//                Text("Choose an MDM from the left to begin.")
-//                    .font(.footnote)
-//                    .padding(.horizontal, 14)
-//                    .padding(.vertical, 6)
-//                    .background(RoundedRectangle(cornerRadius: 10).stroke(LcarsTheme.amber, lineWidth: 2))
-//
-//                // Contact / links
-//                lcarsPanel {
-//                    VStack(spacing: 12) {
-//                        Text("Thank you for using MacForge\nYou can reach the author using the buttons below.")
-//                            .multilineTextAlignment(.center)
-//                        HStack(spacing: 12) {
-//                            Link("GitHub", destination: URL(string: "https://github.com/dannymcdermott")!)
-//                                .buttonStyle(.borderedProminent)
-//                            Link("Email", destination: URL(string: "mailto:daniel.mcdermott@zappistore.com")!)
-//                                .buttonStyle(.bordered)
-//                            Link("Wiki", destination: URL(string: "https://github.com/dannymcdermott/macforge/wiki")!)
-//                                .buttonStyle(.bordered)
-//                        }
-//                    }
-//                }
-//
-//                sectionHeader("AUTHORS NOTES")
-//                lcarsPanel {
-//                    VStack(alignment: .leading, spacing: 8) {
-//                        Text("MacForge is a toolbox for building and managing Apple MDM payloads. Pick an MDM on the left, connect, then open a tool.")
-//                        Text("")
-//                        Text("This app is designed to streamline the creation of configuration profiles for macOS and iOS devices. Whether you're managing PPPC permissions, Wi-Fi settings, or security policies, MacForge provides an intuitive interface for building production-ready profiles.")
-//                    }
-//                    .frame(maxWidth: .infinity, alignment: .leading)
-//                }
-//
-//                sectionHeader("CURRENTLY WORKING ON")
-//                lcarsPanel {
-//                    VStack(alignment: .leading, spacing: 8) {
-//                        bullet("Jamf Pro Blueprints integration")
-//                        bullet("Full PPPC parity with PPPC Utility")
-//                        bullet("Cross-MDM export adapters (Intune, Kandji, Mosyle)")
-//                        bullet("Advanced certificate payload support")
-//                        bullet("Custom payload template system")
-//                    }
-//                }
-//
-//                sectionHeader("REPORTED BUGS & KNOWN ISSUES")
-//                lcarsPanel {
-//                    VStack(alignment: .leading, spacing: 8) {
-//                        Text("Current known issues:")
-//                        bullet("Some MDM image assets may not display correctly")
-//                        bullet("Profile validation could be more comprehensive")
-//                        bullet("Export functionality needs error handling improvements")
-//                        Text("")
-//                        Text("Please report any bugs or feature requests using the 'Report Bug' button in the toolbar when connected to an MDM.")
-//                    }
-//                    .frame(maxWidth: .infinity, alignment: .leading)
-//                }
-//                
-//                sectionHeader("VERSION INFO")
-//                lcarsPanel {
-//                    VStack(alignment: .leading, spacing: 8) {
-//                        HStack {
-//                            Text("Version:")
-//                            Spacer()
-//                            Text("1.0.0 (Beta)")
-//                                .foregroundStyle(LcarsTheme.amber)
-//                        }
-//                        HStack {
-//                            Text("Build Date:")
-//                            Spacer()
-//                            Text("August 15, 2025")
-//                                .foregroundStyle(.secondary)
-//                        }
-//                        HStack {
-//                            Text("Supported Platforms:")
-//                            Spacer()
-//                            Text("macOS 12+, iOS 15+")
-//                                .foregroundStyle(.secondary)
-//                        }
-//                    }
-//                }
-//            }
-//            .padding(20)
-//        }
-//        .background(LcarsTheme.bg)
-//    }
-//
-//    private func sectionHeader(_ title: String) -> some View {
-//        Text(title)
-//            .font(.headline).fontWeight(.heavy)
-//            .foregroundStyle(LcarsTheme.amber)
-//            .padding(.horizontal, 12)
-//            .padding(.vertical, 6)
-//            .background(RoundedRectangle(cornerRadius: 12).stroke(LcarsTheme.amber, lineWidth: 2))
-//    }
-//
-//    private func bullet(_ text: String) -> some View {
-//        HStack(alignment: .firstTextBaseline, spacing: 8) {
-//            Circle()
-//                .fill(LcarsTheme.amber)
-//                .frame(width: 6, height: 6)
-//            Text(text)
-//        }
-//    }
-//
-//    @ViewBuilder
-//    private func lcarsPanel<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
-//        VStack(alignment: .leading) { content() }
-//            .padding(16)
-//            .background(
-//                RoundedRectangle(cornerRadius: 16)
-//                    .fill(LcarsTheme.panel)
-//            )
-//            .overlay(
-//                RoundedRectangle(cornerRadius: 16)
-//                    .stroke(LcarsTheme.orange, lineWidth: 3)
-//            )
-//    }
-//}
-//
-//// MARK: - Default "nothing selected" card
-//struct SelectMDMPlaceholder: View {
-//    var body: some View {
-//        VStack(spacing: 12) {
-//            LcarsHeader(title: "SELECT MOBILE DEVICE MANAGER")
-//            Text("Choose an MDM from the left to begin.")
-//                .font(.footnote)
-//                .padding(.horizontal, 14)
-//                .padding(.vertical, 6)
-//                .background(RoundedRectangle(cornerRadius: 10).stroke(LcarsTheme.amber, lineWidth: 2))
-//            Spacer()
-//        }
-//        .padding(20)
-//        .background(LcarsTheme.bg)
-//    }
-//}

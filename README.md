@@ -1,90 +1,141 @@
-# MacForge
+# MacForge 🚀
 
-A professional macOS application for creating and managing configuration profiles, with specialized support for Privacy Preferences Policy Control (PPPC) and MDM integration.
+[![macOS](https://img.shields.io/badge/macOS-12.0+-blue.svg)](https://www.apple.com/macos/)
+[![Swift](https://img.shields.io/badge/Swift-6.0-orange.svg)](https://swift.org/)
+[![Xcode](https://img.shields.io/badge/Xcode-15.0+-blue.svg)](https://developer.apple.com/xcode/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Status](https://img.shields.io/badge/Status-Beta-orange.svg)](https://github.com/Aussie-Nomad/MacForge)
 
-## Features
+**MacForge** is a professional macOS application for creating and managing configuration profiles, with specialized support for **Privacy Preferences Policy Control (PPPC)** and **MDM integration**. Built with SwiftUI and following Apple's design guidelines, it provides an intuitive wizard-based interface for enterprise administrators and developers.
 
-- **Configuration Profile Creation**: Build custom macOS configuration profiles
-- **PPPC Management**: Specialized support for Privacy Preferences Policy Control
-- **MDM Integration**: Seamless integration with Mobile Device Management systems
-- **User-Friendly Interface**: Intuitive macOS-native interface
-- **Security Focused**: Built with macOS security best practices
+## 🎯 **What is MacForge?**
 
-## Documentation
+MacForge simplifies the creation of macOS configuration profiles, particularly focusing on PPPC profiles that manage app permissions. It provides:
 
-For comprehensive documentation including features, architecture, and development guides, see our [Wiki](WIKI.md) or visit the [GitHub Wiki](../../wiki).
+- **🔐 Comprehensive PPPC Management**: 50+ privacy services across 7 categories
+- **🏢 MDM Integration**: Direct submission to JAMF Pro and other MDMs
+- **🎨 Modern UI**: Dual theme system (Default + LCARS Star Trek-inspired)
+- **🛠️ Developer Tools**: Package analysis, device management, and automation
+- **📱 Drag & Drop**: Simply drop any .app file for automatic configuration
 
-### Quick Links
-- [Features Overview](WIKI.md#current-features)
-- [PPPC Editor Guide](WIKI.md#pppc-editor)
-- [MDM Integration](WIKI.md#mdm-integration)
-- [Getting Started](WIKI.md#getting-started)
-- [Technical Architecture](WIKI.md#technical-architecture)
-- [Future Roadmap](WIKI.md#future-roadmap)
+## 🚀 **Quick Start**
 
-## Requirements
+### **For End Users**
+1. **Download**: Get the latest release from [Releases](https://github.com/Aussie-Nomad/MacForge/releases)
+2. **Install**: Drag MacForge to your Applications folder
+3. **Launch**: Start building profiles with the intuitive wizard interface
 
-- **macOS**: 12.0 (Monterey) or later
-- **Xcode**: 14.0 or later (for building from source)
-- **Swift**: 5.7 or later
+### **For Developers**
+1. **Clone**: `git clone https://github.com/Aussie-Nomad/MacForge.git`
+2. **Open**: `open MacForge/DesktopApp/MacForge.xcodeproj`
+3. **Build**: `xcodebuild -scheme MacForge build`
+4. **Run**: Launch from Xcode or build the app
 
-## Installation
+### **For Contributors**
+1. **Fork** the repository
+2. **Check** [Contributor WIKI](DesktopApp/MacForge/Contributor_WIKI.md) for current status
+3. **Review** [Development Guidelines](DesktopApp/MacForge/WIKI.md#development-guidelines)
+4. **Submit** pull requests with tests and documentation
 
-### For Users
-1. Download the latest release from [Releases](../../releases)
-2. Open the `.dmg` file
-3. Drag MacForge to your Applications folder
-4. Launch MacForge from Applications
+## 📁 **Project Structure**
 
-### For Developers
-1. Clone this repository:
-   ```bash
-   git clone https://github.com/Aussie-Nomad/MacForge.git
-   ```
-2. Open `MacForge.xcodeproj` in Xcode
-3. Build and run (⌘+R)
-
-## Contributing
-
-We welcome contributions! Please read our [Contributing Guidelines](CONTRIBUTING.md) before submitting pull requests.
-
-### Quick Start for Contributors
-1. Fork this repository
-2. Create a feature branch: `git checkout -b feature-name`
-3. Make your changes and test thoroughly
-4. Submit a pull request
-
-## Development
-
-### Project Structure
 ```
 MacForge/
-├── MacForge/           # Main application code
-├── MacForgeTests/      # Unit tests
-├── MacForgeUITests/    # UI tests
-└── Resources/          # App resources
+├── DesktopApp/              # macOS application
+│   ├── MacForge/           # Main application code
+│   ├── MacForgeTests/      # Unit tests
+│   ├── MacForgeUITests/    # UI tests
+│   └── README.md           # Desktop app documentation
+├── docs/                    # Additional documentation
+├── scripts/                 # Build and deployment scripts
+└── README.md               # This file
 ```
 
-### Building
-The project uses standard Xcode build processes. All dependencies are managed through Swift Package Manager.
+## 📚 **Documentation**
 
-## Bug Reports
+| **Document** | **Purpose** | **Audience** |
+|--------------|-------------|--------------|
+| **[DesktopApp README](DesktopApp/README.md)** | Detailed app documentation | Users & Developers |
+| **[Contributor WIKI](DesktopApp/MacForge/Contributor_WIKI.md)** | Development status & guidelines | Contributors |
+| **[Project WIKI](DesktopApp/MacForge/WIKI.md)** | Comprehensive project docs | All users |
+| **[Test Plan](DesktopApp/MacForgeTests/TestPlan.md)** | Testing strategy | Developers |
 
-Found a bug? Please [create an issue](../../issues/new/choose) using our bug report template.
+## 🏗️ **Architecture**
 
-## Feature Requests
+MacForge follows the **MVVM (Model-View-ViewModel)** architecture pattern:
 
-Have an idea? We'd love to hear it! [Create a feature request](../../issues/new/choose).
+- **Models**: Data structures for PPPC services and configurations
+- **Views**: SwiftUI interfaces with dual theme support
+- **ViewModels**: State management and business logic
+- **Services**: MDM integration and profile export
+- **Shared**: Common utilities and theme management
 
-## License
+## 🧪 **Testing**
+
+Comprehensive testing infrastructure with >90% coverage goals:
+
+```bash
+# Run all tests
+xcodebuild test -scheme MacForge -destination 'platform=macOS'
+
+# Run specific test suites
+xcodebuild test -scheme MacForge -destination 'platform=macOS' -only-testing:MacForgeTests
+xcodebuild test -scheme MacForge -destination 'platform=macOS' -only-testing:MacForgeUITests
+```
+
+## 📊 **Current Status**
+
+**Version**: 1.1.0 (Beta)  
+**Status**: Partially Operational - Core features working, enhancement in progress  
+**Last Updated**: August 26, 2025  
+
+### **✅ Working Features**
+- Application launch and navigation
+- Profile Builder with PPPC support
+- Application drop zone and bundle ID extraction
+- Template system (Security Baseline, Network, Antivirus)
+- Theme switching (Default + LCARS)
+- Profile export to .mobileconfig
+- JAMF Pro authentication
+- Comprehensive testing infrastructure
+
+### **🚧 In Progress**
+- Detailed PPPC configuration interface
+- Template service configuration
+- Profile validation and preview
+- Complete MDM integration
+
+## 🔗 **Related Projects**
+
+- **[Apple Device Management](https://github.com/apple/device-management)**: Apple's device management reference
+- **[NanoMDM](https://github.com/micromdm/nanomdm)**: Minimalist Apple MDM server
+- **[Jamf Pro SDK Python](https://github.com/macadmins/jamf-pro-sdk-python)**: Python client for Jamf Pro
+- **[PPPC Utility](https://github.com/jamf/PPPC-Utility)**: Jamf's PPPC management tool
+
+## 🤝 **Contributing**
+
+We welcome contributions! See our [Contributor WIKI](DesktopApp/MacForge/Contributor_WIKI.md) for:
+
+- Current development status and known issues
+- Areas needing help and contribution guidelines
+- Code standards and architecture patterns
+- Testing requirements and quality metrics
+
+## 📄 **License**
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Acknowledgments
+## 📞 **Support & Community**
 
-- Built for the macOS admin community
-- Inspired by the need for better PPPC management tools
+- **GitHub Issues**: [Report bugs](https://github.com/Aussie-Nomad/MacForge/issues) and [request features](https://github.com/Aussie-Nomad/MacForge/issues/new)
+- **GitHub Discussions**: [Join the conversation](https://github.com/Aussie-Nomad/MacForge/discussions)
+- **Documentation**: Check our [WIKI](DesktopApp/MacForge/WIKI.md) for detailed information
 
 ---
 
-**If you find MacForge helpful, I'd love to hear from you, Dan**
+**Made for the macOS community**
+
+[![GitHub stars](https://img.shields.io/github/stars/Aussie-Nomad/MacForge?style=social)](https://github.com/Aussie-Nomad/MacForge/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/Aussie-Nomad/MacForge?style=social)](https://github.com/Aussie-Nomad/MacForge/network)
+[![GitHub issues](https://img.shields.io/github/issues/Aussie-Nomad/MacForge)](https://github.com/Aussie-Nomad/MacForge/issues)
+[![GitHub pull requests](https://img.shields.io/github/issues-pr/Aussie-Nomad/MacForge)](https://github.com/Aussie-Nomad/MacForge/pulls)

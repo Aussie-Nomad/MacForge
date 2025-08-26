@@ -2,9 +2,8 @@
 //  GlobalSidebar.swift
 //  MacForge
 //
-//  Created by Danny Mac on 14/08/2025.
-//
-// V3
+//  Global navigation sidebar that provides access to all available tools and MDM selection.
+//  Manages the main navigation flow of the application.
 
 import SwiftUI
 
@@ -12,6 +11,7 @@ struct GlobalSidebar: View {
     @Binding var selectedMDM: MDMVendor?        // <- new
     var onChangeMDM: () -> Void                 // <- new
     var onSelectTool: (ToolModule) -> Void      // <- new
+
 
     var body: some View {
         ScrollView {
@@ -27,7 +27,7 @@ struct GlobalSidebar: View {
                         // Show only the chosen MDM with a "Change…" button
                         LcarsTileRow(
                             items: [.init(title: mdm.rawValue, imageName: mdm.asset)]
-                        ) { _ in /* no-op; already chosen */ }
+                        )
 
                         LcarsSmallButton(title: "Change…") {
                             onChangeMDM()
@@ -35,14 +35,16 @@ struct GlobalSidebar: View {
                     } else {
                         // Show all MDMs
                         LcarsTileRow(
-                            items: MDMVendor.allCases.map { .init(title: $0.rawValue, imageName: $0.asset) }
-                        ) { item in
-                            // Map back title -> enum
-                            if let mdm = MDMVendor.allCases.first(where: { $0.rawValue == item.title }) {
-                                selectedMDM = mdm         // keep sidebar open
-                                // We *do not* collapse here
+                            items: MDMVendor.allCases.map { .init(title: $0.rawValue, imageName: $0.asset) },
+                            onTap: { item in
+                                // Map back title -> enum
+                                if let mdm = MDMVendor.allCases.first(where: { $0.rawValue == item.title }) {
+                                    selectedMDM = mdm         // keep sidebar open
+                                    // We *do not* collapse here
+                                    // Authentication will be triggered when user tries to submit
+                                }
                             }
-                        }
+                        )
                     }
                 }
 
@@ -50,7 +52,7 @@ struct GlobalSidebar: View {
                 VStack(alignment: .leading, spacing: 10) {
                     Text("TOOLS").lcarsPill()
 
-                    // Enable tools only after an MDM is chosen
+                    // Enable tools after an MDM is chosen
                     if selectedMDM != nil {
                         ForEach(ToolModule.allCases, id: \.self) { tool in
                             Button {
@@ -84,7 +86,7 @@ struct GlobalSidebar: View {
             .padding(LcarsTheme.Sidebar.outerPadding)
         }
         .frame(width: LcarsTheme.Sidebar.width)
-        .background(LcarsTheme.bg)
+        .themeAwareBackground()
     }
 }
 

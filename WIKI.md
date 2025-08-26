@@ -1,10 +1,26 @@
-# MacForge Wiki
+# MacForge Wiki 📚
 
-**MacForge** is a powerful macOS application for creating and managing configuration profiles, with specialized support for Privacy Preferences Policy Control (PPPC) and MDM integration.
+**MacForge** is a powerful macOS application for creating and managing configuration profiles, with specialized support for **Privacy Preferences Policy Control (PPPC)** and **MDM integration**. This wiki provides comprehensive documentation for users, developers, and contributors.
 
-## Table of Contents
+[![macOS](https://img.shields.io/badge/macOS-12.0+-blue.svg)](https://www.apple.com/macos/)
+[![Swift](https://img.shields.io/badge/Swift-6.0-orange.svg)](https://swift.org/)
+[![Xcode](https://img.shields.io/badge/Xcode-15.0+-blue.svg)](https://developer.apple.com/xcode/)
+[![Status](https://img.shields.io/badge/Status-Beta-orange.svg)](https://github.com/Aussie-Nomad/MacForge)
+
+## 🚀 **Quick Navigation**
+
+| **For Users** | **For Developers** | **For Contributors** |
+|---------------|-------------------|---------------------|
+| [Getting Started](#getting-started) | [Architecture Overview](#architecture-overview) | [Contributor WIKI](Contributor_WIKI.md) |
+| [Current Features](#current-features) | [Technical Architecture](#technical-architecture) | [Development Guidelines](#development-guidelines) |
+| [User Interface](#user-interface) | [Code Structure](#code-structure) | [Improvement Roadmap](#improvement-roadmap) |
+| [Troubleshooting](#troubleshooting) | [Testing Strategy](#testing-strategy) | [Code Standards](#code-standards) |
+
+## 📋 **Table of Contents**
 
 - [Overview](#overview)
+- [Current State Assessment](#current-state-assessment)
+- [Architecture Overview](#architecture-overview)
 - [Current Features](#current-features)
 - [PPPC Editor](#pppc-editor)
 - [MDM Integration](#mdm-integration)
@@ -12,7 +28,8 @@
 - [Profile Management](#profile-management)
 - [User Interface](#user-interface)
 - [Technical Architecture](#technical-architecture)
-- [Future Roadmap](#future-roadmap)
+- [Development Guidelines](#development-guidelines)
+- [Improvement Roadmap](#improvement-roadmap)
 - [Getting Started](#getting-started)
 - [Troubleshooting](#troubleshooting)
 
@@ -27,9 +44,136 @@ MacForge is designed to simplify the creation of macOS configuration profiles, p
 - **Professional UI**: Modern, themed interface inspired by LCARS design
 - **Robust Error Handling**: Clear feedback and automatic retry mechanisms
 
+## Current State Assessment
+
+### ✅ **What's Working Well**
+
+#### **Architecture & Code Quality**
+- **Clean MVVM Architecture**: Well-separated concerns with Services, ViewModels, and Views
+- **Simplified Authentication**: Focused JAMF Pro service without unnecessary abstraction
+- **Consistent Documentation**: All files have clear, structured headers explaining purpose
+- **Modern SwiftUI**: Uses latest SwiftUI patterns and best practices
+- **Type Safety**: Good use of Swift's type system and enums
+- **macOS-Focused**: Removed unnecessary cross-platform complexity
+
+#### **Core Functionality**
+- **Profile Builder**: Fully implemented with comprehensive PPPC support
+- **JAMF Pro Integration**: Complete authentication and profile submission
+- **PPPC Editor**: Robust permission management with visual interface
+- **Package Smelting**: Basic but functional package management tool
+- **Theme System**: Consistent LCARS-inspired design throughout
+
+### ✅ **What's Been Improved**
+
+#### **Completed Features**
+- **Package Smelting**: Now functional with drag-and-drop package analysis
+- **Simplified Architecture**: Removed unnecessary protocols and abstractions
+- **State Management**: Simplified NotificationCenter usage with direct event handling
+- **File Organization**: Better structured feature-based organization
+
+#### **Removed Complexity**
+- **iOS Support**: Eliminated cross-platform code and orientation handling
+- **Over-Engineering**: Simplified authentication service to focus on JAMF Pro
+- **Unused Protocols**: Removed generic authentication protocols and credentials
+
+### 🗑️ **What's Been Removed**
+
+- **Cross-Platform Orientation**: iOS-specific orientation handling eliminated
+- **Mobile UI Patterns**: Touch interface support removed
+- **Generic MDM Protocols**: Replaced with focused JAMF Pro implementation
+- **Complex Notification System**: Simplified to direct event handling
+- **Unused Authentication Protocols**: Removed unnecessary abstractions
+
+## Architecture Overview
+
+### **Current Architecture**
+```
+MacForge/
+├── Core/                           # Core app functionality
+│   ├── MacForgeApp.swift          # App entry point
+│   ├── ContentView.swift          # Main navigation
+│   └── GlobalSidebar.swift        # Navigation sidebar
+├── Features/                       # Feature-specific modules
+│   ├── ProfileBuilder/            # Profile building interface
+│   │   ├── ProfileBuilderHostView.swift
+│   │   ├── ProfileCenterPane.swift
+│   │   ├── ProfileDetailPane.swift
+│   │   ├── ProfileSidebar.swift
+│   │   ├── ProfileTopToolbar.swift
+│   │   └── StepContent.swift
+│   ├── PPPC/                      # PPPC editor functionality
+│   │   └── PPPCEditor.swift
+│   └── Tools/                     # Development and debugging tools
+│       ├── ToolHost.swift         # Tool hosting and Package Smelting
+│       ├── PaylodEditors.swift    # Payload editing utilities
+│       └── JamfDebugView.swift   # JAMF debugging interface
+├── Services/                       # Business logic layer
+│   ├── AuthenticationService.swift # JAMF Pro authentication
+│   ├── JAMFService.swift          # JAMF operations
+│   └── ProfileExportService.swift # Profile export
+├── ViewModels/                     # UI state management
+│   ├── AuthenticationViewModel.swift
+│   └── ProfileBuilderViewModel.swift
+├── Views/                          # UI components
+│   ├── Components/                # Reusable UI components
+│   │   ├── CommonUI.swift
+│   │   ├── MissingComponents.swift
+│   │   ├── SettingsHeader.swift
+│   │   ├── ThemeSwitcher.swift   # Theme selection interface
+│   │   └── WizardHeader.swift
+│   ├── JamfAuthSheet.swift        # Authentication UI
+│   └── LandingPage.swift          # Main landing page
+├── Models/                         # Data models
+│   └── BuilderModel.swift         # Core data model
+└── Shared/                         # Utilities and shared components
+    ├── Theme.swift                # Default LCARS design system
+    ├── LCARSTheme.swift           # Star Trek-inspired theme system
+    ├── ThemeManager.swift         # Theme switching and management
+    ├── Helpers.swift              # Utility functions
+    ├── ScalableContainer.swift    # UI scaling
+    └── SampleData.swift           # Sample data for development
+```
+
+### **Architecture Principles**
+- **MVVM Pattern**: Clear separation of concerns
+- **Feature-Focused**: Organized by functionality, not technical layers
+- **Simplified Communication**: Direct event handling for app-wide events
+- **Reusable Components**: Shared UI components and utilities
+- **macOS-Native**: Optimized for desktop use without mobile complexity
+- **Clear Organization**: Logical grouping makes codebase easier to navigate and maintain
+- **Theme System**: Dual-theme support with Default and LCARS (Star Trek-inspired) interfaces
+
+### **Code Structure Details**
+The codebase follows a clear, feature-based organization that makes it easy for developers to understand and contribute:
+
+#### **Core Components**
+- **MacForgeApp.swift**: Application entry point and lifecycle management
+- **ContentView.swift**: Main navigation container and routing
+- **GlobalSidebar.swift**: MDM selection and tool navigation
+
+#### **Feature Modules**
+- **ProfileBuilder/**: Complete profile creation workflow with 3-step wizard
+- **PPPC/**: Privacy preferences management and configuration
+- **Tools/**: Development utilities and debugging interfaces
+
+#### **Service Layer**
+- **AuthenticationService.swift**: JAMF Pro OAuth integration
+- **JAMFService.swift**: MDM operations and profile submission
+- **ProfileExportService.swift**: Profile generation and export
+
+#### **Data Models**
+- **BuilderModel.swift**: Core business logic for profile building
+- **PPPCService.swift**: PPPC service definitions and configuration
+- **PPPCConfiguration.swift**: Individual PPPC permission settings
+
+#### **UI Components**
+- **ViewModels/**: State management for UI components
+- **Views/**: Reusable UI components and layouts
+- **Shared/**: Common utilities, themes, and helpers
+
 ## Current Features
 
-### ✅ Implemented Features
+### ✅ **Implemented Features**
 
 #### PPPC Profile Creation
 - **App Target Configuration**
@@ -67,6 +211,29 @@ MacForge is designed to simplify the creation of macOS configuration profiles, p
   - Unique identifiers
   - Version control
 
+### 🚧 **Planned Features (Placeholder Status)**
+
+#### **Package Smelting** 📦
+- **Status**: ✅ Functional implementation
+- **Purpose**: Upload and manage distribution packages
+- **Features**: Drag-and-drop support, package analysis, MDM integration ready
+- **Implementation**: Basic package info extraction and display
+
+#### **Device Foundry** 🖥️
+- **Status**: UI placeholder only
+- **Purpose**: Smart & Static Group Creator for devices
+- **Implementation**: Not started
+
+#### **Blueprint Builder** 📐
+- **Status**: UI placeholder only
+- **Purpose**: Design reusable configuration blueprints
+- **Implementation**: Not started
+
+#### **Hammering Scripts** 🔨
+- **Status**: UI placeholder with AI integration framework
+- **Purpose**: AI-powered script builder
+- **Implementation**: Basic AI service integration, no UI
+
 ### MDM Platform Support
 
 #### Jamf Pro Integration ✅
@@ -86,6 +253,20 @@ MacForge is designed to simplify the creation of macOS configuration profiles, p
 
 ### User Interface Features
 
+#### **Dual Theme System** 🎨
+- **Default Theme**: Clean, modern macOS interface with LCARS-inspired elements
+  - Dark background with amber/orange accents
+  - Rounded panels with subtle shadows
+  - Professional, enterprise-ready appearance
+- **LCARS Theme**: Full Star Trek-inspired futuristic interface
+  - Deep blue-black backgrounds with vibrant orange, purple, and blue accents
+  - Monospaced fonts and geometric panel designs
+  - Interactive elements with hover effects and animations
+- **Theme Switcher**: Easy switching between themes from the landing page
+  - Persistent theme selection across app launches
+  - Smooth transitions between themes
+  - Visual preview of each theme option
+
 #### 3-Step Wizard
 1. **Select App & Configure Profile**
    - Profile metadata entry
@@ -98,500 +279,149 @@ MacForge is designed to simplify the creation of macOS configuration profiles, p
    - Progress indicators
 
 3. **Review & Submit**
-   - Configuration summary
+   - Profile summary
    - Export options
-   - MDM submission
+   - Direct MDM submission
 
-#### Visual Design
-- **Progress Indicators**: Step circles with completion checkmarks
-- **Smart Navigation**: Auto-advance on completion
-- **Error Feedback**: Inline error messages with clear guidance
-- **Responsive Layout**: Adapts to different window sizes
+## 🎯 **Development Guidelines**
 
-## PPPC Editor
+### **Code Standards**
+- **SwiftLint**: Enforce consistent code style
+- **Documentation**: All files must have clear header comments
+- **Architecture**: Follow MVVM pattern with clear separation of concerns
+- **Testing**: Unit tests for business logic, UI tests for user flows
 
-### App Target Drop Zone
-The PPPC editor features a sophisticated drag-and-drop interface:
+### **Swift Best Practices**
+- Follow [Apple's Swift API Design Guidelines](https://swift.org/documentation/api-design-guidelines/)
+- Use SwiftUI for all new UI components
+- Implement proper error handling with custom error types
+- Use async/await for asynchronous operations
+- Maintain type safety and avoid force unwrapping
+- Use descriptive naming conventions
 
-```swift
-// Automatic extraction on app drop
-func applyApp(at url: URL) {
-    // Extract bundle identifier
-    if let bundle = Bundle(url: url) {
-        bundleID = bundle.bundleIdentifier ?? ""
-    }
-    
-    // Extract code requirement
-    if let req = designatedRequirement(for: url) {
-        codeRequirement = req
-    }
-    
-    // Auto-advance wizard
-    model.wizardStep = max(model.wizardStep, 2)
-}
+### **Code Organization**
+- **Group by Feature**: Organize files by functionality, not type
+- **Clear Naming**: Descriptive file and function names
+- **Consistent Structure**: Use MARK comments for logical sections
+- **Shared Components**: Place reusable code in appropriate shared directories
+- **Documentation**: Include usage examples and parameter descriptions
+
+### **File Organization**
+- **Group by Feature**: Organize files by functionality, not type
+- **Clear Naming**: Descriptive file and function names
+- **Consistent Structure**: Use MARK comments for logical sections
+- **Shared Components**: Place reusable code in appropriate shared directories
+
+### **Git Workflow**
+- **Branch Strategy**: Feature branches for new development
+- **Commit Messages**: Clear, descriptive commit messages
+- **Code Reviews**: All changes require review before merge
+- **Testing**: Ensure tests pass before submitting PRs
+
+## 🧪 **Testing Strategy**
+
+### **Test Coverage Goals**
+- **Unit Tests**: >90% line coverage target
+- **Integration Tests**: All major workflows covered
+- **UI Tests**: Critical user journeys validated
+- **Performance Tests**: Response time benchmarks
+
+### **Test Categories**
+1. **Model Tests**: Data model validation and business logic
+2. **Service Tests**: Authentication, export, and MDM services
+3. **UI Tests**: User interface functionality and accessibility
+4. **Integration Tests**: End-to-end workflow validation
+5. **Performance Tests**: Load handling and responsiveness
+
+### **Running Tests**
+```bash
+# Run all tests
+xcodebuild test -scheme MacForge -destination 'platform=macOS'
+
+# Run specific test suite
+xcodebuild test -scheme MacForge -destination 'platform=macOS' -only-testing:MacForgeTests
+
+# Run UI tests
+xcodebuild test -scheme MacForge -destination 'platform=macOS' -only-testing:MacForgeUITests
 ```
 
-### Permission Configuration
-Each service can be configured with granular control:
+### **Test Documentation**
+- **[Test Plan](MacForgeTests/TestPlan.md)**: Comprehensive testing strategy
+- **[Test Files](MacForgeTests/)**: Unit test implementations
+- **[UI Tests](MacForgeUITests/)**: User interface test suite
 
-- **Standard Permissions**: Camera, Microphone, Full Disk Access
-- **Advanced Options**: 
-  - Apple Events with receiver configuration
-  - Screen Recording with capture type selection
-  - Folder-specific permissions
+## Improvement Roadmap
 
-### Code Requirements
-MacForge automatically extracts designated requirements using the Security framework:
+### **Phase 1: Stabilization (COMPLETED ✅)**
+1. **✅ Remove iOS Support**: Eliminated cross-platform complexity
+2. **✅ Complete JAMF Integration**: Focused on JAMF Pro features
+3. **✅ Implement One Additional Tool**: Package Smelting now functional
+4. **✅ Simplify State Management**: Reduced NotificationCenter usage
+5. **✅ Improve File Organization**: Complete feature-based structure implemented
 
-```swift
-private func designatedRequirement(for url: URL) -> String? {
-    var staticCode: SecStaticCode?
-    let status = SecStaticCodeCreateWithPath(url as CFURL, [], &staticCode)
-    guard status == errSecSuccess, let code = staticCode else { return nil }
-    
-    var requirement: SecRequirement?
-    let reqStatus = SecCodeCopyDesignatedRequirement(code, [], &requirement)
-    guard reqStatus == errSecSuccess, let req = requirement else { return nil }
-    
-    var reqString: CFString?
-    let stringStatus = SecRequirementCopyString(req, [], &reqString)
-    guard stringStatus == errSecSuccess, let string = reqString else { return nil }
-    
-    return string as String
-}
-```
+### **Phase 2: Enhancement (Current Priority)**
+1. **UI/UX Improvements**: Native macOS patterns and better accessibility
+2. **Error Handling**: Comprehensive error messages and recovery
+3. **Testing**: Unit and UI test coverage
+4. **Performance**: Optimize memory usage and responsiveness
+5. **Complete Package Smelting**: Add MDM upload functionality
 
-## MDM Integration
+### **Phase 3: Expansion**
+1. **Additional MDM Support**: Implement Intune, Kandji, Mosyle
+2. **Tool Completion**: Finish Package Smelting, Device Foundry, Blueprint Builder
+3. **Advanced Features**: Template system, bulk operations
+4. **Performance Optimization**: Advanced caching and optimization
 
-### Jamf Pro Implementation
-
-#### Authentication Flow
-```swift
-// OAuth Authentication
-public func authenticateClientID(clientID: String, clientSecret: String) async throws {
-    let endpoints = ["api/oauth/token", "api/v1/oauth/token"]
-    
-    for endpoint in endpoints {
-        // Try each endpoint with proper error handling
-        // Fallback to next endpoint on failure
-    }
-}
-
-// Basic Authentication
-public func authenticatePassword(username: String, password: String) async throws {
-    let endpoint = "api/v1/auth/token"
-    // Convert Basic auth to Bearer token
-}
-```
-
-#### Profile Management
-```swift
-// Automatic create or update
-public func uploadOrUpdateComputerProfileXML(name: String, xmlPlist: Data) async throws {
-    do {
-        try await uploadComputerProfileXML(name: name, xmlPlist: xmlPlist)
-    } catch JamfError.http(let code, _) where code == 409 {
-        // Profile exists, update it
-        try await updateComputerProfileXMLByName(name: name, xmlPlist: xmlPlist)
-    }
-}
-```
-
-### Connection Validation
-Before submission, MacForge validates the connection:
-- Network connectivity check
-- Authentication validation
-- Permission verification
-
-## Authentication Methods
-
-### Jamf Pro
-
-#### Method 1: OAuth (Recommended)
-- **Client ID**: Your Jamf Pro API client identifier
-- **Client Secret**: Corresponding secret key
-- **Endpoints**: Automatically tries both `api/oauth/token` and `api/v1/oauth/token`
-- **Security**: Bearer token with automatic refresh
-
-#### Method 2: Basic Authentication
-- **Username**: Jamf Pro admin username
-- **Password**: Corresponding password
-- **Conversion**: Automatically converts to Bearer token
-- **Scope**: Full API access based on user permissions
-
-### Security Features
-- **Network Entitlements**: Proper sandboxing with network client access
-- **Token Management**: Secure token storage and automatic refresh
-- **Error Recovery**: Graceful handling of authentication failures
-
-## Profile Management
-
-### Export Options
-
-#### Local Export
-```swift
-func saveProfileToDownloads() {
-    do {
-        let data = try exportMobileConfig()
-        let downloadsURL = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first!
-        let filename = "\(settings.name).mobileconfig"
-        let fileURL = downloadsURL.appendingPathComponent(filename)
-        try data.write(to: fileURL)
-    } catch {
-        // Handle export errors
-    }
-}
-```
-
-#### MDM Submission
-Direct submission to MDM with:
-- Automatic conflict resolution
-- Progress feedback
-- Error reporting
-- Retry mechanisms
-
-### Profile Structure
-Generated profiles follow Apple's configuration profile format:
-
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<os_x_configuration_profile>
-  <general>
-    <name>Profile Name</name>
-    <distribution_method>Install Automatically</distribution_method>
-    <payloads>BASE64_ENCODED_PLIST</payloads>
-  </general>
-</os_x_configuration_profile>
-```
-
-## User Interface
-
-### Design Philosophy
-MacForge's UI is inspired by the LCARS (Library Computer Access/Retrieval System) design language, featuring:
-
-- **Geometric Shapes**: Rounded rectangles and pill-shaped elements
-- **Color Hierarchy**: Amber for headers, orange for accents, green for success
-- **Typography**: Clear, sans-serif fonts with appropriate weights
-- **Spacing**: Generous whitespace for clarity
-
-### Component Library
-
-#### Core Components
-- `LcarsHeader`: Styled headers with consistent theming
-- `ThemedField`: Input fields with validation and placeholder support
-- `WizardHeader`: Progress indicator with step circles
-- `PermissionCard`: Individual permission configuration cards
-
-#### Interactive Elements
-- `AppTargetDropView`: Drag-and-drop zone for applications
-- `PPPCServicesEditor`: Grid-based permission configuration
-- `JamfAuthSheet`: Modal authentication interface
-
-### Responsive Design
-The interface adapts to different window sizes:
-- **Minimum Width**: 800px for comfortable editing
-- **Scalable Layout**: Components resize appropriately
-- **Sidebar Behavior**: Collapsible on smaller screens
-
-## Technical Architecture
-
-### SwiftUI Framework
-MacForge is built entirely in SwiftUI, leveraging:
-- **Declarative UI**: Reactive interface updates
-- **State Management**: `@ObservedObject` and `@State` for data binding
-- **Navigation**: `NavigationStack` for structured flow
-- **Modality**: Sheet presentations for authentication and settings
-
-### Data Models
-
-#### Core Models
-```swift
-// Main application state
-class BuilderModel: ObservableObject {
-    @Published var settings: ProfileSettings
-    @Published var dropped: [Payload]
-    @Published var pppcServices: [PPPCService]
-    @Published var wizardStep: Int = 1
-}
-
-// Individual permission service
-struct PPPCService {
-    let id: String
-    let name: String
-    var decision: AuthDecision = .ask
-    var receiverBundleID: String?
-    var screenCaptureType: String?
-}
-```
-
-#### Profile Generation
-```swift
-func exportMobileConfig() throws -> Data {
-    let payloadDicts: [[String: Any]] = dropped.map { payload in
-        // Convert payload to dictionary format
-        // Handle PPPC-specific configurations
-        // Generate proper XML structure
-    }
-    
-    return try PropertyListSerialization.data(
-        fromPropertyList: profile, 
-        format: .xml, 
-        options: 0
-    )
-}
-```
-
-### Security Framework Integration
-MacForge uses Apple's Security framework for:
-- Code signature validation
-- Requirement extraction
-- Bundle analysis
-
-### Network Layer
-Custom HTTP client with:
-- Automatic retry logic
-- Connection pooling
-- Error categorization
-- Debug logging
-
-## Future Roadmap
-
-### 🎯 High Priority Features
-
-#### Enhanced MDM Support
-- **Microsoft Intune Integration**
-  - Graph API authentication
-  - Policy assignment
-  - Compliance reporting
-  
-- **Kandji API Integration**
-  - Tenant-specific authentication
-  - Blueprint integration
-  - Device targeting
-
-- **Mosyle Business Integration**
-  - Access token authentication
-  - Profile distribution
-  - Device management
-
-#### Advanced PPPC Features
-- **Bulk Operations**
-  - Multi-app configuration
-  - Template-based permissions
-  - Batch export/import
-
-- **Permission Templates**
-  - Pre-configured permission sets
-  - Industry-specific templates
-  - Custom template creation
-
-#### Configuration Profile Types
-- **WiFi Profiles**
-  - Enterprise networks
-  - Certificate-based authentication
-  - Hidden network support
-
-- **VPN Configurations**
-  - Multiple VPN types
-  - Per-app VPN
-  - Always-on VPN
-
-- **Certificate Management**
-  - Root CA installation
-  - User certificates
-  - Device certificates
-
-### 🔮 Medium Priority Features
-
-#### User Experience Enhancements
-- **Profile Validation**
-  - Real-time syntax checking
-  - Compatibility warnings
-  - Best practice suggestions
-
-- **Advanced Wizard**
-  - Conditional steps
-  - Smart recommendations
-  - Context-aware help
-
-- **Profile Comparison**
-  - Diff visualization
-  - Merge capabilities
-  - Version history
-
-#### Developer Tools
-- **API Integration**
-  - REST API for automation
-  - Webhook support
-  - CLI interface
-
-- **Scripting Support**
-  - JavaScript automation
-  - Custom transformations
-  - Bulk operations
-
-#### Enterprise Features
-- **Multi-tenant Support**
-  - Organization isolation
-  - Role-based access
-  - Audit logging
-
-- **Advanced Authentication**
-  - SAML integration
-  - Active Directory
-  - Certificate-based auth
-
-### 🌟 Long-term Vision
-
-#### AI-Powered Features
-- **Smart Recommendations**
-  - App-specific permission suggestions
-  - Security best practices
-  - Compliance guidance
-
-- **Automated Conflict Resolution**
-  - Intelligent merging
-  - Policy optimization
-  - Risk assessment
-
-#### Cross-Platform Support
-- **iOS Profile Support**
-  - Mobile device management
-  - App-specific configurations
-  - Device restrictions
-
-- **Universal Profiles**
-  - Multi-platform targeting
-  - Conditional deployment
-  - Platform-specific overrides
-
-#### Advanced Analytics
-- **Usage Tracking**
-  - Profile deployment metrics
-  - Success/failure rates
-  - Performance monitoring
-
-- **Security Insights**
-  - Permission usage analysis
-  - Risk assessment
-  - Compliance reporting
+### **Technical Debt Reduction**
+- **Remove Unused Code**: Clean up placeholder implementations
+- **Consolidate Services**: Reduce service layer complexity
+- **Standardize UI**: Consistent spacing, sizing, and patterns
+- **Documentation**: Complete API and architecture documentation
 
 ## Getting Started
 
-### Installation Requirements
-- **macOS**: 15.5 or later
-- **Xcode**: 16.0 or later (for development)
-- **RAM**: 8GB minimum, 16GB recommended
-- **Storage**: 2GB available space
+### **Prerequisites**
+- macOS 12.0 or later
+- Xcode 15.0 or later
+- Swift 5.9 or later
 
-### Building from Source
-```bash
-# Clone the repository
-git clone <repository-url>
-cd MacForge
+### **Development Setup**
+1. Clone the repository
+2. Open `MacForge.xcodeproj` in Xcode
+3. Build and run the project
+4. Follow the setup guide for JAMF Pro integration
 
-# Open in Xcode
-open MacForge.xcodeproj
+### **First Steps**
+1. **Explore the Interface**: Familiarize yourself with the LCARS theme
+2. **Try Profile Builder**: Create a simple PPPC profile
+3. **Test JAMF Integration**: Connect to a JAMF Pro instance
+4. **Review the Code**: Understand the MVVM architecture
 
-# Build and run
-# Select MacForge scheme and press Cmd+R
-```
-
-### First Run Setup
-1. **Launch MacForge**
-2. **Select Profile Builder** from the sidebar
-3. **Configure MDM Connection** (optional)
-4. **Start Creating Profiles** using the wizard
-
-### Basic Workflow
-1. **Add PPPC Payload**: Click "Add Privacy Permissions (PPPC)"
-2. **Drop Application**: Drag .app file to the drop zone
-3. **Configure Permissions**: Set Allow/Deny/Prompt for each service
-4. **Review Configuration**: Check the summary
-5. **Export or Submit**: Save locally or send to MDM
+### **For Contributors**
+- **Check Contributor_WIKI.md**: Detailed current status, known issues, and development guidelines
+- **Review TestPlan.md**: Comprehensive testing strategy and requirements
+- **Follow Development Guidelines**: Code standards and architecture patterns
 
 ## Troubleshooting
 
-### Common Issues
+### **Common Issues**
+- **Build Errors**: Ensure Xcode and Swift versions are compatible
+- **JAMF Connection**: Verify server URL and credentials
+- **Profile Export**: Check file permissions and export location
+- **UI Rendering**: Verify theme assets are properly included
 
-#### Authentication Problems
-**Symptom**: "HTTP 401" or "Invalid Client" errors
-**Solution**: 
-- Verify MDM credentials are correct
-- Check network connectivity
-- Ensure proper API permissions in MDM
-- Try both authentication methods (OAuth vs Basic)
+### **Debug Tools**
+- **JamfDebugView**: Built-in debugging interface for JAMF operations
+- **Console Logs**: Check Xcode console for detailed error messages
+- **Network Inspector**: Monitor API calls and responses
 
-#### App Drop Failures
-**Symptom**: Bundle ID not extracted from dropped app
-**Solution**:
-- Ensure the file is a valid .app bundle
-- Check app is properly signed
-- Verify file system permissions
-- Try manually entering bundle ID
-
-#### Profile Export Issues
-**Symptom**: Export fails or generates invalid profiles
-**Solution**:
-- Check all required fields are filled
-- Validate profile name is unique
-- Ensure proper permissions are configured
-- Review error messages in detail
-
-### Debug Information
-Enable detailed logging by:
-1. Building in Debug configuration
-2. Monitoring Xcode console output
-3. Checking system logs for Security framework errors
-
-### Network Debugging
-For MDM connection issues:
-```bash
-# Test connectivity
-curl -v https://your-jamf-instance.com/api/v1/ping
-
-# Verify certificates
-openssl s_client -connect your-jamf-instance.com:443
-
-# Check DNS resolution
-nslookup your-jamf-instance.com
-```
-
-### Support Resources
-- **Error Messages**: All errors include detailed descriptions
-- **Debug Logs**: Console output provides detailed operation logs
-- **Network Inspector**: Built-in request/response logging
-- **Validation**: Real-time feedback on configuration issues
-
-### Performance Optimization
-- **Large App Bundles**: Code requirement extraction may take time
-- **Network Timeouts**: Increase timeout for slow connections
-- **Memory Usage**: Large profiles may require more RAM
+### **Getting Help**
+- **GitHub Issues**: Report bugs and request features
+- **Documentation**: Check this wiki for detailed information
+- **Community**: Join discussions in the project repository
 
 ---
 
-## Contributing
-
-### Development Setup
-1. Fork the repository
-2. Create feature branch
-3. Make changes with proper testing
-4. Submit pull request with detailed description
-
-### Code Style
-- Follow Swift naming conventions
-- Use SwiftUI best practices
-- Include documentation for public APIs
-- Add unit tests for new features
-
-### Testing
-- Manual testing with real MDM instances
-- Unit tests for core functionality
-- UI tests for critical workflows
-- Performance testing for large profiles
-
----
-
-**Last Updated**: August 2025  
-**Version**: 1.0.0  
-**Platform**: macOS 15.5+
+**Last Updated**: August 26, 2025  
+**Version**: 1.1.0 (Beta)  
+**Status**: Phase 2 Active - Core Features Stable, Enhancement in Progress, Testing Infrastructure Complete
