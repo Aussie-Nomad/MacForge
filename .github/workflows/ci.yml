@@ -40,6 +40,7 @@ jobs:
         fi
     
     - name: Build project
+      working-directory: DesktopApp
       run: |
         if [ -f "MacForge.xcodeproj/project.pbxproj" ]; then
           xcodebuild -project MacForge.xcodeproj -scheme MacForge -destination 'platform=macOS' build
@@ -51,6 +52,7 @@ jobs:
         fi
     
     - name: Run tests (if available)
+      working-directory: DesktopApp
       run: |
         if [ -f "MacForge.xcodeproj/project.pbxproj" ]; then
           xcodebuild -project MacForge.xcodeproj -scheme MacForge -destination 'platform=macOS' test
