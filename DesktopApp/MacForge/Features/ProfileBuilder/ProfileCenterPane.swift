@@ -180,7 +180,7 @@ struct AdvancedModeContent: View {
                     Group {
                         Text("AVAILABLE PAYLOADS")
                             .font(.headline)
-                            .foregroundStyle(LcarsTheme.amber)
+                            .foregroundStyle(LCARSTheme.accent)
 
                         LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 3), spacing: 12) {
                             ForEach(model.library) { payload in
@@ -198,7 +198,7 @@ struct AdvancedModeContent: View {
                         Group {
                             Text("SELECTED PAYLOADS")
                                 .font(.headline)
-                                .foregroundStyle(LcarsTheme.amber)
+                                .foregroundStyle(LCARSTheme.accent)
 
                             LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 3), spacing: 12) {
                                 ForEach(model.dropped) { payload in
@@ -211,6 +211,31 @@ struct AdvancedModeContent: View {
                             }
                         }
                     }
+                    
+                    // Advanced Mode Notice
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            Image(systemName: "info.circle")
+                                .foregroundStyle(LCARSTheme.accent)
+                            Text("Advanced Mode Active")
+                                .font(.headline)
+                                .foregroundStyle(LCARSTheme.accent)
+                        }
+                        
+                        Text("Advanced Mode gives you direct control over all profile settings and payloads. You can manually configure each aspect of your configuration profile without guided assistance.")
+                            .font(.body)
+                            .foregroundStyle(LCARSTheme.textSecondary)
+                        
+                        Text("Note: App upload functionality is currently in development and will be available in a future update.")
+                            .font(.caption)
+                            .foregroundStyle(LCARSTheme.primary)
+                            .padding(8)
+                            .background(LCARSTheme.primary.opacity(0.1))
+                            .cornerRadius(6)
+                    }
+                    .padding(16)
+                    .background(LCARSTheme.panel.opacity(0.3))
+                    .cornerRadius(12)
                 }
                 .padding(20)
             }

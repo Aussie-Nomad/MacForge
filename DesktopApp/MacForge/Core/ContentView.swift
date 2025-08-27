@@ -66,7 +66,13 @@ struct ContentView: View {
                 }
             )
             .frame(width: sidebarWidth)
-            .themeAwareBackground()
+            .background(LCARSTheme.background)
+            .overlay(
+                Rectangle()
+                    .fill(LCARSTheme.primary.opacity(0.1))
+                    .frame(width: 1)
+                    .frame(maxHeight: .infinity, alignment: .trailing)
+            )
 
         } detail: {
             // RIGHT: Main canvas with responsive layout
@@ -111,6 +117,7 @@ struct ContentView: View {
             }
         }
         .navigationSplitViewStyle(.balanced)
+        .navigationSplitViewColumnWidth(min: sidebarWidth, ideal: sidebarWidth, max: sidebarWidth)
 
         // Modern onChange (macOS 14+ signature). We’re not using the deprecated one.
         .onChange(of: selectedTool) { _, newValue in
