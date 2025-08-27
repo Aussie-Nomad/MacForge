@@ -99,16 +99,16 @@ struct ThemePreferences: Codable {
         
         var color: Color {
             switch self {
-            case .amber: return LCARSTheme.accent
-            case .orange: return LCARSTheme.primary
-            case .purple: return LCARSTheme.secondary
+            case .amber: return .orange
+            case .orange: return .red
+            case .purple: return .purple
             }
         }
     }
 }
 
 // MARK: - MDM Account
-struct MDMAccount: Codable, Identifiable {
+struct MDMAccount: Codable, Identifiable, Hashable {
     var id = UUID()
     var vendor: String
     var serverURL: String

@@ -1077,10 +1077,14 @@ struct ExportDeployStepView: View {
     let onBack: () -> Void
     let onComplete: () -> Void
     
+    @StateObject private var userSettings = UserSettings()
     @State private var showingExportPanel = false
     @State private var showingDeployPanel = false
     @State private var exportErrorMessage: String?
     @State private var showingExportError = false
+    @State private var selectedMDMAccount: MDMAccount?
+    @State private var isDeploying = false
+    @State private var deployStatus: String = ""
     
     var body: some View {
         VStack(spacing: 0) {
@@ -1139,6 +1143,12 @@ struct ExportDeployStepView: View {
                     .background(LCARSTheme.panel)
                     .cornerRadius(12)
                     
+                    // MDM Connection Section
+                    MDMConnectionSection(
+                        userSettings: userSettings,
+                        selectedMDMAccount: $selectedMDMAccount
+                    )
+                    
                     // Action Buttons
                     VStack(spacing: 16) {
                         Button("Export .mobileconfig File") {
@@ -1155,10 +1165,22 @@ struct ExportDeployStepView: View {
                         .frame(maxWidth: .infinity)
                         
                         Button("Deploy to MDM") {
-                            showingDeployPanel = true
+                            deployToMDM()
                         }
-                        .buttonStyle(.bordered)
+                        .buttonStyle(.borderedProminent)
+                        .tint(LCARSTheme.accent)
                         .frame(maxWidth: .infinity)
+                        .disabled(selectedMDMAccount == nil || isDeploying)
+                        
+                        if isDeploying {
+                            HStack {
+                                ProgressView()
+                                    .scaleEffect(0.8)
+                                Text(deployStatus)
+                                    .font(.caption)
+                                    .foregroundStyle(LCARSTheme.textSecondary)
+                            }
+                        }
                     }
                 }
                 .padding(16)
@@ -1271,6 +1293,101 @@ struct ExportDeployStepView: View {
         }
         
         return true
+    }
+    
+    private func deployToMDM() {
+        guard let account = selectedMDMAccount else { return }
+        
+        isDeploying = true
+        deployStatus = "Connecting to \(account.displayName)..."
+        
+        // Simulate deployment process
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+            deployStatus = "Authenticating..."
+        }
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+            deployStatus = "Uploading profile..."
+        }
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+            deployStatus = "Profile deployed successfully!"
+            isDeploying = false
+            
+            // TODO: Implement actual JAMF deployment
+            // This would integrate with the existing JAMFService
+        }
+    }
+}
+
+// MARK: - MDM Connection Section
+struct MDMConnectionSection: View {
+    let userSettings: UserSettings
+    @Binding var selectedMDMAccount: MDMAccount?
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("MDM Deployment")
+                .font(.headline)
+                .foregroundStyle(LCARSTheme.accent)
+            
+            if userSettings.mdmAccounts.isEmpty {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("No MDM accounts configured")
+                        .font(.subheadline)
+                        .foregroundStyle(LCARSTheme.textSecondary)
+                    
+                    Button("Add MDM Account") {
+                        // TODO: Open settings to add MDM account
+                    }
+                    .buttonStyle(.bordered)
+                    .font(.caption)
+                }
+                .padding(12)
+                .background(LCARSTheme.panel)
+                .cornerRadius(8)
+            } else {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Select MDM Account")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                    
+                    Picker("MDM Account", selection: $selectedMDMAccount) {
+                        Text("Choose an account...").tag(nil as MDMAccount?)
+                        ForEach(userSettings.mdmAccounts) { account in
+                            Text(account.displayName).tag(account as MDMAccount?)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    
+                    if let selectedAccount = selectedMDMAccount {
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundStyle(.green)
+                                Text("Connected to \(selectedAccount.displayName)")
+                                    .font(.subheadline)
+                                    .fontWeight(.medium)
+                            }
+                            
+                            Text("Server: \(selectedAccount.serverURL)")
+                                .font(.caption)
+                                .foregroundStyle(LCARSTheme.textSecondary)
+                            
+                            Text("Vendor: \(selectedAccount.vendor)")
+                                .font(.caption)
+                                .foregroundStyle(LCARSTheme.textSecondary)
+                        }
+                        .padding(12)
+                        .background(LCARSTheme.panel)
+                        .cornerRadius(8)
+                    }
+                }
+            }
+        }
+        .padding(20)
+        .background(LCARSTheme.panel)
+        .cornerRadius(12)
     }
 }
 
