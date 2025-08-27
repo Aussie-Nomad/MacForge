@@ -11,7 +11,9 @@ struct ContentView: View {
     @State private var selectedTool: ToolModule? = nil
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
     @State private var selectedMDM: MDMVendor? = nil
+    @State private var showingSettings = false
     @StateObject private var model = BuilderModel()
+    @StateObject private var userSettings = UserSettings()
 
     // MARK: - Layout
     private let sidebarWidth: CGFloat = 320
@@ -90,6 +92,12 @@ struct ContentView: View {
                     }
                     .buttonStyle(.bordered)
                     .contentShape(Rectangle())
+
+                    Button("Settings") {
+                        showingSettings = true
+                    }
+                    .buttonStyle(.bordered)
+                    .contentShape(Rectangle())
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 10)
@@ -101,6 +109,9 @@ struct ContentView: View {
                 detailContent
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
+        }
+        .sheet(isPresented: $showingSettings) {
+            SettingsView(userSettings: userSettings)
         }
     }
 
