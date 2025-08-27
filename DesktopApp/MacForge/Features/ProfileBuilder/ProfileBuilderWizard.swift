@@ -1082,6 +1082,7 @@ struct ExportDeployStepView: View {
     @State private var showingDeployPanel = false
     @State private var exportErrorMessage: String?
     @State private var showingExportError = false
+    @State private var showingSettings = false
     @State private var selectedMDMAccount: MDMAccount?
     @State private var isDeploying = false
     @State private var deployStatus: String = ""
@@ -1146,7 +1147,10 @@ struct ExportDeployStepView: View {
                     // MDM Connection Section
                     MDMConnectionSection(
                         userSettings: userSettings,
-                        selectedMDMAccount: $selectedMDMAccount
+                        selectedMDMAccount: $selectedMDMAccount,
+                        onOpenSettings: {
+                            showingSettings = true
+                        }
                     )
                     
                     // Action Buttons
@@ -1203,6 +1207,9 @@ struct ExportDeployStepView: View {
             }
             .padding(20)
             .background(LCARSTheme.surface)
+        }
+        .sheet(isPresented: $showingSettings) {
+            SettingsView(userSettings: userSettings)
         }
         .fileExporter(
             isPresented: $showingExportPanel,
@@ -1296,26 +1303,57 @@ struct ExportDeployStepView: View {
     }
     
     private func deployToMDM() {
-        guard let account = selectedMDMAccount else { return }
+        guard let selectedAccount = selectedMDMAccount else { return }
         
         isDeploying = true
-        deployStatus = "Connecting to \(account.displayName)..."
+        deployStatus = "Connecting to \(selectedAccount.displayName)..."
         
-        // Simulate deployment process
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-            deployStatus = "Authenticating..."
-        }
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-            deployStatus = "Uploading profile..."
-        }
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-            deployStatus = "Profile deployed successfully!"
-            isDeploying = false
-            
-            // TODO: Implement actual JAMF deployment
-            // This would integrate with the existing JAMFService
+        Task {
+            do {
+                // Generate the profile content
+                let profileContent = generateProfileContent()
+                let profileData = Data(profileContent.utf8)
+                
+                // Create JAMF service instance
+                guard let serverURL = URL(string: selectedAccount.serverURL) else {
+                    await MainActor.run {
+                        deployStatus = "Invalid server URL"
+                        isDeploying = false
+                    }
+                    return
+                }
+                
+                await MainActor.run {
+                    deployStatus = "Authenticating with \(selectedAccount.vendor)..."
+                }
+                
+                // TODO: Implement proper token retrieval/storage
+                // For now, we'll show a message that authentication is needed
+                await MainActor.run {
+                    deployStatus = "Authentication required. Please authenticate in Settings first."
+                    isDeploying = false
+                }
+                
+                // When authentication is properly implemented, this would work:
+                /*
+                let jamfService = JAMFService(baseURL: serverURL, token: token)
+                try await jamfService.uploadOrUpdateProfile(
+                    name: profileSettings.name,
+                    xmlData: profileData
+                )
+                
+                await MainActor.run {
+                    deployStatus = "Profile deployed successfully to \(selectedAccount.displayName)!"
+                    isDeploying = false
+                }
+                */
+                
+            } catch {
+                await MainActor.run {
+                    deployStatus = "Deployment failed: \(error.localizedDescription)"
+                    isDeploying = false
+                }
+            }
         }
     }
 }
@@ -1324,6 +1362,7 @@ struct ExportDeployStepView: View {
 struct MDMConnectionSection: View {
     let userSettings: UserSettings
     @Binding var selectedMDMAccount: MDMAccount?
+    let onOpenSettings: () -> Void
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -1338,7 +1377,7 @@ struct MDMConnectionSection: View {
                         .foregroundStyle(LCARSTheme.textSecondary)
                     
                     Button("Add MDM Account") {
-                        // TODO: Open settings to add MDM account
+                        onOpenSettings()
                     }
                     .buttonStyle(.bordered)
                     .font(.caption)
