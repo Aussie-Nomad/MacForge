@@ -218,11 +218,53 @@ struct SetupStepView: View {
                         .foregroundStyle(LCARSTheme.accent)
                     
                     VStack(alignment: .leading, spacing: 12) {
-                        SettingsRow(label: "Profile Name", value: $profileSettings.name)
-                        SettingsRow(label: "Description", value: $profileSettings.description)
-                        SettingsRow(label: "Identifier", value: $profileSettings.identifier)
-                        SettingsRow(label: "Organization", value: $profileSettings.organization)
-                        SettingsRow(label: "Scope", value: $profileSettings.scope)
+                        SettingsRow(
+                            label: "Profile Name", 
+                            value: $profileSettings.name,
+                            helpText: "The display name for your configuration profile. This will be shown to users and administrators."
+                        )
+                        SettingsRow(
+                            label: "Description", 
+                            value: $profileSettings.description,
+                            helpText: "A detailed description of what this profile does and why it's needed. This helps administrators understand the profile's purpose."
+                        )
+                        SettingsRow(
+                            label: "Identifier", 
+                            value: $profileSettings.identifier,
+                            helpText: "A unique reverse-DNS identifier for your profile (e.g., com.company.profilename). Must be unique across all profiles on the device and cannot contain spaces or special characters.",
+                            isMonospaced: true
+                        )
+                        SettingsRow(
+                            label: "Organization", 
+                            value: $profileSettings.organization,
+                            helpText: "The name of your organization or company. This will be displayed to users and helps identify the source of the profile."
+                        )
+                        
+                        // Scope Picker
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack {
+                                Text("Scope")
+                                    .font(.subheadline)
+                                    .fontWeight(.medium)
+                                    .frame(width: 120, alignment: .leading)
+                                
+                                Button(action: {}) {
+                                    Image(systemName: "info.circle")
+                                        .foregroundStyle(LCARSTheme.accent)
+                                        .font(.caption)
+                                }
+                                .help("System scope applies to all users on the device, while User scope applies only to the current user. Choose based on your deployment needs.")
+                                .buttonStyle(.plain)
+                                
+                                Spacer()
+                            }
+                            
+                            Picker("Scope", selection: $profileSettings.scope) {
+                                Text("System").tag("System")
+                                Text("User").tag("User")
+                            }
+                            .pickerStyle(.segmented)
+                        }
                     }
                 }
                 .padding(20)
@@ -246,19 +288,62 @@ struct SetupStepView: View {
                         .tint(LCARSTheme.accent)
                     }
                     
-                    if uploadedApps.isEmpty {
-                        Text("No applications uploaded yet. Upload apps to configure PPPC and other app-specific settings.")
-                            .font(.body)
-                            .foregroundStyle(LCARSTheme.textSecondary)
-                            .padding(20)
-                            .background(LCARSTheme.surface)
-                            .cornerRadius(8)
-                    } else {
-                        LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 12) {
-                            ForEach(uploadedApps) { app in
-                                AppInfoCard(app: app)
+                    // Drop Zone
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(LCARSTheme.surface.opacity(0.5))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(LCARSTheme.accent.opacity(0.3), style: StrokeStyle(lineWidth: 1, dash: [4]))
+                            )
+                        
+                        if uploadedApps.isEmpty {
+                            VStack(spacing: 12) {
+                                Image(systemName: "arrow.down.doc")
+                                    .font(.title2)
+                                    .foregroundStyle(LCARSTheme.accent)
+                                
+                                Text("Drop .app files here or click Upload Apps")
+                                    .font(.subheadline)
+                                    .foregroundStyle(LCARSTheme.textSecondary)
+                                    .multilineTextAlignment(.center)
+                                
+                                Text("Upload applications to configure PPPC permissions and other app-specific settings")
+                                    .font(.caption)
+                                    .foregroundStyle(LCARSTheme.textMuted)
+                                    .multilineTextAlignment(.center)
                             }
+                            .padding(20)
+                        } else {
+                            VStack(alignment: .leading, spacing: 12) {
+                                HStack {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .foregroundStyle(.green)
+                                    Text("\(uploadedApps.count) Application(s) Uploaded")
+                                        .font(.subheadline)
+                                        .fontWeight(.medium)
+                                    Spacer()
+                                }
+                                
+                                LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 8) {
+                                    ForEach(uploadedApps) { app in
+                                        AppInfoCard(app: app)
+                                            .contextMenu {
+                                                Button("Remove") {
+                                                    uploadedApps.removeAll { $0.id == app.id }
+                                                }
+                                                .foregroundStyle(.red)
+                                            }
+                                    }
+                                }
+                            }
+                            .padding(16)
                         }
+                    }
+                    .frame(minHeight: 120)
+                    .onDrop(of: [.fileURL], isTargeted: nil) { providers in
+                        handleAppDrop(providers)
+                        return true
                     }
                 }
                 .padding(20)
@@ -312,6 +397,50 @@ struct SetupStepView: View {
             }
             .padding(24)
         }
+        .onDrop(of: [.fileURL], isTargeted: nil) { providers in
+            handleAppDrop(providers)
+            return true
+        }
+    }
+    
+    // MARK: - App Drop Handling
+    private func handleAppDrop(_ providers: [NSItemProvider]) {
+        for provider in providers {
+            provider.loadItem(forTypeIdentifier: UTType.fileURL.identifier, options: nil) { item, error in
+                if let data = item as? Data,
+                   let url = URL(dataRepresentation: data, relativeTo: nil) {
+                    DispatchQueue.main.async {
+                        self.handleSelectedApp(url)
+                    }
+                }
+            }
+        }
+    }
+    
+    private func handleSelectedApp(_ url: URL) {
+        // Extract app information
+        let appName = url.deletingPathExtension().lastPathComponent
+        let bundleID = extractBundleID(from: url) ?? "com.unknown.app"
+        
+        let appInfo = AppInfo(name: appName, bundleID: bundleID, path: url.path)
+        
+        // Check if app is already uploaded
+        if !uploadedApps.contains(where: { $0.bundleID == bundleID }) {
+            uploadedApps.append(appInfo)
+        }
+    }
+    
+    private func extractBundleID(from url: URL) -> String? {
+        // Try to extract bundle ID from Info.plist
+        let infoPlistPath = url.appendingPathComponent("Contents/Info.plist")
+        
+        guard let plistData = try? Data(contentsOf: infoPlistPath),
+              let plist = try? PropertyListSerialization.propertyList(from: plistData, options: [], format: nil) as? [String: Any],
+              let bundleID = plist["CFBundleIdentifier"] as? String else {
+            return nil
+        }
+        
+        return bundleID
     }
 }
 
@@ -714,16 +843,40 @@ struct ExportDeployStepView: View {
 struct SettingsRow: View {
     let label: String
     @Binding var value: String
+    let helpText: String?
+    let isMonospaced: Bool
+    
+    init(label: String, value: Binding<String>, helpText: String? = nil, isMonospaced: Bool = false) {
+        self.label = label
+        self._value = value
+        self.helpText = helpText
+        self.isMonospaced = isMonospaced
+    }
     
     var body: some View {
-        HStack {
-            Text(label)
-                .font(.subheadline)
-                .fontWeight(.medium)
-                .frame(width: 120, alignment: .leading)
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Text(label)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .frame(width: 120, alignment: .leading)
+                
+                if let helpText = helpText {
+                    Button(action: {}) {
+                        Image(systemName: "info.circle")
+                            .foregroundStyle(LCARSTheme.accent)
+                            .font(.caption)
+                    }
+                    .help(helpText)
+                    .buttonStyle(.plain)
+                }
+                
+                Spacer()
+            }
             
             TextField(label, text: $value)
                 .textFieldStyle(.roundedBorder)
+                .font(isMonospaced ? .system(.body, design: .monospaced) : .body)
         }
     }
 }
@@ -796,9 +949,19 @@ struct PayloadSelectionCard: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(payload.name)
-                        .font(.headline)
-                        .foregroundStyle(LCARSTheme.textPrimary)
+                    HStack {
+                        Text(payload.name)
+                            .font(.headline)
+                            .foregroundStyle(LCARSTheme.textPrimary)
+                        
+                        Button(action: {}) {
+                            Image(systemName: "info.circle")
+                                .foregroundStyle(LCARSTheme.accent)
+                                .font(.caption)
+                        }
+                        .help(payload.description)
+                        .buttonStyle(.plain)
+                    }
                     
                     Text(payload.category)
                         .font(.caption)
@@ -972,23 +1135,171 @@ struct AppUploadView: View {
     @Binding var uploadedApps: [AppInfo]
     @Environment(\.dismiss) private var dismiss
     
+    @State private var draggedApps: [AppInfo] = []
+    @State private var isDragTargeted = false
+    
     var body: some View {
-        VStack(spacing: 20) {
-            Text("App Upload")
-                .font(.title2)
-                .fontWeight(.bold)
+        VStack(spacing: 24) {
+            // Header
+            HStack {
+                Text("Application Upload")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .foregroundStyle(LCARSTheme.accent)
+                
+                Spacer()
+                
+                Button("Done") {
+                    dismiss()
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(LCARSTheme.accent)
+            }
             
-            Text("App upload interface will be implemented here")
+            // Instructions
+            Text("Drag and drop .app files here to configure PPPC permissions and other app-specific settings. You can also use the file picker below.")
                 .font(.body)
                 .foregroundStyle(LCARSTheme.textSecondary)
+                .multilineTextAlignment(.center)
             
-            Button("Done") {
-                dismiss()
+            // Drop Zone
+            ZStack {
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(isDragTargeted ? LCARSTheme.accent.opacity(0.1) : LCARSTheme.panel.opacity(0.3))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(LCARSTheme.accent, style: StrokeStyle(lineWidth: 2, dash: [5]))
+                    )
+                
+                VStack(spacing: 16) {
+                    if uploadedApps.isEmpty {
+                        Image(systemName: "arrow.down.doc")
+                            .font(.system(size: 48))
+                            .foregroundStyle(LCARSTheme.accent)
+                        
+                        Text("Drop Applications Here")
+                            .font(.headline)
+                            .foregroundStyle(LCARSTheme.textPrimary)
+                        
+                        Text("Drag and drop .app files to configure permissions")
+                            .font(.caption)
+                            .foregroundStyle(LCARSTheme.textSecondary)
+                            .multilineTextAlignment(.center)
+                        
+                        Button("Select Applications") {
+                            selectApplications()
+                        }
+                        .buttonStyle(.bordered)
+                        .tint(LCARSTheme.accent)
+                    } else {
+                        VStack(spacing: 12) {
+                            Image(systemName: "checkmark.circle.fill")
+                                .font(.system(size: 32))
+                                .foregroundStyle(.green)
+                            
+                            Text("\(uploadedApps.count) Application(s) Uploaded")
+                                .font(.headline)
+                                .foregroundStyle(LCARSTheme.textPrimary)
+                            
+                            Button("Add More Apps") {
+                                selectApplications()
+                            }
+                            .buttonStyle(.bordered)
+                            .tint(LCARSTheme.accent)
+                        }
+                    }
+                }
+                .padding(32)
             }
-            .buttonStyle(.borderedProminent)
+            .frame(height: 200)
+            .onDrop(of: [.fileURL], isTargeted: $isDragTargeted) { providers in
+                handleAppDrop(providers)
+                return true
+            }
+            
+            // Uploaded Apps List
+            if !uploadedApps.isEmpty {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Uploaded Applications")
+                        .font(.headline)
+                        .foregroundStyle(LCARSTheme.accent)
+                    
+                    ScrollView {
+                        LazyVStack(spacing: 8) {
+                            ForEach(uploadedApps) { app in
+                                AppInfoCard(app: app)
+                                    .contextMenu {
+                                        Button("Remove") {
+                                            uploadedApps.removeAll { $0.id == app.id }
+                                        }
+                                        .foregroundStyle(.red)
+                                    }
+                            }
+                        }
+                    }
+                    .frame(maxHeight: 200)
+                }
+            }
+            
+            Spacer()
         }
-        .padding(40)
-        .frame(width: 400, height: 300)
+        .padding(24)
+        .frame(width: 500, height: 600)
+        .background(LCARSTheme.background)
+    }
+    
+    // MARK: - App Selection Helpers
+    private func selectApplications() {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.application]
+        panel.allowsMultipleSelection = true
+        panel.canChooseFiles = true
+        panel.canChooseDirectories = false
+        
+        if panel.runModal() == .OK {
+            for url in panel.urls {
+                handleSelectedApp(url)
+            }
+        }
+    }
+    
+    private func handleAppDrop(_ providers: [NSItemProvider]) {
+        for provider in providers {
+            provider.loadItem(forTypeIdentifier: UTType.fileURL.identifier, options: nil) { item, error in
+                if let data = item as? Data,
+                   let url = URL(dataRepresentation: data, relativeTo: nil) {
+                    DispatchQueue.main.async {
+                        self.handleSelectedApp(url)
+                    }
+                }
+            }
+        }
+    }
+    
+    private func handleSelectedApp(_ url: URL) {
+        // Extract app information
+        let appName = url.deletingPathExtension().lastPathComponent
+        let bundleID = extractBundleID(from: url) ?? "com.unknown.app"
+        
+        let appInfo = AppInfo(name: appName, bundleID: bundleID, path: url.path)
+        
+        // Check if app is already uploaded
+        if !uploadedApps.contains(where: { $0.bundleID == bundleID }) {
+            uploadedApps.append(appInfo)
+        }
+    }
+    
+    private func extractBundleID(from url: URL) -> String? {
+        // Try to extract bundle ID from Info.plist
+        let infoPlistPath = url.appendingPathComponent("Contents/Info.plist")
+        
+        guard let plistData = try? Data(contentsOf: infoPlistPath),
+              let plist = try? PropertyListSerialization.propertyList(from: plistData, options: [], format: nil) as? [String: Any],
+              let bundleID = plist["CFBundleIdentifier"] as? String else {
+            return nil
+        }
+        
+        return bundleID
     }
 }
 
