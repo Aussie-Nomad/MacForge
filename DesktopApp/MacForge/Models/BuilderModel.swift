@@ -9,6 +9,24 @@
 import SwiftUI
 import Foundation
 
+// MARK: - JAMF Connection Types
+struct JAMFConnection {
+    let account: MDMAccount
+    let service: JAMFService
+    let token: String
+    
+    var serverURL: String { account.serverURL }
+    var displayName: String { account.displayName }
+    var vendor: String { account.vendor }
+}
+
+enum JAMFConnectionStatus {
+    case disconnected
+    case connecting
+    case connected
+    case failed
+}
+
 // MARK: - Core Data Models
 struct Payload: Identifiable, Hashable, Codable {
     let id: String
@@ -211,6 +229,10 @@ final class BuilderModel: ObservableObject {
     @Published var isAuthenticated = false
     @Published var authenticationError: String?
     @Published var isAuthenticating = false
+    
+    // JAMF Connection state
+    @Published var currentJAMFConnection: JAMFConnection?
+    @Published var jamfConnectionStatus: JAMFConnectionStatus = .disconnected
     
     // MARK: - Initialization
     init(

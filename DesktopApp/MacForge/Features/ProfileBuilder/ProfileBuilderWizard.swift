@@ -634,6 +634,441 @@ struct ConfigureSettingsStepView: View {
     }
 }
 
+// MARK: - Specific Payload Configuration Views
+
+struct PPPCConfigurationView: View {
+    @Binding var configuration: [String: CodableValue]
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Privacy Preferences Policy Control")
+                .font(.headline)
+                .foregroundStyle(LCARSTheme.accent)
+            
+            VStack(alignment: .leading, spacing: 12) {
+                // Bundle Identifier
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Text("Bundle Identifier")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                        
+                        Button(action: {}) {
+                            Image(systemName: "info.circle")
+                                .foregroundStyle(LCARSTheme.accent)
+                                .font(.caption)
+                        }
+                        .help("The bundle identifier of the application that will be granted permissions")
+                        .buttonStyle(.plain)
+                    }
+                    
+                    TextField("com.company.app", text: binding(for: "BundleIdentifier"))
+                        .textFieldStyle(.roundedBorder)
+                        .font(.system(.body, design: .monospaced))
+                }
+                
+                // Code Requirement
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Text("Code Requirement")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                        
+                        Button(action: {}) {
+                            Image(systemName: "info.circle")
+                                .foregroundStyle(LCARSTheme.accent)
+                                .font(.caption)
+                        }
+                        .help("Code signing requirement for the application")
+                        .buttonStyle(.plain)
+                    }
+                    
+                    TextField("designated => ...", text: binding(for: "CodeRequirement"))
+                        .textFieldStyle(.roundedBorder)
+                        .font(.system(.body, design: .monospaced))
+                }
+                
+                // Services
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Privacy Services")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                    
+                    LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 8) {
+                        ForEach(privacyServices, id: \.id) { service in
+                            PrivacyServiceToggle(
+                                service: service,
+                                isEnabled: isServiceEnabled(service.id),
+                                onToggle: { toggleService(service.id) }
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    private func binding(for key: String) -> Binding<String> {
+        Binding(
+            get: { (configuration[key]?.value as? String) ?? "" },
+            set: { configuration[key] = CodableValue($0) }
+        )
+    }
+    
+    private func isServiceEnabled(_ serviceId: String) -> Bool {
+        let services = configuration["Services"]?.value as? [String] ?? []
+        return services.contains(serviceId)
+    }
+    
+    private func toggleService(_ serviceId: String) {
+        var services = configuration["Services"]?.value as? [String] ?? []
+        if services.contains(serviceId) {
+            services.removeAll { $0 == serviceId }
+        } else {
+            services.append(serviceId)
+        }
+        configuration["Services"] = CodableValue(services)
+    }
+    
+    private let privacyServices = [
+        PrivacyService(id: "camera", name: "Camera", description: "Access to camera"),
+        PrivacyService(id: "microphone", name: "Microphone", description: "Access to microphone"),
+        PrivacyService(id: "full-disk-access", name: "Full Disk Access", description: "Access to all files"),
+        PrivacyService(id: "screen-recording", name: "Screen Recording", description: "Record screen content"),
+        PrivacyService(id: "accessibility", name: "Accessibility", description: "Control other applications"),
+        PrivacyService(id: "input-monitoring", name: "Input Monitoring", description: "Monitor keyboard and mouse")
+    ]
+}
+
+struct PrivacyServiceToggle: View {
+    let service: PrivacyService
+    let isEnabled: Bool
+    let onToggle: () -> Void
+    
+    var body: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(service.name)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                
+                Text(service.description)
+                    .font(.caption)
+                    .foregroundStyle(LCARSTheme.textSecondary)
+            }
+            
+            Spacer()
+            
+            Toggle("", isOn: .constant(isEnabled))
+                .onChange(of: isEnabled) { _, _ in onToggle() }
+                .labelsHidden()
+        }
+        .padding(8)
+        .background(LCARSTheme.surface)
+        .cornerRadius(6)
+    }
+}
+
+struct PrivacyService: Identifiable {
+    let id: String
+    let name: String
+    let description: String
+}
+
+struct FileVaultConfigurationView: View {
+    @Binding var configuration: [String: CodableValue]
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("FileVault 2 Encryption")
+                .font(.headline)
+                .foregroundStyle(LCARSTheme.accent)
+            
+            VStack(alignment: .leading, spacing: 12) {
+                // Enable FileVault
+                HStack {
+                    Text("Enable FileVault")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                    
+                    Spacer()
+                    
+                    Toggle("", isOn: binding(for: "EnableFileVault"))
+                        .labelsHidden()
+                }
+                
+                // Recovery Key
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Recovery Key")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                    
+                    TextField("Enter recovery key", text: binding(for: "RecoveryKey"))
+                        .textFieldStyle(.roundedBorder)
+                        .font(.system(.body, design: .monospaced))
+                }
+                
+                // Recovery Key Certificate
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Recovery Key Certificate")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                    
+                    Button("Choose Certificate File") {
+                        // TODO: Implement certificate selection
+                    }
+                    .buttonStyle(.bordered)
+                }
+            }
+        }
+    }
+    
+    private func binding(for key: String) -> Binding<String> {
+        Binding(
+            get: { (configuration[key]?.value as? String) ?? "" },
+            set: { configuration[key] = CodableValue($0) }
+        )
+    }
+    
+    private func binding(for key: String) -> Binding<Bool> {
+        Binding(
+            get: { (configuration[key]?.value as? Bool) ?? false },
+            set: { configuration[key] = CodableValue($0) }
+        )
+    }
+}
+
+struct GatekeeperConfigurationView: View {
+    @Binding var configuration: [String: CodableValue]
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Gatekeeper Security")
+                .font(.headline)
+                .foregroundStyle(LCARSTheme.accent)
+            
+            VStack(alignment: .leading, spacing: 12) {
+                // Allowed Sources
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Allowed Application Sources")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                    
+                    VStack(alignment: .leading, spacing: 6) {
+                        ForEach(applicationSources, id: \.id) { source in
+                            HStack {
+                                RadioButton(
+                                    isSelected: selectedSource == source.id,
+                                    action: { selectedSource = source.id }
+                                )
+                                
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(source.name)
+                                        .font(.subheadline)
+                                    
+                                    Text(source.description)
+                                        .font(.caption)
+                                        .foregroundStyle(LCARSTheme.textSecondary)
+                                }
+                                
+                                Spacer()
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    @State private var selectedSource = "mac-app-store"
+    
+    private let applicationSources = [
+        ApplicationSource(id: "mac-app-store", name: "Mac App Store", description: "Only applications from the Mac App Store"),
+        ApplicationSource(id: "mac-app-store-identified-developers", name: "Mac App Store and Identified Developers", description: "Mac App Store apps and apps from identified developers"),
+        ApplicationSource(id: "anywhere", name: "Anywhere", description: "Allow applications from anywhere (not recommended)")
+    ]
+}
+
+struct ApplicationSource: Identifiable {
+    let id: String
+    let name: String
+    let description: String
+}
+
+struct RadioButton: View {
+    let isSelected: Bool
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: isSelected ? "largecircle.fill.circle" : "circle")
+                .foregroundStyle(isSelected ? LCARSTheme.accent : LCARSTheme.textSecondary)
+                .font(.title3)
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+struct WiFiConfigurationView: View {
+    @Binding var configuration: [String: CodableValue]
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Wi-Fi Configuration")
+                .font(.headline)
+                .foregroundStyle(LCARSTheme.accent)
+            
+            VStack(alignment: .leading, spacing: 12) {
+                // SSID
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Network Name (SSID)")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                    
+                    TextField("Enter network name", text: binding(for: "SSID"))
+                        .textFieldStyle(.roundedBorder)
+                }
+                
+                // Security Type
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Security Type")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                    
+                    Picker("Security", selection: binding(for: "SecurityType")) {
+                        Text("None").tag("None")
+                        Text("WEP").tag("WEP")
+                        Text("WPA/WPA2 Personal").tag("WPA/WPA2 Personal")
+                        Text("WPA/WPA2 Enterprise").tag("WPA/WPA2 Enterprise")
+                        Text("WPA3 Personal").tag("WPA3 Personal")
+                        Text("WPA3 Enterprise").tag("WPA3 Enterprise")
+                    }
+                    .pickerStyle(.menu)
+                }
+                
+                // Password
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Password")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                    
+                    SecureField("Enter password", text: binding(for: "Password"))
+                        .textFieldStyle(.roundedBorder)
+                }
+            }
+        }
+    }
+    
+    private func binding(for key: String) -> Binding<String> {
+        Binding(
+            get: { (configuration[key]?.value as? String) ?? "" },
+            set: { configuration[key] = CodableValue($0) }
+        )
+    }
+}
+
+struct VPNConfigurationView: View {
+    @Binding var configuration: [String: CodableValue]
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("VPN Configuration")
+                .font(.headline)
+                .foregroundStyle(LCARSTheme.accent)
+            
+            VStack(alignment: .leading, spacing: 12) {
+                // VPN Type
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("VPN Type")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                    
+                    Picker("VPN Type", selection: binding(for: "VPNType")) {
+                        Text("IKEv2").tag("IKEv2")
+                        Text("L2TP").tag("L2TP")
+                        Text("PPTP").tag("PPTP")
+                        Text("Cisco IPsec").tag("Cisco IPsec")
+                    }
+                    .pickerStyle(.menu)
+                }
+                
+                // Server Address
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Server Address")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                    
+                    TextField("vpn.company.com", text: binding(for: "ServerAddress"))
+                        .textFieldStyle(.roundedBorder)
+                }
+                
+                // Username
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Username")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                    
+                    TextField("Enter username", text: binding(for: "Username"))
+                        .textFieldStyle(.roundedBorder)
+                }
+                
+                // Password
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Password")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                    
+                    SecureField("Enter password", text: binding(for: "Password"))
+                        .textFieldStyle(.roundedBorder)
+                }
+            }
+        }
+    }
+    
+    private func binding(for key: String) -> Binding<String> {
+        Binding(
+            get: { (configuration[key]?.value as? String) ?? "" },
+            set: { configuration[key] = CodableValue($0) }
+        )
+    }
+}
+
+struct GenericConfigurationView: View {
+    let payload: Payload
+    @Binding var configuration: [String: CodableValue]
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Configuration Options")
+                .font(.headline)
+                .foregroundStyle(LCARSTheme.accent)
+            
+            Text("Detailed configuration options for \(payload.name) will be implemented in future updates.")
+                .font(.body)
+                .foregroundStyle(LCARSTheme.textSecondary)
+            
+            // Basic enable/disable toggle
+            HStack {
+                Text("Enable \(payload.name)")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                
+                Spacer()
+                
+                Toggle("", isOn: binding(for: "Enabled"))
+                    .labelsHidden()
+            }
+        }
+    }
+    
+    private func binding(for key: String) -> Binding<Bool> {
+        Binding(
+            get: { (configuration[key]?.value as? Bool) ?? false },
+            set: { configuration[key] = CodableValue($0) }
+        )
+    }
+}
+
 // MARK: - Export & Deploy Step
 struct ExportDeployStepView: View {
     let profileSettings: ProfileSettings
@@ -1018,8 +1453,11 @@ struct PayloadConfigurationView: View {
     let payload: Payload
     @Binding var configuration: [String: CodableValue]
     
+    @State private var isExpanded = false
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
+            // Header
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(payload.name)
@@ -1029,32 +1467,55 @@ struct PayloadConfigurationView: View {
                     Text(payload.category)
                         .font(.caption)
                         .foregroundStyle(LCARSTheme.accent)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(LCARSTheme.accent.opacity(0.2))
+                        .cornerRadius(4)
                 }
                 
                 Spacer()
                 
-                Button("Configure") {
-                    // Open detailed configuration interface
+                Button(action: { isExpanded.toggle() }) {
+                    Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                        .foregroundStyle(LCARSTheme.accent)
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(LCARSTheme.accent)
+                .buttonStyle(.plain)
             }
             
             Text(payload.description)
                 .font(.body)
                 .foregroundStyle(LCARSTheme.textSecondary)
             
-            // Basic configuration options would go here
-            Text("Configuration options will be available in the detailed view")
-                .font(.caption)
-                .foregroundStyle(LCARSTheme.textMuted)
-                .padding(12)
-                .background(LCARSTheme.surface)
-                .cornerRadius(8)
+            // Configuration Interface
+            if isExpanded {
+                configurationInterface
+            }
         }
         .padding(16)
         .background(LCARSTheme.panel)
         .cornerRadius(12)
+    }
+    
+    @ViewBuilder
+    private var configurationInterface: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Divider()
+            
+            switch payload.id {
+            case "pppc":
+                PPPCConfigurationView(configuration: $configuration)
+            case "filevault":
+                FileVaultConfigurationView(configuration: $configuration)
+            case "gatekeeper":
+                GatekeeperConfigurationView(configuration: $configuration)
+            case "wifi":
+                WiFiConfigurationView(configuration: $configuration)
+            case "vpn":
+                VPNConfigurationView(configuration: $configuration)
+            default:
+                GenericConfigurationView(payload: payload, configuration: $configuration)
+            }
+        }
     }
 }
 
