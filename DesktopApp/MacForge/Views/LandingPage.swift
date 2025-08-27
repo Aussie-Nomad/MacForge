@@ -92,7 +92,7 @@ struct LandingPage: View {
                 .foregroundStyle(.secondary)
             
             // Theme Switcher
-            ThemeSwitcher()
+                            // LCARS Theme Active - No theme switching needed
                 .frame(maxWidth: 400)
         }
     }

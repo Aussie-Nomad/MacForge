@@ -251,19 +251,7 @@ enum AIProviderType: String, CaseIterable, Identifiable {
 
 
 
-extension Text {
-    func lcarsPill() -> some View {
-        self.font(.caption)
-            .fontWeight(.bold)
-            .foregroundStyle(LCARSTheme.accent)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(LCARSTheme.accent.opacity(0.2))
-            )
-    }
-}
+
 
 struct HammeringScriptsHostView: View {
     var model: BuilderModel
@@ -439,116 +427,40 @@ struct DeviceFoundryHostView: View {
     var selectedMDM: MDMVendor?
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                // Header
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack(spacing: 12) {
-                        Image(systemName: "server.rack")
-                            .font(.system(size: 48))
-                            .foregroundStyle(LCARSTheme.accent)
-                        
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Device Foundry")
-                                .font(.system(size: 36, weight: .black, design: .rounded))
-                                .foregroundStyle(LCARSTheme.accent)
-                            Text("Smart & Static Group Creator for devices")
-                                .font(.title2)
-                                .foregroundStyle(LCARSTheme.textSecondary)
-                        }
-                    }
-                }
+        VStack(spacing: 24) {
+            // Header
+            HStack(spacing: 16) {
+                Image(systemName: "server.rack")
+                    .font(.system(size: 48))
+                    .foregroundStyle(LCARSTheme.accent)
                 
-                // Tool Purpose
-                VStack(alignment: .leading, spacing: 16) {
-                    Text("Tool Purpose")
-                        .font(.title2).bold()
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Device Foundry")
+                        .font(.system(size: 32, weight: .black, design: .rounded))
                         .foregroundStyle(LCARSTheme.accent)
-                    
-                    Text("Device Foundry is a comprehensive device management tool that enables you to create, organize, and manage device groups within your MDM system. This tool provides both smart (dynamic) and static grouping capabilities, allowing you to efficiently categorize devices based on various criteria and manage them at scale.")
-                        .font(.body)
+                    Text("Smart & Static Group Creator for devices")
+                        .font(.title2)
                         .foregroundStyle(LCARSTheme.textSecondary)
                 }
+            }
+            
+            // Simple Description
+            VStack(alignment: .leading, spacing: 16) {
+                Text("Tool Purpose")
+                    .font(.title2).bold()
+                    .foregroundStyle(LCARSTheme.accent)
                 
-                // Feature Breakdown
-                LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 16) {
-                    FeatureRow(
-                        icon: "brain.head.profile",
-                        title: "Smart Groups",
-                        description: "Dynamic device grouping based on device properties, user attributes, and real-time conditions"
-                    )
-                    
-                    FeatureRow(
-                        icon: "list.bullet.clipboard",
-                        title: "Static Groups",
-                        description: "Manual device assignment for specific organizational needs and custom workflows"
-                    )
-                    
-                    FeatureRow(
-                        icon: "chart.bar.xaxis",
-                        title: "Device Analytics",
-                        description: "Comprehensive reporting on device distribution, compliance status, and group performance"
-                    )
-                    
-                    FeatureRow(
-                        icon: "arrow.triangle.2.circlepath",
-                        title: "Auto-Refresh",
-                        description: "Automatic group updates based on changing device conditions and user attributes"
-                    )
-                    
-                    FeatureRow(
-                        icon: "network",
-                        title: "MDM Integration",
-                        description: "Seamless integration with JAMF Pro, Microsoft Intune, and other MDM platforms"
-                    )
-                    
-                    FeatureRow(
-                        icon: "gearshape.2",
-                        title: "Policy Assignment",
-                        description: "Direct policy and profile assignment to device groups for streamlined management"
-                    )
-                }
-                
-                // Coming Soon Features
-                VStack(alignment: .leading, spacing: 16) {
-                    Text("Coming Soon")
-                        .font(.title2).bold()
-                        .foregroundStyle(LCARSTheme.primary)
-                    
-                    VStack(alignment: .leading, spacing: 12) {
-                        ComingSoonFeature(
-                            title: "AI-Powered Grouping",
-                            description: "Machine learning algorithms to suggest optimal device groupings based on usage patterns"
-                        )
-                        
-                        ComingSoonFeature(
-                            title: "Advanced Filtering",
-                            description: "Complex filtering rules with AND/OR logic for precise device selection"
-                        )
-                        
-                        ComingSoonFeature(
-                            title: "Group Templates",
-                            description: "Pre-built group configurations for common enterprise scenarios"
-                        )
-                        
-                        ComingSoonFeature(
-                            title: "Bulk Operations",
-                            description: "Mass device operations across multiple groups simultaneously"
-                        )
-                    }
-                }
-                
-                // Status
-                HStack {
-                    StatusBadge(status: .development, text: "In Development")
-                    Spacer()
-                    Text("Estimated Release: Q4 2025")
-                        .font(.caption)
-                        .foregroundStyle(LCARSTheme.textMuted)
-                }
+                Text("Device Foundry enables you to create, organize, and manage device groups within your MDM system. Create both smart (dynamic) and static groups to efficiently categorize devices based on various criteria.")
+                    .font(.body)
+                    .foregroundStyle(LCARSTheme.textSecondary)
             }
             .padding(24)
+            .background(LCARSTheme.panel)
+            .cornerRadius(16)
+            
+            Spacer()
         }
+        .padding(24)
         .background(LCARSTheme.background)
     }
 }
@@ -559,278 +471,44 @@ struct BlueprintBuilderHostView: View {
     var selectedMDM: MDMVendor?
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                // Header
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack(spacing: 12) {
-                        Image(systemName: "doc.text.image")
-                            .font(.system(size: 48))
-                            .foregroundStyle(LCARSTheme.accent)
-                        
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Blueprint Builder")
-                                .font(.system(size: 36, weight: .black, design: .rounded))
-                                .foregroundStyle(LCARSTheme.accent)
-                            Text("Design reusable configuration blueprints")
-                                .font(.title2)
-                                .foregroundStyle(LCARSTheme.textSecondary)
-                        }
-                    }
-                }
+        VStack(spacing: 24) {
+            // Header
+            HStack(spacing: 16) {
+                Image(systemName: "doc.text.image")
+                    .font(.system(size: 48))
+                    .foregroundStyle(LCARSTheme.accent)
                 
-                // Tool Purpose
-                VStack(alignment: .leading, spacing: 16) {
-                    Text("Tool Purpose")
-                        .font(.title2).bold()
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Blueprint Builder")
+                        .font(.system(size: 32, weight: .black, design: .rounded))
                         .foregroundStyle(LCARSTheme.accent)
-                    
-                    Text("Blueprint Builder is a powerful template system that allows you to create, save, and reuse configuration profiles across different environments and use cases. This tool streamlines the profile creation process by providing pre-built templates and allowing you to customize them for specific organizational needs.")
-                        .font(.body)
+                    Text("Design reusable configuration blueprints")
+                        .font(.title2)
                         .foregroundStyle(LCARSTheme.textSecondary)
                 }
+            }
+            
+            // Simple Description
+            VStack(alignment: .leading, spacing: 16) {
+                Text("Tool Purpose")
+                    .font(.title2).bold()
+                    .foregroundStyle(LCARSTheme.accent)
                 
-                // Feature Breakdown
-                LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 16) {
-                    FeatureRow(
-                        icon: "doc.on.doc",
-                        title: "Template Library",
-                        description: "Extensive collection of pre-built configuration templates for common enterprise scenarios"
-                    )
-                    
-                    FeatureRow(
-                        icon: "paintbrush",
-                        title: "Custom Templates",
-                        description: "Create and save your own configuration templates for repeated use"
-                    )
-                    
-                    FeatureRow(
-                        icon: "arrow.triangle.branch",
-                        title: "Template Inheritance",
-                        description: "Build complex templates by combining and extending existing ones"
-                    )
-                    
-                    FeatureRow(
-                        icon: "slider.horizontal.3",
-                        title: "Variable Substitution",
-                        description: "Use placeholders and variables for dynamic configuration generation"
-                    )
-                    
-                    FeatureRow(
-                        icon: "square.and.arrow.up",
-                        title: "Template Sharing",
-                        description: "Export and share templates with team members and other organizations"
-                    )
-                    
-                    FeatureRow(
-                        icon: "checkmark.shield",
-                        title: "Validation Engine",
-                        description: "Built-in validation to ensure templates meet MDM requirements"
-                    )
-                }
-                
-                // Template Categories
-                VStack(alignment: .leading, spacing: 16) {
-                    Text("Template Categories")
-                        .font(.title2).bold()
-                        .foregroundStyle(LCARSTheme.primary)
-                    
-                    LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 3), spacing: 12) {
-                        TemplateCategoryCard(
-                            title: "Security",
-                            description: "Firewall, FileVault, Gatekeeper",
-                            icon: "shield",
-                            color: .red
-                        )
-                        
-                        TemplateCategoryCard(
-                            title: "Network",
-                            description: "Wi-Fi, VPN, Proxy",
-                            icon: "network",
-                            color: .blue
-                        )
-                        
-                        TemplateCategoryCard(
-                            title: "Privacy",
-                            description: "PPPC, TCC, Location",
-                            icon: "lock.shield",
-                            color: .green
-                        )
-                        
-                        TemplateCategoryCard(
-                            title: "Applications",
-                            description: "App restrictions, Updates",
-                            icon: "app.badge",
-                            color: .orange
-                        )
-                        
-                        TemplateCategoryCard(
-                            title: "System",
-                            description: "Login, Energy, Notifications",
-                            icon: "gearshape",
-                            color: .purple
-                        )
-                        
-                        TemplateCategoryCard(
-                            title: "Custom",
-                            description: "User-defined configurations",
-                            icon: "plus.circle",
-                            color: .gray
-                        )
-                    }
-                }
-                
-                // Coming Soon Features
-                VStack(alignment: .leading, spacing: 16) {
-                    Text("Coming Soon")
-                        .font(.title2).bold()
-                        .foregroundStyle(LCARSTheme.primary)
-                    
-                    VStack(alignment: .leading, spacing: 12) {
-                        ComingSoonFeature(
-                            title: "AI Template Suggestions",
-                            description: "Intelligent recommendations for template combinations based on your organization's needs"
-                        )
-                        
-                        ComingSoonFeature(
-                            title: "Version Control",
-                            description: "Track template changes and rollback to previous versions when needed"
-                        )
-                        
-                        ComingSoonFeature(
-                            title: "Template Marketplace",
-                            description: "Community-driven template sharing and rating system"
-                        )
-                        
-                        ComingSoonFeature(
-                            title: "Advanced Variables",
-                            description: "Complex variable types including arrays, objects, and conditional logic"
-                        )
-                    }
-                }
-                
-                // Status
-                HStack {
-                    StatusBadge(status: .planning, text: "In Planning")
-                    Spacer()
-                    Text("Estimated Release: Q1 2026")
-                        .font(.caption)
-                        .foregroundStyle(LCARSTheme.textMuted)
-                }
+                Text("Blueprint Builder is a template system that allows you to create, save, and reuse configuration profiles across different environments. Streamline profile creation with pre-built templates and custom configurations.")
+                    .font(.body)
+                    .foregroundStyle(LCARSTheme.textSecondary)
             }
             .padding(24)
+            .background(LCARSTheme.panel)
+            .cornerRadius(16)
+            
+            Spacer()
         }
+        .padding(24)
         .background(LCARSTheme.background)
     }
 }
 
-// MARK: - Status Badge
-struct StatusBadge: View {
-    let status: StatusType
-    let text: String
-    
-    var body: some View {
-        HStack(spacing: 4) {
-            Circle()
-                .fill(status.color)
-                .frame(width: 8, height: 8)
-            
-            Text(text)
-                .font(.caption)
-                .fontWeight(.medium)
-                .foregroundStyle(status.color)
-        }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
-        .background(status.color.opacity(0.1))
-        .cornerRadius(8)
-        .overlay(
-            RoundedRectangle(cornerRadius: 8)
-                .stroke(status.color.opacity(0.3), lineWidth: 1)
-        )
-    }
-}
 
-enum StatusType: CaseIterable {
-    case development
-    case planning
-    case completed
-    case testing
-    
-    var color: Color {
-        switch self {
-        case .development:
-            return .blue
-        case .planning:
-            return .orange
-        case .completed:
-            return .green
-        case .testing:
-            return .yellow
-        }
-    }
-}
 
-// MARK: - Template Category Card
-struct TemplateCategoryCard: View {
-    let title: String
-    let description: String
-    let icon: String
-    let color: Color
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Image(systemName: icon)
-                    .font(.title2)
-                    .foregroundStyle(color)
-                Spacer()
-            }
-            
-            Text(title)
-                .font(.headline)
-                .foregroundStyle(LCARSTheme.textPrimary)
-            
-            Text(description)
-                .font(.caption)
-                .foregroundStyle(LCARSTheme.textSecondary)
-                .lineLimit(2)
-        }
-        .padding(16)
-        .background(LCARSTheme.panel)
-        .cornerRadius(12)
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(color.opacity(0.3), lineWidth: 1)
-        )
-    }
-}
 
-// MARK: - Coming Soon Feature
-struct ComingSoonFeature: View {
-    let title: String
-    let description: String
-    
-    var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            Image(systemName: "clock.badge")
-                .font(.title3)
-                .foregroundStyle(LCARSTheme.primary)
-                .frame(width: 24)
-            
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title)
-                    .font(.subheadline)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(LCARSTheme.textPrimary)
-                
-                Text(description)
-                    .font(.caption)
-                    .foregroundStyle(LCARSTheme.textSecondary)
-            }
-        }
-        .padding(12)
-        .background(LCARSTheme.panel.opacity(0.5))
-        .cornerRadius(8)
-    }
-}

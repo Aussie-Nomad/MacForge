@@ -1,70 +1,24 @@
 //
-//  ThemeManager.swift
 //  MacForge
 //
-//  Manages theme switching and provides theme-aware colors and constants.
+//  Simplified theme manager that provides LCARS theme colors.
+//  No theme switching - just consistent LCARS styling.
 //
 
 import SwiftUI
 
-// MARK: - Theme Types
-enum ThemeType: String, CaseIterable {
-    case lcars = "LCARS"
-    
-    var displayName: String {
-        switch self {
-        case .lcars:
-            return "Star Trek-Inspired futuristic interface"
-        }
-    }
-}
-
 // MARK: - Theme Manager
 class ThemeManager: ObservableObject {
-    @Published var currentTheme: ThemeType = .lcars
-    
     // MARK: - Theme-Aware Colors
-    var backgroundColor: Color {
-        switch currentTheme {
-        case .lcars:
-            return LCARSTheme.background
-        }
-    }
-    
-    var surfaceColor: Color {
-        switch currentTheme {
-        case .lcars:
-            return LCARSTheme.surface
-        }
-    }
-    
-    var primaryColor: Color {
-        switch currentTheme {
-        case .lcars:
-            return LCARSTheme.primary
-        }
-    }
-    
-    var secondaryColor: Color {
-        switch currentTheme {
-        case .lcars:
-            return LCARSTheme.secondary
-        }
-    }
-    
-    var accentColor: Color {
-        switch currentTheme {
-        case .lcars:
-            return LCARSTheme.accent
-        }
-    }
-    
-    var panelColor: Color {
-        switch currentTheme {
-        case .lcars:
-            return LCARSTheme.panel
-        }
-    }
+    var backgroundColor: Color { LCARSTheme.background }
+    var surfaceColor: Color { LCARSTheme.surface }
+    var primaryColor: Color { LCARSTheme.primary }
+    var secondaryColor: Color { LCARSTheme.secondary }
+    var accentColor: Color { LCARSTheme.accent }
+    var panelColor: Color { LCARSTheme.panel }
+    var textPrimaryColor: Color { LCARSTheme.textPrimary }
+    var textSecondaryColor: Color { LCARSTheme.textSecondary }
+    var textMutedColor: Color { LCARSTheme.textMuted }
 }
 
 // MARK: - Environment Key

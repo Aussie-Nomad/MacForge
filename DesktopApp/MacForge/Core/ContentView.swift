@@ -14,7 +14,7 @@ struct ContentView: View {
     @StateObject private var model = BuilderModel()
 
     // MARK: - Layout
-    private let sidebarWidth: CGFloat = LCARSTheme.Sidebar.width
+    private let sidebarWidth: CGFloat = 240
 
     // MARK: - Detail content
     @ViewBuilder
@@ -50,46 +50,34 @@ struct ContentView: View {
     }
 
     var body: some View {
-        NavigationSplitView(columnVisibility: $columnVisibility) {
-            // LEFT: Global sidebar – stays open after MDM selection.
+        HStack(spacing: 0) {
+            // LEFT: Global sidebar
             GlobalSidebar(
                 selectedMDM: $selectedMDM,
                 onChangeMDM: {
                     selectedMDM  = nil
                     selectedTool = nil
-                    columnVisibility = .all
                 },
                 onSelectTool: { tool in
                     selectedTool = tool
-                    // Sidebar collapses only when a tool is chosen
-                    columnVisibility = .detailOnly
                 }
             )
-            .frame(width: sidebarWidth)
+            .frame(width: 240)
             .background(LCARSTheme.background)
-            .overlay(
-                Rectangle()
-                    .fill(LCARSTheme.primary.opacity(0.1))
-                    .frame(width: 1)
-                    .frame(maxHeight: .infinity, alignment: .trailing)
-            )
 
-        } detail: {
-            // RIGHT: Main canvas with responsive layout
+            // RIGHT: Main content area
             VStack(spacing: 0) {
                 // Top Utility Bar
                 HStack(spacing: 12) {
                     Button("Change MDM") {
                         selectedMDM  = nil
                         selectedTool = nil
-                        columnVisibility = .all
                     }
                     .buttonStyle(.borderedProminent)
                     .contentShape(Rectangle())
 
                     Button("Change Tool") {
                         selectedTool = nil
-                        columnVisibility = .all
                     }
                     .buttonStyle(.bordered)
                     .disabled(selectedTool == nil)
@@ -109,31 +97,10 @@ struct ContentView: View {
                 .background(.ultraThinMaterial)
                 .overlay(Divider(), alignment: .bottom)
 
-                // Main Content with proper scaling
-                ScalableContainer(base: kDesignBase) {
-                    detailContent
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                // Main Content
+                detailContent
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
-        }
-        .navigationSplitViewStyle(.balanced)
-        .navigationSplitViewColumnWidth(min: sidebarWidth, ideal: sidebarWidth, max: sidebarWidth)
-
-        // Modern onChange (macOS 14+ signature). We’re not using the deprecated one.
-        .onChange(of: selectedTool) { _, newValue in
-            if newValue != nil { columnVisibility = .detailOnly }
-        }
-
-        // Global event listeners for app-wide functionality
-        .onReceive(NotificationCenter.default.publisher(for: .jfHomeRequested)) { _ in
-            resetTool()
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .jfChangeMDMRequested)) { _ in
-            resetMDM()
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .jfReportBugRequested)) { _ in
-            // Handle bug reporting - could open email or GitHub issue
-            print("Bug report requested")
         }
     }
 

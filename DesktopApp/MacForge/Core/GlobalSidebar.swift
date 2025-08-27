@@ -15,7 +15,7 @@ struct GlobalSidebar: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: LCARSTheme.Sidebar.sectionGap) {
+            VStack(spacing: 16) {
                 SidebarBrandHeader()
 
                 // MDM section
@@ -65,8 +65,8 @@ struct GlobalSidebar: View {
                                 }
                                 .padding(12)
                                 .background(
-                                    RoundedRectangle(cornerRadius: LCARSTheme.Sidebar.tileCorner)
-                                        .stroke(LCARSTheme.accent, lineWidth: LCARSTheme.Sidebar.tileStroke)
+                                                            RoundedRectangle(cornerRadius: 12)
+                            .stroke(LCARSTheme.accent, lineWidth: 2)
                                 )
                             }
                             .buttonStyle(.plain)
@@ -83,9 +83,9 @@ struct GlobalSidebar: View {
                 }
                 Spacer(minLength: 0)
             }
-            .padding(LCARSTheme.Sidebar.outerPadding)
+            .padding(12)
         }
-        .frame(width: LCARSTheme.Sidebar.width)
+        .frame(width: 240)
         .themeAwareBackground()
     }
 }
