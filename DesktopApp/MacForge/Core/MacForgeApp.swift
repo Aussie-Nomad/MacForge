@@ -71,7 +71,6 @@ struct MacForgeApp: App {
         .windowStyle(.titleBar)
         .windowToolbarStyle(.unifiedCompact)
         .windowResizability(.contentSize)
-        .frame(minWidth: 1000, minHeight: 700)
 
         // Global command menu (posted as notifications)
         .commands {

@@ -22,7 +22,7 @@ struct ProfileBuilderHostView: View {
         HStack(spacing: 0) {
             // Left sidebar
             ProfileSidebar(model: model, onHome: onHome)
-                .frame(width: 260)
+                .frame(width: LcarsTheme.Sidebar.width)
 
             // Center content
             ProfileCenterPane(model: model, viewModel: viewModel, onHome: onHome)

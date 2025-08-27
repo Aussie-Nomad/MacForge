@@ -6,31 +6,64 @@
 //  Provides quick access to common actions and profile management tools.
 
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct ProfileTopToolbar: View {
     var onHome: () -> Void
     var onExport: () -> Void
-    var onSubmit: () -> Void
+    @State private var showingExportPanel = false
 
     var body: some View {
         HStack(spacing: 12) {
-            Button("Back") { onHome() }
+            Button("Home") { onHome() }
                 .buttonStyle(.bordered)
                 .contentShape(Rectangle())
 
             Spacer()
 
-            Button("Download .mobileconfig") { onExport() }
-                .buttonStyle(.bordered)
-                .contentShape(Rectangle())
-
-            Button("Submit to MDM") { onSubmit() }
-                .buttonStyle(.borderedProminent)
-                .contentShape(Rectangle())
+            Button("Download .mobileconfig") { 
+                showingExportPanel = true
+            }
+            .buttonStyle(.bordered)
+            .contentShape(Rectangle())
+            .fileExporter(
+                isPresented: $showingExportPanel,
+                document: ProfileDocument(content: "Profile content will be generated here"),
+                contentType: UTType(filenameExtension: "mobileconfig") ?? .data,
+                defaultFilename: "profile.mobileconfig"
+            ) { result in
+                switch result {
+                case .success(_):
+                    // Trigger the actual export when user chooses location
+                    onExport()
+                case .failure(let error):
+                    print("Export failed: \(error.localizedDescription)")
+                }
+            }
         }
         .contentShape(Rectangle())
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
         .background(.ultraThinMaterial)
+    }
+}
+
+// MARK: - Profile Document for Export
+struct ProfileDocument: FileDocument {
+    static var readableContentTypes: [UTType] { [UTType(filenameExtension: "mobileconfig") ?? .data] }
+    
+    var content: String
+    
+    init(content: String) {
+        self.content = content
+    }
+    
+    init(configuration: ReadConfiguration) throws {
+        content = ""
+    }
+    
+    func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper {
+        let data = Data(content.utf8)
+        return FileWrapper(regularFileWithContents: data)
     }
 }

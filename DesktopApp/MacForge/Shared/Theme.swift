@@ -18,7 +18,7 @@ enum LcarsTheme {
     static let panel  = Color(red: 0.10, green: 0.10, blue: 0.10)
     
     enum Sidebar {
-        static let width: CGFloat = 260
+        static let width: CGFloat = 220
         static let sectionGap: CGFloat = 16
         static let outerPadding: CGFloat = 12
         static let cardCorner: CGFloat = 18

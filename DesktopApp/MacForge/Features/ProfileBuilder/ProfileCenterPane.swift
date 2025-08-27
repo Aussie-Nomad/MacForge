@@ -17,13 +17,12 @@ struct ProfileCenterPane: View {
             // Top toolbar
             ProfileTopToolbar(
                 onHome: onHome,
-                onExport: viewModel.exportProfile,
-                onSubmit: viewModel.submitProfile
+                onExport: viewModel.exportProfile
             )
 
             // Main content area
             if model.wizardMode {
-                WizardModeContent(model: model, viewModel: viewModel)
+                WizardModeContent(model: model, viewModel: viewModel, onHome: onHome)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 ExpertModeContent(model: model, viewModel: viewModel)
@@ -37,6 +36,7 @@ struct ProfileCenterPane: View {
 struct WizardModeContent: View {
     @ObservedObject var model: BuilderModel
     @ObservedObject var viewModel: ProfileBuilderViewModel
+    var onHome: () -> Void
 
     var body: some View {
         VStack(spacing: 0) {
@@ -65,41 +65,59 @@ struct WizardModeContent: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-            // Navigation buttons - always at bottom
-            VStack(spacing: 16) {
-                HStack(spacing: 16) {
-                    Button("Previous") {
-                        viewModel.previousStep()
-                    }
-                    .disabled(!viewModel.canGoToPreviousStep)
-                    .contentShape(Rectangle())
-
-                    Spacer()
-
-                    Button(viewModel.nextButtonTitle) {
+            // Additional action buttons
+            HStack(spacing: 16) {
+                Button("Add PPPC Payload") {
+                    viewModel.addPPPCPayload()
+                }
+                .disabled(!viewModel.hasPPPCPayload)
+                .help("Add a Privacy Preferences Policy Control (PPPC) payload to configure app permissions like Full Disk Access, Accessibility, Input Monitoring, and other system services that require user approval.")
+                .contentShape(Rectangle())
+                
+                Button("Configure Permissions") {
+                    // Auto-advance to step 2 for PPPC configuration
+                    if viewModel.hasPPPCPayload {
                         viewModel.nextStep()
                     }
-                    .disabled(!viewModel.canAdvanceToNextStep)
-                    .contentShape(Rectangle())
                 }
+                .disabled(!viewModel.hasPPPCPayload)
+                .help("Configure the specific permissions and services for the selected application. This allows you to set which system services the app can access.")
+                .contentShape(Rectangle())
+            }
+            .padding(.horizontal, 20)
+            
+            // Navigation buttons - always at bottom
+            HStack(spacing: 20) {
+                // Previous button - bottom left, 3x larger
+                Button("Previous") {
+                    viewModel.previousStep()
+                }
+                .disabled(!viewModel.canGoToPreviousStep)
+                .buttonStyle(.borderedProminent)
+                .tint(.blue)
+                .contentShape(Rectangle())
+                .font(.title2)
+                .frame(height: 60)
+                .frame(maxWidth: .infinity)
                 
-                // Additional action buttons
-                HStack(spacing: 16) {
-                    Button("Add PPPC Payload") {
-                        viewModel.addPPPCPayload()
+                Spacer()
+                
+                // Next/Finish button - bottom right, 3x larger
+                Button(viewModel.nextButtonTitle == "Finish" ? "Submit to MDM" : viewModel.nextButtonTitle) {
+                    if viewModel.nextButtonTitle == "Finish" {
+                        // Submit to MDM instead of just finishing
+                        viewModel.submitProfile()
+                    } else {
+                        viewModel.nextStep()
                     }
-                    .disabled(!viewModel.hasPPPCPayload)
-                    .contentShape(Rectangle())
-                    
-                    Button("Configure Permissions") {
-                        // Auto-advance to step 2 for PPPC configuration
-                        if viewModel.hasPPPCPayload {
-                            viewModel.nextStep()
-                        }
-                    }
-                    .disabled(!viewModel.hasPPPCPayload)
-                    .contentShape(Rectangle())
                 }
+                .disabled(!viewModel.canAdvanceToNextStep)
+                .buttonStyle(.borderedProminent)
+                .tint(viewModel.nextButtonTitle == "Finish" ? .red : .blue)
+                .contentShape(Rectangle())
+                .font(.title2)
+                .frame(height: 60)
+                .frame(maxWidth: .infinity)
             }
             .padding(.horizontal, 20)
             .padding(.bottom, 20)

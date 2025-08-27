@@ -15,13 +15,91 @@ struct Step1Content: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 32) {
-            Text("SELECT PAYLOADS")
+            Text("CREATE PROFILE")
                 .font(.title2)
                 .fontWeight(.bold)
                 .foregroundStyle(LcarsTheme.amber)
 
-            Text("Choose the payloads you want to include in your profile. You can select multiple payloads and configure them in the next steps.")
+            Text("Start by naming your profile and uploading an application to configure PPPC permissions.")
                 .foregroundStyle(.secondary)
+
+            // Profile Settings Section
+            VStack(alignment: .leading, spacing: 20) {
+                Text("PROFILE SETTINGS")
+                    .font(.headline)
+                    .foregroundStyle(LcarsTheme.amber)
+                
+                VStack(alignment: .leading, spacing: 16) {
+                    // Profile Name
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Profile Name")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                        
+                        TextField("Enter profile name", text: $viewModel.profileSettings.name)
+                            .textFieldStyle(.roundedBorder)
+                            .contentShape(Rectangle())
+                    }
+                    
+                    // Profile Description
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Description")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                        
+                        TextField("Enter profile description", text: $viewModel.profileSettings.description)
+                            .textFieldStyle(.roundedBorder)
+                            .contentShape(Rectangle())
+                    }
+                    
+                    // Profile Identifier with explanation
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Text("Identifier")
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                            
+                            Button(action: {
+                                // Show tooltip/popover explaining identifier
+                            }) {
+                                Image(systemName: "info.circle")
+                                    .foregroundStyle(LcarsTheme.amber)
+                            }
+                            .help("The identifier is a unique string that uniquely identifies this profile. It's typically in reverse domain notation (e.g., com.company.profile.name) and must be unique across all profiles on the device.")
+                            .contentShape(Rectangle())
+                        }
+                        
+                        TextField("Enter profile identifier", text: $viewModel.profileSettings.identifier)
+                            .textFieldStyle(.roundedBorder)
+                            .font(.system(.body, design: .monospaced))
+                            .contentShape(Rectangle())
+                        
+                        Text("Format: com.organization.profile.name (must be unique)")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    
+                    // Organization
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Organization")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                        
+                        TextField("Enter organization name", text: $viewModel.profileSettings.organization)
+                            .textFieldStyle(.roundedBorder)
+                            .contentShape(Rectangle())
+                    }
+                }
+                .padding(20)
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(LcarsTheme.panel.opacity(0.3))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(LcarsTheme.amber.opacity(0.5), lineWidth: 1)
+                        )
+                )
+            }
 
             // Application Drop Zone
             VStack(alignment: .leading, spacing: 20) {
@@ -100,16 +178,26 @@ struct Step1Content: View {
             }
 
             // Available payloads grid - responsive columns
-            LazyVGrid(columns: [
-                GridItem(.flexible(), spacing: 16),
-                GridItem(.flexible(), spacing: 16)
-            ], spacing: 16) {
-                ForEach(model.library) { payload in
-                    PayloadSelectionTile(
-                        payload: payload,
-                        isSelected: model.dropped.contains { $0.id == payload.id },
-                        onToggle: { viewModel.togglePayload(payload) }
-                    )
+            VStack(alignment: .leading, spacing: 16) {
+                Text("AVAILABLE PAYLOADS")
+                    .font(.headline)
+                    .foregroundStyle(LcarsTheme.amber)
+                
+                Text("Choose the payloads you want to include in your profile. You can select multiple payloads and configure them in the next steps.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                
+                LazyVGrid(columns: [
+                    GridItem(.flexible(), spacing: 16),
+                    GridItem(.flexible(), spacing: 16)
+                ], spacing: 16) {
+                    ForEach(model.library) { payload in
+                        PayloadSelectionTile(
+                            payload: payload,
+                            isSelected: model.dropped.contains { $0.id == payload.id },
+                            onToggle: { viewModel.togglePayload(payload) }
+                        )
+                    }
                 }
             }
 
@@ -322,10 +410,6 @@ struct PayloadSelectionTile: View {
                     .font(.caption2)
                     .foregroundStyle(isSelected ? .white.opacity(0.8) : .secondary)
                     .lineLimit(3)
-                
-                Text(payload.description)
-                    .font(.caption2)
-                    .foregroundStyle(isSelected ? .white.opacity(0.6) : .secondary)
             }
             .padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -339,6 +423,7 @@ struct PayloadSelectionTile: View {
             )
         }
         .buttonStyle(.plain)
+        .help("\(payload.name): \(payload.description)")
         .contentShape(Rectangle())
     }
 }
@@ -365,6 +450,7 @@ struct PPPCConfigurationView: View {
                 }
                 .buttonStyle(.bordered)
                 .disabled(model.selectedApp == nil)
+                .help("Add a new PPPC service configuration for the selected application. This allows you to configure specific permissions like Full Disk Access, Accessibility, or Input Monitoring.")
                 .contentShape(Rectangle())
             }
             

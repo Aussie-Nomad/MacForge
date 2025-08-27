@@ -16,21 +16,21 @@ struct JamfAuthSheet: View {
     
     var body: some View {
         NavigationView {
-            VStack(spacing: 20) {
+            VStack(spacing: 24) {
                 // Header
-                VStack(spacing: 8) {
+                VStack(spacing: 12) {
                     Text("Connect to JAMF Pro")
-                        .font(.title2)
+                        .font(.title)
                         .fontWeight(.bold)
                     
                     Text("Enter your JAMF Pro server details and credentials to connect")
-                        .font(.caption)
+                        .font(.body)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
                 }
                 
                 // Server URL
-                VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: 12) {
                     Text("Server URL")
                         .font(.headline)
                         .foregroundStyle(.primary)
@@ -38,10 +38,11 @@ struct JamfAuthSheet: View {
                     TextField("https://your-jamf-instance.com", text: $viewModel.serverURL)
                         .textFieldStyle(.roundedBorder)
                         .autocorrectionDisabled()
+                        .frame(height: 40)
                 }
                 
                 // Authentication Mode
-                VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: 12) {
                     Text("Authentication Method")
                         .font(.headline)
                         .foregroundStyle(.primary)
@@ -54,7 +55,7 @@ struct JamfAuthSheet: View {
                     .pickerStyle(.segmented)
                     
                     Text(viewModel.authenticationMode.description)
-                        .font(.caption)
+                        .font(.body)
                         .foregroundStyle(.secondary)
                 }
                 
@@ -67,38 +68,40 @@ struct JamfAuthSheet: View {
                         BasicCredentialsView(viewModel: viewModel)
                     }
                 }
+                .frame(maxWidth: .infinity)
                 
                 // Status and Error
-                VStack(spacing: 8) {
+                VStack(spacing: 12) {
                     // Connection Status
                     HStack {
                         Circle()
                             .fill(viewModel.statusColor)
-                            .frame(width: 8, height: 8)
+                            .frame(width: 12, height: 12)
                         Text(viewModel.statusText)
-                            .font(.caption)
+                            .font(.body)
                             .foregroundStyle(viewModel.statusColor)
                     }
                     
                     // Error Message
                     if let errorMessage = viewModel.errorMessage {
                         Text(errorMessage)
-                            .font(.caption)
+                            .font(.body)
                             .foregroundStyle(.red)
                             .multilineTextAlignment(.center)
-                            .padding(.horizontal, 8)
+                            .padding(.horizontal, 12)
                     }
                 }
                 
                 Spacer()
                 
                 // Action Buttons
-                HStack(spacing: 12) {
+                HStack(spacing: 16) {
                     Button("Cancel") {
                         dismiss()
                     }
                     .buttonStyle(.bordered)
                     .contentShape(Rectangle())
+                    .frame(height: 44)
                     
                     Spacer()
                     
@@ -114,9 +117,11 @@ struct JamfAuthSheet: View {
                     .buttonStyle(.borderedProminent)
                     .disabled(!viewModel.canConnect || viewModel.isConnecting)
                     .contentShape(Rectangle())
+                    .frame(height: 44)
                 }
             }
-            .padding(24)
+            .padding(32)
+            .frame(minWidth: 500, minHeight: 600)
             .navigationTitle("JAMF Authentication")
 
             .toolbar {
@@ -168,8 +173,8 @@ struct OAuthCredentialsView: View {
     @ObservedObject var viewModel: AuthenticationViewModel
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 12) {
                 Text("Client ID")
                     .font(.headline)
                     .foregroundStyle(.primary)
@@ -177,9 +182,10 @@ struct OAuthCredentialsView: View {
                 TextField("Your OAuth client ID", text: $viewModel.oauthClientID)
                     .textFieldStyle(.roundedBorder)
                     .autocorrectionDisabled()
+                    .frame(height: 40)
             }
             
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 12) {
                 Text("Client Secret")
                     .font(.headline)
                     .foregroundStyle(.primary)
@@ -187,6 +193,7 @@ struct OAuthCredentialsView: View {
                 SecureField("Your OAuth client secret", text: $viewModel.oauthClientSecret)
                     .textFieldStyle(.roundedBorder)
                     .autocorrectionDisabled()
+                    .frame(height: 40)
             }
         }
     }
@@ -197,8 +204,8 @@ struct BasicCredentialsView: View {
     @ObservedObject var viewModel: AuthenticationViewModel
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 12) {
                 Text("Username")
                     .font(.headline)
                     .foregroundStyle(.primary)
@@ -206,9 +213,10 @@ struct BasicCredentialsView: View {
                 TextField("Your JAMF username", text: $viewModel.basicUsername)
                     .textFieldStyle(.roundedBorder)
                     .autocorrectionDisabled()
+                    .frame(height: 40)
             }
             
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 12) {
                 Text("Password")
                     .font(.headline)
                     .foregroundStyle(.primary)
@@ -216,6 +224,7 @@ struct BasicCredentialsView: View {
                 SecureField("Your JAMF password", text: $viewModel.basicPassword)
                     .textFieldStyle(.roundedBorder)
                     .autocorrectionDisabled()
+                    .frame(height: 40)
             }
         }
     }

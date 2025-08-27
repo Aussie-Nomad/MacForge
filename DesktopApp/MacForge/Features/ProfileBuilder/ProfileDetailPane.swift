@@ -89,6 +89,7 @@ struct ProfileDetailPane: View {
                 }
                 .buttonStyle(.bordered)
                 .disabled(viewModel.hasPPPCPayload)
+                .help("Add a Privacy Preferences Policy Control (PPPC) payload to configure app permissions like Full Disk Access, Accessibility, Input Monitoring, and other system services that require user approval.")
                 .contentShape(Rectangle())
 
                 Button("Configure Permissions") {
@@ -99,6 +100,7 @@ struct ProfileDetailPane: View {
                 }
                 .buttonStyle(.bordered)
                 .disabled(!viewModel.hasPPPCPayload)
+                .help("Configure the specific permissions and services for the selected application. This allows you to set which system services the app can access.")
                 .contentShape(Rectangle())
             }
         }

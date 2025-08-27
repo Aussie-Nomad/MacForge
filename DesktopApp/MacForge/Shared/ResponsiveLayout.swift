@@ -111,16 +111,13 @@ struct ResponsiveSection<Header: View, Content: View>: View {
 struct ResponsiveButton<Content: View>: View {
     let action: () -> Void
     let content: Content
-    let style: ButtonStyle
     let isEnabled: Bool
     
     init(action: @escaping () -> Void,
          isEnabled: Bool = true,
-         style: ButtonStyle = .bordered,
          @ViewBuilder content: () -> Content) {
         self.action = action
         self.content = content()
-        self.style = style
         self.isEnabled = isEnabled
     }
     
@@ -128,7 +125,7 @@ struct ResponsiveButton<Content: View>: View {
         Button(action: action) {
             content
         }
-        .buttonStyle(style)
+        .buttonStyle(.borderedProminent)
         .disabled(!isEnabled)
         .contentShape(Rectangle())
         .frame(minHeight: ResponsiveLayout.minimumButtonHeight)
