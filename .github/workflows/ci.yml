@@ -1,11 +1,9 @@
 name: Build and Test MacForge
-
 on:
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
-
 jobs:
   build:
     runs-on: macos-latest
@@ -14,27 +12,34 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
     
-    - name: Select Xcode version
-      run: sudo xcode-select -s /Applications/Xcode_15.0.app/Contents/Developer
+    - name: Debug - List project structure
+      run: |
+        echo "Repository structure:"
+        find . -name "*.xcodeproj" -o -name "*.xcworkspace" | head -10
+        echo ""
+        echo "DesktopApp directory contents:"
+        ls -la DesktopApp/ || echo "DesktopApp directory not found"
+    
+    - name: Debug - Check Xcode project details
+      working-directory: DesktopApp
+      run: |
+        echo "Available schemes:"
+        xcodebuild -project MacForge.xcodeproj -list || echo "Failed to list schemes"
+        echo ""
+        echo "Xcode version:"
+        xcodebuild -version
     
     - name: Build project
+      working-directory: DesktopApp
       run: |
-        if [ -f "MacForge.xcodeproj/project.pbxproj" ]; then
-          xcodebuild -project MacForge.xcodeproj -scheme MacForge -destination 'platform=macOS' build
-        elif [ -f "MacForge.xcworkspace/contents.xcworkspacedata" ]; then
-          xcodebuild -workspace MacForge.xcworkspace -scheme MacForge -destination 'platform=macOS' build
-        else
-          echo "No Xcode project or workspace found"
-          exit 1
-        fi
+        echo "Building MacForge project with Debug configuration..."
+        xcodebuild -project MacForge.xcodeproj -scheme MacForge -configuration Debug -destination 'platform=macOS' build
+        echo "Build completed successfully!"
     
-    - name: Run tests (if available)
+    - name: Run tests
+      working-directory: DesktopApp
       run: |
-        if [ -f "MacForge.xcodeproj/project.pbxproj" ]; then
-          xcodebuild -project MacForge.xcodeproj -scheme MacForge -destination 'platform=macOS' test
-        elif [ -f "MacForge.xcworkspace/contents.xcworkspacedata" ]; then
-          xcodebuild -workspace MacForge.xcworkspace -scheme MacForge -destination 'platform=macOS' test
-        else
-          echo "No tests to run"
-        fi
+        echo "Running MacForge tests with Debug configuration..."
+        xcodebuild -project MacForge.xcodeproj -scheme MacForge -configuration Debug -destination 'platform=macOS' test
+        echo "Tests completed successfully!"
       continue-on-error: true
