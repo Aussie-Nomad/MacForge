@@ -85,7 +85,7 @@ struct GlobalSidebar: View {
             }
             .padding(12)
         }
-        .frame(width: 240)
+        .frame(width: 320)
         .themeAwareBackground()
     }
 }

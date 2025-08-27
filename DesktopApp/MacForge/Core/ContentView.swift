@@ -14,7 +14,7 @@ struct ContentView: View {
     @StateObject private var model = BuilderModel()
 
     // MARK: - Layout
-    private let sidebarWidth: CGFloat = 240
+    private let sidebarWidth: CGFloat = 320
 
     // MARK: - Detail content
     @ViewBuilder
@@ -62,7 +62,7 @@ struct ContentView: View {
                     selectedTool = tool
                 }
             )
-            .frame(width: 240)
+            .frame(width: 320)
             .background(LCARSTheme.background)
 
             // RIGHT: Main content area
