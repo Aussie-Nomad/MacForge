@@ -96,11 +96,8 @@ MacForge/
 ├── Features/                       # Feature-specific modules
 │   ├── ProfileBuilder/            # Profile building interface
 │   │   ├── ProfileBuilderHostView.swift
-│   │   ├── ProfileCenterPane.swift
-│   │   ├── ProfileDetailPane.swift
-│   │   ├── ProfileSidebar.swift
-│   │   ├── ProfileTopToolbar.swift
-│   │   └── StepContent.swift
+│   │   ├── ProfileBuilderWizard.swift
+│   │   └── ProfileTopToolbar.swift
 │   ├── PPPC/                      # PPPC editor functionality
 │   │   └── PPPCEditor.swift
 │   └── Tools/                     # Development and debugging tools
@@ -181,6 +178,8 @@ The codebase follows a clear, feature-based organization that makes it easy for 
   - Automatic code requirement extraction using Security framework
   - Support for Bundle ID, Path, and Code Requirement identifier types
   - Visual drop zone with clear feedback
+  - Multiple app upload support with duplicate prevention
+  - Comprehensive app information display
 
 #### Privacy Permissions Management
 - **Supported Services**:
@@ -253,35 +252,71 @@ The codebase follows a clear, feature-based organization that makes it easy for 
 
 ### User Interface Features
 
-#### **Dual Theme System** 🎨
-- **Default Theme**: Clean, modern macOS interface with LCARS-inspired elements
-  - Dark background with amber/orange accents
-  - Rounded panels with subtle shadows
-  - Professional, enterprise-ready appearance
+#### **LCARS Theme System** 🎨
 - **LCARS Theme**: Full Star Trek-inspired futuristic interface
   - Deep blue-black backgrounds with vibrant orange, purple, and blue accents
   - Monospaced fonts and geometric panel designs
   - Interactive elements with hover effects and animations
-- **Theme Switcher**: Easy switching between themes from the landing page
-  - Persistent theme selection across app launches
-  - Smooth transitions between themes
-  - Visual preview of each theme option
+  - Professional, enterprise-ready appearance with sci-fi aesthetics
+- **Theme Consistency**: Unified LCARS design throughout the application
+  - Consistent color palette and typography
+  - Smooth transitions and animations
+  - Optimized for macOS desktop use
 
-#### 3-Step Wizard
-1. **Select App & Configure Profile**
-   - Profile metadata entry
-   - App target selection via drag & drop
-   - Identifier type configuration
+#### 4-Step Profile Builder Wizard
+1. **Setup**
+   - Profile metadata entry with comprehensive help system
+   - App target selection via drag & drop with bundle ID extraction
+   - Template management and creation
+   - Organization and scope configuration
 
-2. **Configure Permissions**
-   - Visual permission grid
-   - Real-time validation
-   - Progress indicators
+2. **Choose Payloads**
+   - Visual payload library with categories
+   - Search and filtering capabilities
+   - Detailed payload descriptions and info bubbles
+   - Platform support indicators
 
-3. **Review & Submit**
-   - Profile summary
-   - Export options
+3. **Configure Settings**
+   - Detailed configuration for each selected payload
+   - Real-time validation and error checking
+   - Advanced settings and options
+
+4. **Export & Deploy**
+   - Profile summary and review
+   - Export to .mobileconfig files
    - Direct MDM submission
+   - Deployment tracking
+
+## 📊 **Current Development Status**
+
+### **✅ Recently Completed (August 2025)**
+- **Profile Builder Wizard**: Complete 4-step workflow implementation
+- **App Upload System**: Full drag & drop with bundle ID extraction
+- **Info Bubble System**: Comprehensive help and guidance throughout
+- **Crash Fixes**: Resolved .mobileconfig export crashes
+- **User Settings**: Comprehensive preferences and MDM account management
+- **Theme Consolidation**: Unified LCARS theme system
+
+### **🚧 Next Phase Development Priorities**
+1. **JAMF Connection Integration**
+   - Integrate with saved MDM accounts from user settings
+   - Implement profile submission to JAMF Pro
+   - Add connection status monitoring
+
+2. **Payload Configuration Interfaces**
+   - Build detailed configuration UI for each payload type
+   - Implement real-time validation and error checking
+   - Add advanced settings and options
+
+3. **Profile Validation System**
+   - Add Apple MDM compliance checking
+   - Implement profile preview and testing
+   - Add validation error reporting
+
+4. **Enhanced Template Management**
+   - Save and reuse common configurations
+   - Template sharing and import/export
+   - Version control for templates
 
 ## 🎯 **Development Guidelines**
 

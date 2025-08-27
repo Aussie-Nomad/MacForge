@@ -12,11 +12,12 @@
 
 MacForge simplifies the creation of macOS configuration profiles, particularly focusing on PPPC profiles that manage app permissions. It provides:
 
-- **🔐 Comprehensive PPPC Management**: 50+ privacy services across 7 categories
+- **🔐 Comprehensive PPPC Management**: Privacy services across multiple categories
 - **🏢 MDM Integration**: Direct submission to JAMF Pro and other MDMs
-- **🎨 Modern UI**: Dual theme system (Default + LCARS Star Trek-inspired)
+- **🎨 Modern UI**: LCARS Star Trek-inspired theme with professional aesthetics
 - **🛠️ Developer Tools**: Package analysis, device management, and automation
 - **📱 Drag & Drop**: Simply drop any .app file for automatic configuration
+- **📚 Guided Wizard**: 4-step profile creation process with comprehensive help
 
 ## 🚀 **Quick Start**
 
@@ -64,11 +65,12 @@ MacForge/
 
 MacForge follows the **MVVM (Model-View-ViewModel)** architecture pattern:
 
-- **Models**: Data structures for PPPC services and configurations
-- **Views**: SwiftUI interfaces with dual theme support
+- **Models**: Data structures for PPPC services, profiles, and configurations
+- **Views**: SwiftUI interfaces with LCARS theme support
 - **ViewModels**: State management and business logic
 - **Services**: MDM integration and profile export
 - **Shared**: Common utilities and theme management
+- **Wizard System**: Guided 4-step profile creation workflow
 
 ## 🧪 **Testing**
 
@@ -91,19 +93,21 @@ xcodebuild test -scheme MacForge -destination 'platform=macOS' -only-testing:Mac
 
 ### **✅ Working Features**
 - Application launch and navigation
-- Profile Builder with PPPC support
-- Application drop zone and bundle ID extraction
+- Profile Builder Wizard with 4-step workflow
+- Application drag & drop with bundle ID extraction
+- Comprehensive info bubbles and help system
 - Template system (Security Baseline, Network, Antivirus)
-- Theme switching (Default + LCARS)
-- Profile export to .mobileconfig
+- LCARS Star Trek-inspired theme
+- Profile export to .mobileconfig (crash-free)
 - JAMF Pro authentication
+- User settings and preferences system
 - Comprehensive testing infrastructure
 
 ### **🚧 In Progress**
-- Detailed PPPC configuration interface
-- Template service configuration
-- Profile validation and preview
-- Complete MDM integration
+- JAMF Connection integration with saved MDM accounts
+- Detailed payload configuration interfaces
+- Profile validation and Apple MDM compliance checking
+- Enhanced template management system
 
 ## 🔗 **Related Projects**
 
