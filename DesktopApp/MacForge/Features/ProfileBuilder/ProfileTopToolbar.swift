@@ -37,22 +37,4 @@ struct ProfileTopToolbar: View {
     }
 }
 
-// MARK: - Profile Document for Export
-struct ProfileDocument: FileDocument {
-    static var readableContentTypes: [UTType] { [UTType(filenameExtension: "mobileconfig") ?? .data] }
-    
-    var content: String
-    
-    init(content: String) {
-        self.content = content
-    }
-    
-    init(configuration: ReadConfiguration) throws {
-        content = ""
-    }
-    
-    func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper {
-        let data = Data(content.utf8)
-        return FileWrapper(regularFileWithContents: data)
-    }
-}
+
