@@ -1,11 +1,9 @@
 name: Build and Test MacForge
-
 on:
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
-
 jobs:
   build:
     runs-on: macos-latest
@@ -14,8 +12,32 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
     
-    - name: Select Xcode version
-      run: sudo xcode-select -s /Applications/Xcode_15.0.app/Contents/Developer
+    - name: List available Xcode versions
+      run: |
+        echo "Available Xcode versions:"
+        ls /Applications/ | grep Xcode || echo "No Xcode installations found"
+        echo "Current Xcode version:"
+        xcode-select -p || echo "No Xcode selected"
+    
+    - name: Select latest Xcode version
+      run: |
+        # Find the latest Xcode version
+        LATEST_XCODE=$(ls /Applications/ | grep "^Xcode" | grep -E "Xcode_[0-9]+\.[0-9]+" | sort -V | tail -n 1)
+        if [ -z "$LATEST_XCODE" ]; then
+          # If no versioned Xcode found, try just "Xcode.app"
+          LATEST_XCODE=$(ls /Applications/ | grep "^Xcode\.app$" | head -n 1)
+        fi
+        
+        if [ -n "$LATEST_XCODE" ]; then
+          echo "Using Xcode: $LATEST_XCODE"
+          sudo xcode-select -s "/Applications/$LATEST_XCODE/Contents/Developer"
+          echo "Xcode version selected:"
+          xcode-select -p
+          xcodebuild -version
+        else
+          echo "No Xcode installation found"
+          exit 1
+        fi
     
     - name: Build project
       run: |
