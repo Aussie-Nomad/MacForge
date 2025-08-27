@@ -32,23 +32,14 @@ jobs:
     - name: Build project
       working-directory: DesktopApp
       run: |
-        # Get the first available scheme
-        SCHEME=$(xcodebuild -project MacForge.xcodeproj -list | grep -A 100 "Schemes:" | grep -v "Schemes:" | head -1 | xargs)
-        if [ -z "$SCHEME" ]; then
-          echo "No schemes found, trying with MacForge scheme"
-          SCHEME="MacForge"
-        fi
-        echo "Using scheme: $SCHEME"
-        xcodebuild -project MacForge.xcodeproj -scheme "$SCHEME" -destination 'platform=macOS' build
+        echo "Building MacForge project with Debug configuration..."
+        xcodebuild -project MacForge.xcodeproj -scheme MacForge -configuration Debug -destination 'platform=macOS' build
+        echo "Build completed successfully!"
     
     - name: Run tests
       working-directory: DesktopApp
       run: |
-        SCHEME=$(xcodebuild -project MacForge.xcodeproj -list | grep -A 100 "Schemes:" | grep -v "Schemes:" | head -1 | xargs)
-        if [ -z "$SCHEME" ]; then
-          echo "No schemes found, trying with MacForge scheme"
-          SCHEME="MacForge"
-        fi
-        echo "Testing scheme: $SCHEME"
-        xcodebuild -project MacForge.xcodeproj -scheme "$SCHEME" -destination 'platform=macOS' test
+        echo "Running MacForge tests with Debug configuration..."
+        xcodebuild -project MacForge.xcodeproj -scheme MacForge -configuration Debug -destination 'platform=macOS' test
+        echo "Tests completed successfully!"
       continue-on-error: true
