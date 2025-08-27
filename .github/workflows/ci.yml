@@ -12,13 +12,43 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
     
+    - name: Debug - List project structure
+      run: |
+        echo "Repository structure:"
+        find . -name "*.xcodeproj" -o -name "*.xcworkspace" | head -10
+        echo ""
+        echo "DesktopApp directory contents:"
+        ls -la DesktopApp/ || echo "DesktopApp directory not found"
+    
+    - name: Debug - Check Xcode project details
+      working-directory: DesktopApp
+      run: |
+        echo "Available schemes:"
+        xcodebuild -project MacForge.xcodeproj -list || echo "Failed to list schemes"
+        echo ""
+        echo "Xcode version:"
+        xcodebuild -version
+    
     - name: Build project
       working-directory: DesktopApp
       run: |
-        xcodebuild -project MacForge.xcodeproj -scheme MacForge -destination 'platform=macOS' build
+        # Get the first available scheme
+        SCHEME=$(xcodebuild -project MacForge.xcodeproj -list | grep -A 100 "Schemes:" | grep -v "Schemes:" | head -1 | xargs)
+        if [ -z "$SCHEME" ]; then
+          echo "No schemes found, trying with MacForge scheme"
+          SCHEME="MacForge"
+        fi
+        echo "Using scheme: $SCHEME"
+        xcodebuild -project MacForge.xcodeproj -scheme "$SCHEME" -destination 'platform=macOS' build
     
     - name: Run tests
       working-directory: DesktopApp
       run: |
-        xcodebuild -project MacForge.xcodeproj -scheme MacForge -destination 'platform=macOS' test
+        SCHEME=$(xcodebuild -project MacForge.xcodeproj -list | grep -A 100 "Schemes:" | grep -v "Schemes:" | head -1 | xargs)
+        if [ -z "$SCHEME" ]; then
+          echo "No schemes found, trying with MacForge scheme"
+          SCHEME="MacForge"
+        fi
+        echo "Testing scheme: $SCHEME"
+        xcodebuild -project MacForge.xcodeproj -scheme "$SCHEME" -destination 'platform=macOS' test
       continue-on-error: true
