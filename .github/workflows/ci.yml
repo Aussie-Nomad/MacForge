@@ -12,53 +12,13 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
     
-    - name: List available Xcode versions
-      run: |
-        echo "Available Xcode versions:"
-        ls /Applications/ | grep Xcode || echo "No Xcode installations found"
-        echo "Current Xcode version:"
-        xcode-select -p || echo "No Xcode selected"
-    
-    - name: Select latest Xcode version
-      run: |
-        # Find the latest Xcode version
-        LATEST_XCODE=$(ls /Applications/ | grep "^Xcode" | grep -E "Xcode_[0-9]+\.[0-9]+" | sort -V | tail -n 1)
-        if [ -z "$LATEST_XCODE" ]; then
-          # If no versioned Xcode found, try just "Xcode.app"
-          LATEST_XCODE=$(ls /Applications/ | grep "^Xcode\.app$" | head -n 1)
-        fi
-        
-        if [ -n "$LATEST_XCODE" ]; then
-          echo "Using Xcode: $LATEST_XCODE"
-          sudo xcode-select -s "/Applications/$LATEST_XCODE/Contents/Developer"
-          echo "Xcode version selected:"
-          xcode-select -p
-          xcodebuild -version
-        else
-          echo "No Xcode installation found"
-          exit 1
-        fi
-    
     - name: Build project
       working-directory: DesktopApp
       run: |
-        if [ -f "MacForge.xcodeproj/project.pbxproj" ]; then
-          xcodebuild -project MacForge.xcodeproj -scheme MacForge -destination 'platform=macOS' build
-        elif [ -f "MacForge.xcworkspace/contents.xcworkspacedata" ]; then
-          xcodebuild -workspace MacForge.xcworkspace -scheme MacForge -destination 'platform=macOS' build
-        else
-          echo "No Xcode project or workspace found"
-          exit 1
-        fi
+        xcodebuild -project MacForge.xcodeproj -scheme MacForge -destination 'platform=macOS' build
     
-    - name: Run tests (if available)
+    - name: Run tests
       working-directory: DesktopApp
       run: |
-        if [ -f "MacForge.xcodeproj/project.pbxproj" ]; then
-          xcodebuild -project MacForge.xcodeproj -scheme MacForge -destination 'platform=macOS' test
-        elif [ -f "MacForge.xcworkspace/contents.xcworkspacedata" ]; then
-          xcodebuild -workspace MacForge.xcworkspace -scheme MacForge -destination 'platform=macOS' test
-        else
-          echo "No tests to run"
-        fi
+        xcodebuild -project MacForge.xcodeproj -scheme MacForge -destination 'platform=macOS' test
       continue-on-error: true
