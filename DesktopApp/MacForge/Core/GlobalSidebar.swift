@@ -15,7 +15,7 @@ struct GlobalSidebar: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: DefaultTheme.Sidebar.sectionGap) {
+            VStack(spacing: LCARSTheme.Sidebar.sectionGap) {
                 SidebarBrandHeader()
 
                 // MDM section
@@ -65,8 +65,8 @@ struct GlobalSidebar: View {
                                 }
                                 .padding(12)
                                 .background(
-                                    RoundedRectangle(cornerRadius: DefaultTheme.Sidebar.tileCorner)
-                                        .stroke(DefaultTheme.amber, lineWidth: DefaultTheme.Sidebar.tileStroke)
+                                    RoundedRectangle(cornerRadius: LCARSTheme.Sidebar.tileCorner)
+                                        .stroke(LCARSTheme.accent, lineWidth: LCARSTheme.Sidebar.tileStroke)
                                 )
                             }
                             .buttonStyle(.plain)
@@ -83,9 +83,9 @@ struct GlobalSidebar: View {
                 }
                 Spacer(minLength: 0)
             }
-            .padding(DefaultTheme.Sidebar.outerPadding)
+            .padding(LCARSTheme.Sidebar.outerPadding)
         }
-        .frame(width: DefaultTheme.Sidebar.width)
+        .frame(width: LCARSTheme.Sidebar.width)
         .themeAwareBackground()
     }
 }
@@ -107,7 +107,7 @@ struct CompactBrandHeader: View {
         .padding(8) // Reduced padding
         .background(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .stroke(DefaultTheme.amber, lineWidth: 2)
+                .stroke(LCARSTheme.accent, lineWidth: 2)
         )
     }
 }
@@ -187,7 +187,7 @@ struct MDMTileButton: View {
                 // Status indicator
                 Image(systemName: "chevron.right")
                     .font(.system(size: 14, weight: .bold))
-                    .foregroundStyle(DefaultTheme.amber)
+                    .foregroundStyle(LCARSTheme.accent)
             }
             .padding(16) // Increased padding for larger buttons
             .contentShape(Rectangle())
@@ -197,10 +197,10 @@ struct MDMTileButton: View {
             RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .fill(
                     LinearGradient(
-                        colors: [
-                            DefaultTheme.orange.opacity(isPressed ? 0.9 : 0.7),
-                            DefaultTheme.orange.opacity(isPressed ? 0.7 : 0.5)
-                        ],
+                                        colors: [
+                    LCARSTheme.primary.opacity(isPressed ? 0.9 : 0.7),
+                    LCARSTheme.primary.opacity(isPressed ? 0.7 : 0.5)
+                ],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
@@ -208,10 +208,10 @@ struct MDMTileButton: View {
         )
         .overlay(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(DefaultTheme.orange, lineWidth: 3)
+                .stroke(LCARSTheme.primary, lineWidth: 3)
         )
         .scaleEffect(isPressed ? 0.98 : 1.0)
-        .shadow(color: DefaultTheme.orange.opacity(0.4), radius: 6)
+        .shadow(color: LCARSTheme.primary.opacity(0.4), radius: 6)
     }
     
     private func displayName(for vendor: MDMVendor) -> String {

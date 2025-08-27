@@ -47,7 +47,7 @@ struct MacForgeApp: App {
         WindowGroup {
             ContentView()
                 .preferredColorScheme(.dark)
-                .environment(\.themeManager, ThemeManager.shared)
+                .environment(\.themeManager, ThemeManager())
 
                 /// Scene phase → broadcast so models can refresh, invalidate tokens, etc.
                 .onChange(of: scenePhase, initial: true) { oldPhase, newPhase in

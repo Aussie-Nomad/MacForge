@@ -198,7 +198,7 @@ struct LandingPage: View {
         HStack {
             Text(title)
                 .font(.system(size: 16, weight: .black, design: .monospaced))
-                .foregroundStyle(themeManager.isLCARSActive ? LCARSTheme.textPrimary : color)
+                .foregroundStyle(LCARSTheme.textPrimary)
             Spacer()
             Circle()
                 .fill(color)
@@ -277,7 +277,7 @@ struct LandingPage: View {
             .padding(20)
             .background(
                 RoundedRectangle(cornerRadius: 16)
-                    .fill(themeManager.isLCARSActive ? LCARSTheme.panel : LcarsTheme.panel)
+                    .fill(LCARSTheme.panel)
                     .shadow(color: color.opacity(0.3), radius: 8)
             )
             .overlay(
@@ -297,8 +297,8 @@ struct AnimatedHeader: View {
     var body: some View {
         Text(title)
             .font(.system(size: 32, weight: .black, design: .monospaced))
-            .foregroundStyle(themeManager.isLCARSActive ? LCARSTheme.primary : LcarsTheme.amber)
-            .shadow(color: (themeManager.isLCARSActive ? LCARSTheme.primary : LcarsTheme.amber).opacity(0.8), radius: isAnimating ? 12 : 4)
+            .foregroundStyle(LCARSTheme.primary)
+            .shadow(color: LCARSTheme.primary.opacity(0.8), radius: isAnimating ? 12 : 4)
             .scaleEffect(isAnimating ? 1.02 : 1.0)
             .animation(.easeInOut(duration: 2.0).repeatForever(autoreverses: true), value: isAnimating)
             .onAppear {
@@ -327,7 +327,7 @@ struct AnimatedBackground: View {
                             path.addLine(to: CGPoint(x: size.width, y: y))
                         }
                     },
-                    with: .color((themeManager.isLCARSActive ? LCARSTheme.primary : LcarsTheme.amber).opacity(0.05)),
+                    with: .color(LCARSTheme.primary.opacity(0.05)),
                     lineWidth: 1
                 )
             }
@@ -339,7 +339,7 @@ struct AnimatedBackground: View {
                         LinearGradient(
                             colors: [
                                 .clear,
-                                (themeManager.isLCARSActive ? LCARSTheme.primary : LcarsTheme.amber).opacity(0.1),
+                                LCARSTheme.primary.opacity(0.1),
                                 .clear
                             ],
                             startPoint: .leading,

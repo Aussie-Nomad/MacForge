@@ -171,12 +171,33 @@ final class ProfileBuilderViewModel: ObservableObject {
     }
     
     private func saveProfileToDownloads(_ data: Data, name: String) {
-        let downloadsPath = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first
-        let fileName = "\(name).mobileconfig"
-        let fileURL = downloadsPath?.appendingPathComponent(fileName)
-        
-        if let fileURL = fileURL {
-            try? data.write(to: fileURL)
+        do {
+            let downloadsPath = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first
+            let fileName = "\(name).mobileconfig"
+            
+            guard let downloadsPath = downloadsPath else {
+                submitError = "Could not access Downloads directory"
+                return
+            }
+            
+            // Ensure the filename is safe
+            let sanitizedFileName = fileName.replacingOccurrences(of: ":", with: "_")
+                .replacingOccurrences(of: "/", with: "_")
+                .replacingOccurrences(of: "\\", with: "_")
+                .replacingOccurrences(of: "?", with: "_")
+                .replacingOccurrences(of: "%", with: "_")
+                .replacingOccurrences(of: "*", with: "_")
+                .replacingOccurrences(of: "|", with: "_")
+                .replacingOccurrences(of: "\"", with: "_")
+                .replacingOccurrences(of: "<", with: "_")
+                .replacingOccurrences(of: ">", with: "_")
+            
+            let safeFileURL = downloadsPath.appendingPathComponent(sanitizedFileName)
+            
+            try data.write(to: safeFileURL)
+            submitError = nil
+        } catch {
+            submitError = "Failed to save profile: \(error.localizedDescription)"
         }
     }
 }

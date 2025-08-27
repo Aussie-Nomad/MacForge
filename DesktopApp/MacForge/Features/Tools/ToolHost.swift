@@ -18,7 +18,7 @@ struct FeatureRow: View {
         HStack(spacing: 12) {
             Image(systemName: icon)
                 .font(.title2)
-                .foregroundStyle(DefaultTheme.amber)
+                .foregroundStyle(LCARSTheme.accent)
                 .frame(width: 24)
             
             VStack(alignment: .leading, spacing: 4) {
@@ -65,7 +65,7 @@ struct PackageSmeltingHostView: View {
             VStack(alignment: .leading, spacing: 16) {
                 Text("Tool Purpose")
                     .font(.title2).bold()
-                    .foregroundStyle(DefaultTheme.amber)
+                    .foregroundStyle(LCARSTheme.accent)
                 
                 Text("Package Smelting is a distribution package manager that allows you to analyze, modify, and deploy macOS packages (.pkg files) to your MDM system. This tool helps you understand package contents, validate compatibility, and streamline deployment workflows.")
                     .font(.body)
@@ -93,7 +93,7 @@ struct PackageSmeltingHostView: View {
                 }
             }
             .padding()
-            .background(DefaultTheme.panel)
+            .background(LCARSTheme.panel)
             .cornerRadius(12)
             
             // Main content with proper scrolling
@@ -166,7 +166,7 @@ struct PackageSmeltingHostView: View {
                             selectPackage()
                         }
                         .onDrop(of: [.fileURL], isTargeted: nil) { providers in
-                            handlePackageDrop(providers)
+                            let _ = handlePackageDrop(providers)
                             return true
                         }
                     }
@@ -202,8 +202,9 @@ struct PackageSmeltingHostView: View {
         panel.allowsMultipleSelection = false
         
         if panel.runModal() == .OK {
-            if let url = panel.url {
-                _ = handlePackageDrop([NSItemProvider()])
+            if let _ = panel.url {
+                let _ = handlePackageDrop([NSItemProvider()])
+                // TODO: Use the selected URL for package analysis
             }
         }
     }

@@ -28,7 +28,7 @@ struct ScalableContainer<Content: View>: View {
                 let scaledSize = CGSize(width: safeBase.width * scale, height: safeBase.height * scale)
                 
                 ZStack {
-                    Color(red: 0.03, green: 0.03, blue: 0.03).ignoresSafeArea()
+                    Color(red: 0.05, green: 0.05, blue: 0.1).ignoresSafeArea()
                     
                     content()
                         .frame(width: safeBase.width, height: safeBase.height)
@@ -41,7 +41,7 @@ struct ScalableContainer<Content: View>: View {
             } else {
                 // Full size approach with proper padding for larger windows
                 ZStack {
-                    Color(red: 0.03, green: 0.03, blue: 0.03).ignoresSafeArea()
+                    Color(red: 0.05, green: 0.05, blue: 0.1).ignoresSafeArea()
                     
                     content()
                         .frame(maxWidth: safeBase.width, maxHeight: safeBase.height)

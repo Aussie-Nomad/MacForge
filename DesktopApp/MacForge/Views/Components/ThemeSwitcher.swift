@@ -2,8 +2,7 @@
 //  ThemeSwitcher.swift
 //  MacForge
 //
-//  Theme switcher component that allows users to toggle between
-//  the default theme and LCARS theme.
+//  Theme switching component for the LCARS interface.
 //
 
 import SwiftUI
@@ -13,21 +12,17 @@ struct ThemeSwitcher: View {
     @State private var showingThemePicker = false
     
     var body: some View {
-        VStack(spacing: 8) {
-            // Current Theme Display
-            HStack(spacing: 12) {
-                Image(systemName: themeManager.currentTheme.icon)
-                    .font(.title2)
-                    .foregroundColor(themeManager.primaryColor)
-                
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(themeManager.currentTheme.displayName)
+        VStack(spacing: 12) {
+            // Theme Display
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("LCARS Theme")
                         .font(.headline)
-                        .foregroundColor(.primary)
+                        .foregroundStyle(LCARSTheme.accent)
                     
-                    Text(themeManager.currentTheme.description)
+                    Text("Star Trek-Inspired futuristic interface")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(LCARSTheme.textSecondary)
                 }
                 
                 Spacer()
@@ -37,41 +32,45 @@ struct ThemeSwitcher: View {
                         showingThemePicker.toggle()
                     }
                 }) {
-                    Image(systemName: "chevron.down")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .rotationEffect(.degrees(showingThemePicker ? 180 : 0))
-                        .animation(.easeInOut(duration: 0.2), value: showingThemePicker)
+                    Image(systemName: "paintbrush")
+                        .font(.title3)
+                        .foregroundStyle(LCARSTheme.accent)
+                        .padding(8)
+                        .background(
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(LCARSTheme.panel)
+                        )
                 }
                 .buttonStyle(.plain)
-                .contentShape(Rectangle())
             }
-            .padding(16)
+            .padding(12)
             .background(
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(themeManager.surfaceColor)
+                    .fill(LCARSTheme.surface)
                     .overlay(
                         RoundedRectangle(cornerRadius: 12)
-                            .stroke(themeManager.primaryColor.opacity(0.3), lineWidth: 1)
+                            .stroke(LCARSTheme.primary.opacity(0.3), lineWidth: 1)
                     )
             )
             
-            // Theme Picker
+            // Theme Info
             if showingThemePicker {
                 VStack(spacing: 8) {
-                    ForEach(AppTheme.allCases) { theme in
-                        ThemeOptionRow(
-                            theme: theme,
-                            isSelected: themeManager.currentTheme == theme,
-                            onSelect: {
-                                withAnimation(.easeInOut(duration: 0.3)) {
-                                    themeManager.switchTheme(to: theme)
-                                    showingThemePicker = false
-                                }
-                            }
-                        )
-                    }
+                    Text("LCARS Theme Active")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundStyle(LCARSTheme.accent)
+                    
+                    Text("The LCARS (Library Computer Access/Retrieval System) theme provides a futuristic, Star Trek-inspired interface with optimized colors and typography for professional MDM management.")
+                        .font(.caption)
+                        .foregroundStyle(LCARSTheme.textSecondary)
+                        .multilineTextAlignment(.center)
                 }
+                .padding(12)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(LCARSTheme.panel.opacity(0.5))
+                )
                 .transition(.asymmetric(
                     insertion: .opacity.combined(with: .move(edge: .top)),
                     removal: .opacity.combined(with: .move(edge: .top))
@@ -81,69 +80,12 @@ struct ThemeSwitcher: View {
     }
 }
 
-// MARK: - Theme Option Row
-struct ThemeOptionRow: View {
-    let theme: AppTheme
-    let isSelected: Bool
-    let onSelect: () -> Void
-    
-    var body: some View {
-        Button(action: onSelect) {
-            HStack(spacing: 12) {
-                Image(systemName: theme.icon)
-                    .font(.title3)
-                    .foregroundColor(isSelected ? .white : .primary)
-                
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(theme.displayName)
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                        .foregroundColor(isSelected ? .white : .primary)
-                    
-                    Text(theme.description)
-                        .font(.caption)
-                        .foregroundColor(isSelected ? .white.opacity(0.8) : .secondary)
-                }
-                
-                Spacer()
-                
-                if isSelected {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.title3)
-                        .foregroundColor(.white)
-                }
-            }
-            .padding(12)
-            .background(
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(isSelected ? 
-                          (theme == .lcars ? LCARSTheme.primary : LcarsTheme.amber) : 
-                          Color.clear)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(
-                        isSelected ? Color.clear : 
-                        (theme == .lcars ? LCARSTheme.primary.opacity(0.3) : LcarsTheme.amber.opacity(0.3)),
-                        lineWidth: 1
-                    )
-            )
-        }
-        .buttonStyle(.plain)
-        .contentShape(Rectangle())
-    }
-}
-
 // MARK: - Preview
 #Preview {
     VStack(spacing: 20) {
         ThemeSwitcher()
             .padding()
-            .background(LcarsTheme.bg)
-        
-        ThemeSwitcher()
-            .padding()
             .background(LCARSTheme.background)
     }
-    .environment(\.themeManager, ThemeManager.shared)
+    .environment(\.themeManager, ThemeManager())
 }
