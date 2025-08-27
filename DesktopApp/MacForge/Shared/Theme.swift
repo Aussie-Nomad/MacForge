@@ -2,20 +2,21 @@
 //  Theme.swift
 //  MacForge
 //
-//  LCARS-inspired color theme and design constants for the MacForge application.
+//  Consolidated theme system for MacForge application.
 //  Provides consistent visual styling across all UI components.
-
+//
 
 import SwiftUI
 #if os(macOS)
 import AppKit
 #endif
 
-enum LcarsTheme {
-    static let bg     = Color(red: 0.03, green: 0.03, blue: 0.03)
-    static let amber    = Color(red: 1.0, green: 0.53, blue: 0.0)
+// MARK: - Default Theme Colors
+struct DefaultTheme {
+    static let bg = Color(red: 0.03, green: 0.03, blue: 0.03)
+    static let amber = Color(red: 1.0, green: 0.53, blue: 0.0)
     static let orange = Color(red: 0.925, green: 0.48, blue: 0.13)
-    static let panel  = Color(red: 0.10, green: 0.10, blue: 0.10)
+    static let panel = Color(red: 0.10, green: 0.10, blue: 0.10)
     
     enum Sidebar {
         static let width: CGFloat = 220
@@ -29,7 +30,7 @@ enum LcarsTheme {
     enum Header {
         static let ringCorner: CGFloat = 18
         static let ringStroke: CGFloat = 2
-        static let titleSize: CGFloat  = 22
+        static let titleSize: CGFloat = 22
     }
     
     enum Welcome {
@@ -38,35 +39,61 @@ enum LcarsTheme {
     }
     
     enum Layout {
-        // Some call-sites expect LcarsTheme.Layout.designBase
         static let designBase = CGSize(width: 1440, height: 900)
-    }
-    
-    // Optional builder version of "panel" used by some legacy call-sites:
-    static func panel<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
-        VStack(alignment: .leading, spacing: 12) { content() }
-            .padding(12)
-            .background(RoundedRectangle(cornerRadius: 18).fill(LcarsTheme.panel))
-            .overlay(RoundedRectangle(cornerRadius: 18).stroke(LcarsTheme.orange, lineWidth: 3))
     }
 }
 
+// MARK: - LCARS Theme Colors
+struct LCARSTheme {
+    // Primary Colors
+    static let primary = Color(red: 0.8, green: 0.4, blue: 0.0)      // Orange
+    static let secondary = Color(red: 0.6, green: 0.2, blue: 0.8)    // Purple
+    static let tertiary = Color(red: 0.2, green: 0.6, blue: 0.8)     // Blue
+    static let accent = Color(red: 0.8, green: 0.8, blue: 0.2)       // Yellow
+    
+    // Background Colors
+    static let background = Color(red: 0.05, green: 0.05, blue: 0.1) // Dark Blue-Black
+    static let surface = Color(red: 0.1, green: 0.1, blue: 0.15)     // Slightly Lighter
+    static let panel = Color(red: 0.15, green: 0.15, blue: 0.2)      // Panel Background
+    
+    // Status Colors
+    static let success = Color(red: 0.2, green: 0.8, blue: 0.4)      // Green
+    static let warning = Color(red: 0.8, green: 0.6, blue: 0.2)      // Amber
+    static let error = Color(red: 0.8, green: 0.2, blue: 0.2)        // Red
+    static let info = Color(red: 0.2, green: 0.6, blue: 0.8)         // Info Blue
+    
+    // Text Colors
+    static let textPrimary = Color.white
+    static let textSecondary = Color(red: 0.8, green: 0.8, blue: 0.8)
+    static let textMuted = Color(red: 0.6, green: 0.6, blue: 0.6)
+}
+
+// MARK: - Legacy Support (for existing code)
+typealias LcarsTheme = DefaultTheme
+
+// MARK: - Theme-Aware Extensions
+extension View {
+    func lcarsPanel(tint: Color = DefaultTheme.orange) -> some View {
+        modifier(LcarsPanel(tint: tint))
+    }
+    
+    func lcarsPill() -> some View { 
+        modifier(LcarsPillModifier()) 
+    }
+}
+
+// MARK: - Panel Modifier
 struct LcarsPanel: ViewModifier {
-    var tint: Color = LcarsTheme.orange
+    var tint: Color = DefaultTheme.orange
     func body(content: Content) -> some View {
         content
             .padding(12)
-            .background(RoundedRectangle(cornerRadius: 18).fill(LcarsTheme.panel))
+            .background(RoundedRectangle(cornerRadius: 18).fill(DefaultTheme.panel))
             .overlay(RoundedRectangle(cornerRadius: 18).stroke(tint, lineWidth: 3))
     }
 }
 
-extension View {
-    func lcarsPanel(tint: Color = LcarsTheme.orange) -> some View {
-        modifier(LcarsPanel(tint: tint))
-    }
-}
-
+// MARK: - Pill Modifier
 private struct LcarsPillModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
@@ -74,46 +101,45 @@ private struct LcarsPillModifier: ViewModifier {
             .padding(.vertical, 6)
             .overlay(
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .stroke(LcarsTheme.amber, lineWidth: 2)
+                    .stroke(DefaultTheme.amber, lineWidth: 2)
             )
     }
 }
 
-extension View {
-    /// Small rounded "pill" stroke used for captions/tags
-    func lcarsPill() -> some View { modifier(LcarsPillModifier()) }
-}
-
+// MARK: - Header Component
 struct LcarsHeader: View {
     let title: String
     var body: some View {
         Text(title.uppercased())
             .font(.system(size: 22, weight: .black, design: .rounded)).kerning(1.2)
-            .foregroundStyle(LcarsTheme.amber)
+            .foregroundStyle(DefaultTheme.amber)
             .padding(.vertical, 8)
             .frame(maxWidth: .infinity)
-            .background(RoundedRectangle(cornerRadius: 20).fill(LcarsTheme.panel))
-            .overlay(RoundedRectangle(cornerRadius: 20).stroke(LcarsTheme.orange, lineWidth: 3))
+            .background(RoundedRectangle(cornerRadius: 20).fill(DefaultTheme.panel))
+            .overlay(RoundedRectangle(cornerRadius: 20).stroke(DefaultTheme.orange, lineWidth: 3))
             .padding(.bottom, 6)
     }
 }
 
+// MARK: - Button Style
 struct LcarsButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.system(.headline, design: .rounded).weight(.black))
             .padding(.vertical, 12).padding(.horizontal, 16)
             .frame(maxWidth: .infinity)
-            .background(RoundedRectangle(cornerRadius: 16).fill(LcarsTheme.amber.opacity(configuration.isPressed ? 0.85 : 1)))
+            .background(RoundedRectangle(cornerRadius: 16).fill(DefaultTheme.amber.opacity(configuration.isPressed ? 0.85 : 1)))
             .foregroundStyle(.black)
             .lineLimit(1)
             .minimumScaleFactor(0.7)
     }
 }
 
+// MARK: - Constants
 let kDesignBase = CGSize(width: 1440, height: 900)
 let kAppMarkAsset = "MACFORGE"
 
+// MARK: - App Mark Component
 @ViewBuilder
 func JamforgeMark(_ size: CGFloat) -> some View {
 #if os(macOS)

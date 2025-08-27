@@ -62,7 +62,7 @@ struct ResponsiveCard<Content: View>: View {
     
     init(padding: CGFloat = ResponsiveLayout.mediumPadding,
          cornerRadius: CGFloat = ResponsiveLayout.mediumCornerRadius,
-         backgroundColor: Color = LcarsTheme.panel.opacity(0.3),
+         backgroundColor: Color = Color(red: 0.10, green: 0.10, blue: 0.10).opacity(0.3),
          @ViewBuilder content: () -> Content) {
         self.padding = padding
         self.cornerRadius = cornerRadius
@@ -79,7 +79,7 @@ struct ResponsiveCard<Content: View>: View {
             )
             .overlay(
                 RoundedRectangle(cornerRadius: cornerRadius)
-                    .stroke(LcarsTheme.orange.opacity(0.3), lineWidth: 1)
+                    .stroke(Color(red: 0.925, green: 0.48, blue: 0.13).opacity(0.3), lineWidth: 1)
             )
     }
 }
@@ -216,5 +216,5 @@ extension View {
         }
     }
     .padding()
-    .background(LcarsTheme.bg)
+    .background(Color(red: 0.10, green: 0.10, blue: 0.10))
 }

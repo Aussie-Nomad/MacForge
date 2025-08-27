@@ -14,7 +14,7 @@ struct ContentView: View {
     @StateObject private var model = BuilderModel()
 
     // MARK: - Layout
-    private let sidebarWidth: CGFloat = LcarsTheme.Sidebar.width
+    private let sidebarWidth: CGFloat = DefaultTheme.Sidebar.width
 
     // MARK: - Detail content
     @ViewBuilder

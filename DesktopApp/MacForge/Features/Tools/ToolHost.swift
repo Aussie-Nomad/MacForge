@@ -8,6 +8,35 @@
 import SwiftUI
 import UniformTypeIdentifiers
 
+// MARK: - Feature Row Component
+struct FeatureRow: View {
+    let icon: String
+    let title: String
+    let description: String
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: icon)
+                .font(.title2)
+                .foregroundStyle(DefaultTheme.amber)
+                .frame(width: 24)
+            
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(.headline)
+                    .foregroundStyle(.primary)
+                
+                Text(description)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            
+            Spacer()
+        }
+        .padding(.vertical, 8)
+    }
+}
+
 // MARK: - Package Smelting
 struct PackageSmeltingHostView: View {
     var model: BuilderModel
@@ -31,6 +60,41 @@ struct PackageSmeltingHostView: View {
                         .foregroundStyle(.secondary)
                 }
             }
+            
+            // Tool Purpose
+            VStack(alignment: .leading, spacing: 16) {
+                Text("Tool Purpose")
+                    .font(.title2).bold()
+                    .foregroundStyle(DefaultTheme.amber)
+                
+                Text("Package Smelting is a distribution package manager that allows you to analyze, modify, and deploy macOS packages (.pkg files) to your MDM system. This tool helps you understand package contents, validate compatibility, and streamline deployment workflows.")
+                    .font(.body)
+                    .foregroundStyle(.secondary)
+                
+                // Feature Rows
+                VStack(spacing: 12) {
+                    FeatureRow(
+                        icon: "doc.text.magnifyingglass",
+                        title: "Package Analysis",
+                        description: "Deep inspection of package contents, dependencies, and metadata"
+                    )
+                    
+                    FeatureRow(
+                        icon: "arrow.up.doc",
+                        title: "MDM Integration",
+                        description: "Direct upload and deployment to connected MDM systems"
+                    )
+                    
+                    FeatureRow(
+                        icon: "gearshape.2",
+                        title: "Package Modification",
+                        description: "Edit package properties and customize installation behavior"
+                    )
+                }
+            }
+            .padding()
+            .background(DefaultTheme.panel)
+            .cornerRadius(12)
             
             // Main content with proper scrolling
             ScrollView {
@@ -75,7 +139,7 @@ struct PackageSmeltingHostView: View {
                             .contentShape(Rectangle())
                         }
                         .padding()
-                        .background(LcarsTheme.panel)
+                        .background(DefaultTheme.panel)
                         .cornerRadius(12)
                         
                     } else {
@@ -83,7 +147,7 @@ struct PackageSmeltingHostView: View {
                         VStack(spacing: 12) {
                             Image(systemName: "arrow.down.circle")
                                 .font(.system(size: 48))
-                                .foregroundStyle(LcarsTheme.amber)
+                                .foregroundStyle(DefaultTheme.amber)
                             
                             Text("Drop a .pkg file here")
                                 .font(.headline)
@@ -95,8 +159,8 @@ struct PackageSmeltingHostView: View {
                         .frame(maxWidth: .infinity, minHeight: 200)
                         .background(
                             RoundedRectangle(cornerRadius: 16)
-                                .stroke(LcarsTheme.amber, style: StrokeStyle(lineWidth: 2, dash: [5]))
-                                .fill(LcarsTheme.panel.opacity(0.3))
+                                .stroke(DefaultTheme.amber, style: StrokeStyle(lineWidth: 2, dash: [5]))
+                                .fill(DefaultTheme.panel.opacity(0.3))
                         )
                         .onTapGesture {
                             selectPackage()
@@ -129,7 +193,7 @@ struct PackageSmeltingHostView: View {
             Spacer()
         }
         .padding(24)
-        .background(LcarsTheme.bg)
+        .background(DefaultTheme.bg)
     }
     
     private func selectPackage() {
@@ -190,12 +254,12 @@ extension Text {
     func lcarsPill() -> some View {
         self.font(.caption)
             .fontWeight(.bold)
-            .foregroundStyle(LcarsTheme.amber)
+            .foregroundStyle(DefaultTheme.amber)
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
             .background(
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(LcarsTheme.amber.opacity(0.2))
+                    .fill(DefaultTheme.amber.opacity(0.2))
             )
     }
 }
@@ -211,7 +275,7 @@ struct HammeringScriptsHostView: View {
             ScriptBuilderMainView(vm: vm)
         }
         .padding(24)
-        .background(LcarsTheme.bg)
+        .background(DefaultTheme.bg)
     }
 }
 
@@ -251,7 +315,7 @@ struct ScriptBuilderSettingsView: View {
         }
         .frame(width: 340)
         .padding(16)
-        .background(LcarsTheme.panel)
+        .background(DefaultTheme.panel)
         .clipShape(RoundedRectangle(cornerRadius: 14))
     }
 }
@@ -265,7 +329,7 @@ struct ScriptBuilderMainView: View {
             TextEditor(text: $vm.prompt)
                 .font(.system(.body, design: .monospaced))
                 .frame(minHeight: 120)
-                .overlay(RoundedRectangle(cornerRadius: 8).stroke(LcarsTheme.orange, lineWidth: 1))
+                .overlay(RoundedRectangle(cornerRadius: 8).stroke(DefaultTheme.orange, lineWidth: 1))
 
             ScriptBuilderButtonsView(vm: vm)
 
@@ -275,7 +339,7 @@ struct ScriptBuilderMainView: View {
             TextEditor(text: $vm.script)
                 .font(.system(.body, design: .monospaced))
                 .frame(minHeight: 260)
-                .overlay(RoundedRectangle(cornerRadius: 8).stroke(LcarsTheme.orange, lineWidth: 1))
+                .overlay(RoundedRectangle(cornerRadius: 8).stroke(DefaultTheme.orange, lineWidth: 1))
 
             ScriptBuilderActionButtonsView(vm: vm)
         }
@@ -382,7 +446,7 @@ struct DeviceFoundryHostView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .padding(24)
-        .background(LcarsTheme.bg)
+        .background(DefaultTheme.bg)
     }
 }
 
@@ -400,6 +464,6 @@ struct BlueprintBuilderHostView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .padding(24)
-        .background(LcarsTheme.bg)
+        .background(DefaultTheme.bg)
     }
 }

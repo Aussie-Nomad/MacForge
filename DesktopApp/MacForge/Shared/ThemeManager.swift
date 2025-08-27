@@ -52,7 +52,7 @@ final class ThemeManager: ObservableObject {
     var backgroundColor: Color {
         switch currentTheme {
         case .default:
-            return LcarsTheme.bg
+            return DefaultTheme.bg
         case .lcars:
             return LCARSTheme.background
         }
@@ -61,7 +61,7 @@ final class ThemeManager: ObservableObject {
     var surfaceColor: Color {
         switch currentTheme {
         case .default:
-            return LcarsTheme.panel
+            return DefaultTheme.panel
         case .lcars:
             return LCARSTheme.surface
         }
@@ -70,7 +70,7 @@ final class ThemeManager: ObservableObject {
     var primaryColor: Color {
         switch currentTheme {
         case .default:
-            return LcarsTheme.amber
+            return DefaultTheme.amber
         case .lcars:
             return LCARSTheme.primary
         }
@@ -79,7 +79,7 @@ final class ThemeManager: ObservableObject {
     var secondaryColor: Color {
         switch currentTheme {
         case .default:
-            return LcarsTheme.orange
+            return DefaultTheme.orange
         case .lcars:
             return LCARSTheme.secondary
         }
@@ -88,9 +88,18 @@ final class ThemeManager: ObservableObject {
     var accentColor: Color {
         switch currentTheme {
         case .default:
-            return LcarsTheme.amber
+            return DefaultTheme.amber
         case .lcars:
             return LCARSTheme.accent
+        }
+    }
+    
+    var panelColor: Color {
+        switch currentTheme {
+        case .default:
+            return DefaultTheme.panel
+        case .lcars:
+            return LCARSTheme.panel
         }
     }
 }
