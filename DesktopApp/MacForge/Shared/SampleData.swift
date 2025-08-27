@@ -17,29 +17,29 @@ let pppcServiceCatalog: [String] = [
 // MARK: - Comprehensive PPPC Services
 let pppcServices: [PPPCService] = [
     // System Services
-    PPPCService(id: "SystemPolicyAllFiles", name: "System Policy All Files", description: "Full disk access for system-wide file operations", category: .systemPolicy, requiresBundleID: true, requiresCodeRequirement: false, requiresIdentifier: true),
-    PPPCService(id: "SystemPolicyDownloadsFolder", name: "System Policy Downloads Folder", description: "Access to Downloads folder", category: .systemPolicy, requiresBundleID: true, requiresCodeRequirement: false, requiresIdentifier: true),
-    PPPCService(id: "SystemPolicyDesktopFolder", name: "System Policy Desktop Folder", description: "Access to Desktop folder", category: .systemPolicy, requiresBundleID: true, requiresCodeRequirement: false, requiresIdentifier: true),
-    PPPCService(id: "SystemPolicyDocumentsFolder", name: "System Policy Documents Folder", description: "Access to Documents folder", category: .systemPolicy, requiresBundleID: true, requiresCodeRequirement: false, requiresIdentifier: true),
+    PPPCService(id: "SystemPolicyAllFiles", name: "Full Disk Access", description: "Allows the app to access all files on your Mac - commonly needed for security tools, backup apps, and file managers", category: .systemPolicy, requiresBundleID: true, requiresCodeRequirement: false, requiresIdentifier: true),
+    PPPCService(id: "SystemPolicyDownloadsFolder", name: "Downloads Folder Access", description: "Lets the app read and write files in your Downloads folder - useful for apps that download or process files", category: .systemPolicy, requiresBundleID: true, requiresCodeRequirement: false, requiresIdentifier: true),
+    PPPCService(id: "SystemPolicyDesktopFolder", name: "Desktop Folder Access", description: "Allows the app to access files on your Desktop - helpful for apps that need to work with desktop files", category: .systemPolicy, requiresBundleID: true, requiresCodeRequirement: false, requiresIdentifier: true),
+    PPPCService(id: "SystemPolicyDocumentsFolder", name: "Documents Folder Access", description: "Gives the app access to your Documents folder - needed for document editors and file organizers", category: .systemPolicy, requiresBundleID: true, requiresCodeRequirement: false, requiresIdentifier: true),
     
     // Accessibility Services
-    PPPCService(id: "Accessibility", name: "Accessibility", description: "Control other applications and system features", category: .accessibility, requiresBundleID: true, requiresCodeRequirement: false, requiresIdentifier: true),
-    PPPCService(id: "InputMonitoring", name: "Input Monitoring", description: "Monitor user input from keyboards and mice", category: .inputMonitoring, requiresBundleID: true, requiresCodeRequirement: false, requiresIdentifier: true),
+    PPPCService(id: "Accessibility", name: "Accessibility Control", description: "Allows the app to control other apps and system features - essential for automation tools, screen readers, and accessibility apps", category: .accessibility, requiresBundleID: true, requiresCodeRequirement: false, requiresIdentifier: true),
+    PPPCService(id: "InputMonitoring", name: "Input Monitoring", description: "Lets the app see what you type and click - needed for password managers, automation tools, and security software", category: .inputMonitoring, requiresBundleID: true, requiresCodeRequirement: false, requiresIdentifier: true),
     
     // Media Services
-    PPPCService(id: "Camera", name: "Camera", description: "Access to camera hardware", category: .media, requiresBundleID: true, requiresCodeRequirement: false, requiresIdentifier: true),
-    PPPCService(id: "Microphone", name: "Microphone", description: "Access to microphone hardware", category: .media, requiresBundleID: true, requiresCodeRequirement: false, requiresIdentifier: true),
-    PPPCService(id: "ScreenCapture", name: "Screen Capture", description: "Capture screen content and record screen", category: .media, requiresBundleID: true, requiresCodeRequirement: false, requiresIdentifier: true),
+    PPPCService(id: "Camera", name: "Camera Access", description: "Allows the app to use your Mac's camera - needed for video chat apps, photo apps, and security cameras", category: .media, requiresBundleID: true, requiresCodeRequirement: false, requiresIdentifier: true),
+    PPPCService(id: "Microphone", name: "Microphone Access", description: "Lets the app record audio from your microphone - required for voice chat, recording apps, and speech recognition", category: .media, requiresBundleID: true, requiresCodeRequirement: false, requiresIdentifier: true),
+    PPPCService(id: "ScreenCapture", name: "Screen Recording", description: "Allows the app to record your screen or take screenshots - needed for tutorials, presentations, and security monitoring", category: .media, requiresBundleID: true, requiresCodeRequirement: false, requiresIdentifier: true),
     
     // Automation Services
-    PPPCService(id: "AppleEvents", name: "Apple Events", description: "Send Apple Events to other applications", category: .automation, requiresBundleID: true, requiresCodeRequirement: false, requiresIdentifier: true),
+    PPPCService(id: "AppleEvents", name: "Apple Events", description: "Lets the app control other applications - essential for automation tools, workflow apps, and productivity software", category: .automation, requiresBundleID: true, requiresCodeRequirement: false, requiresIdentifier: true),
     
     // Network Services
-    PPPCService(id: "NetworkExtension", name: "Network Extension", description: "Configure network settings and VPN", category: .network, requiresBundleID: true, requiresCodeRequirement: false, requiresIdentifier: true),
+    PPPCService(id: "NetworkExtension", name: "Network Configuration", description: "Allows the app to configure network settings and VPN connections - needed for network management tools and VPN apps", category: .network, requiresBundleID: true, requiresCodeRequirement: false, requiresIdentifier: true),
     
     // Additional System Services
-    PPPCService(id: "SystemPolicyRemovableVolumes", name: "System Policy Removable Volumes", description: "Access to removable storage devices", category: .systemPolicy, requiresBundleID: true, requiresCodeRequirement: false, requiresIdentifier: true),
-    PPPCService(id: "SystemPolicySysAdminFiles", name: "System Policy SysAdmin Files", description: "Access to system administration files", category: .systemPolicy, requiresBundleID: true, requiresCodeRequirement: false, requiresIdentifier: true)
+    PPPCService(id: "SystemPolicyRemovableVolumes", name: "Removable Drive Access", description: "Lets the app access USB drives, SD cards, and other removable storage - useful for backup tools and file managers", category: .systemPolicy, requiresBundleID: true, requiresCodeRequirement: false, requiresIdentifier: true),
+    PPPCService(id: "SystemPolicySysAdminFiles", name: "System Files Access", description: "Allows the app to access system administration files - needed for system utilities and development tools", category: .systemPolicy, requiresBundleID: true, requiresCodeRequirement: false, requiresIdentifier: true)
 ]
 
 let allPayloadsLibrary: [Payload] = [
@@ -53,9 +53,12 @@ let allPayloadsLibrary: [Payload] = [
 ]
 
 let templatesLibrary: [TemplateProfile] = [
-    .init(name: "Security Baseline", description: "Essential security settings", payloadIDs: ["restrictions","firewall","filevault2","pppc"]),
-    .init(name: "Network", description: "Wi-Fi + VPN", payloadIDs: ["wifi","vpn"]),
-    .init(name: "Antivirus Setup", description: "EDR-friendly PPPC", payloadIDs: ["pppc"])
+    .init(name: "Security Baseline", description: "Essential security settings for enterprise devices", payloadIDs: ["restrictions","firewall","filevault2","pppc"]),
+    .init(name: "Network Configuration", description: "Wi-Fi and VPN settings for network management", payloadIDs: ["wifi","vpn"]),
+    .init(name: "Antivirus & EDR", description: "Security tool permissions with PPPC configuration", payloadIDs: ["pppc"]),
+    .init(name: "Development Tools", description: "Developer-friendly permissions for coding apps", payloadIDs: ["pppc"]),
+    .init(name: "Media & Communication", description: "Camera, microphone, and screen sharing permissions", payloadIDs: ["pppc"]),
+    .init(name: "File Management", description: "Full disk access and folder permissions", payloadIDs: ["pppc"])
 ]
 
 let categories: [String] = ["All","Network","Security","User Experience","Applications","Accounts","Certificates"]

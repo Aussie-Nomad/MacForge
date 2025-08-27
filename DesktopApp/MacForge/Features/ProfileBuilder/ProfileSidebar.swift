@@ -23,17 +23,28 @@ struct ProfileSidebar: View {
                         Text("MODE").lcarsPill()
                         Spacer()
                         Toggle(isOn: $model.wizardMode) {
-                            Text(model.wizardMode ? "Wizard" : "Expert")
+                            Text(model.wizardMode ? "Simple" : "Advanced")
                                 .font(.caption)
                         }
                         .toggleStyle(.switch)
                         .labelsHidden()
                     }
                     
+                    // Current mode indicator
+                    HStack(spacing: 6) {
+                        Circle()
+                            .fill(model.wizardMode ? .green : LcarsTheme.amber)
+                            .frame(width: 8, height: 8)
+                        Text(model.wizardMode ? "Simple Mode Active" : "Advanced Mode Active")
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .foregroundStyle(model.wizardMode ? .green : LcarsTheme.amber)
+                    }
+                    
                     // Mode explanation
                     Text(model.wizardMode ? 
-                        "Wizard Mode: Step-by-step guided profile creation with templates and validation" :
-                        "Expert Mode: Advanced configuration with direct payload editing and custom settings"
+                        "Simple Mode: Guided step-by-step profile creation with templates and validation" :
+                        "Advanced Mode: Direct configuration with full control over all settings and payloads"
                     )
                     .font(.caption2)
                     .foregroundStyle(.secondary)

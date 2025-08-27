@@ -22,28 +22,51 @@ struct ProfileCenterPane: View {
 
             // Main content area
             if model.wizardMode {
-                WizardModeContent(model: model, viewModel: viewModel, onHome: onHome)
+                SimpleModeContent(model: model, viewModel: viewModel, onHome: onHome)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-                ExpertModeContent(model: model, viewModel: viewModel)
+                AdvancedModeContent(model: model, viewModel: viewModel)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
     }
 }
 
-// MARK: - Wizard Mode Content
-struct WizardModeContent: View {
+// MARK: - Simple Mode Content
+struct SimpleModeContent: View {
     @ObservedObject var model: BuilderModel
     @ObservedObject var viewModel: ProfileBuilderViewModel
     var onHome: () -> Void
 
     var body: some View {
         VStack(spacing: 0) {
-            // Step indicator
-            WizardHeader(step: viewModel.currentStep)
-                .padding(.top, 20)
-                .padding(.horizontal, 20)
+            // Step indicator with workflow progression
+            VStack(spacing: 12) {
+                WizardHeader(step: viewModel.currentStep)
+                
+                // Workflow breadcrumbs
+                HStack(spacing: 16) {
+                    ForEach(1...3, id: \.self) { step in
+                        HStack(spacing: 6) {
+                            Circle()
+                                .fill(step <= viewModel.currentStep ? LcarsTheme.amber : .secondary.opacity(0.3))
+                                .frame(width: 12, height: 12)
+                            Text(stepTitle(for: step))
+                                .font(.caption)
+                                .foregroundStyle(step <= viewModel.currentStep ? LcarsTheme.amber : .secondary)
+                        }
+                        .opacity(step == viewModel.currentStep ? 1.0 : 0.6)
+                        
+                        if step < 3 {
+                            Rectangle()
+                                .fill(.secondary.opacity(0.3))
+                                .frame(width: 20, height: 1)
+                        }
+                    }
+                }
+            }
+            .padding(.top, 20)
+            .padding(.horizontal, 20)
 
             // Step content with proper scrolling
             ScrollView {
@@ -73,6 +96,12 @@ struct WizardModeContent: View {
                 .disabled(!viewModel.hasPPPCPayload)
                 .help("Add a Privacy Preferences Policy Control (PPPC) payload to configure app permissions like Full Disk Access, Accessibility, Input Monitoring, and other system services that require user approval.")
                 .contentShape(Rectangle())
+                .onHover { isHovered in
+                    if isHovered {
+                        // Show enhanced tooltip with more context
+                        // This will be enhanced with a custom tooltip system
+                    }
+                }
                 
                 Button("Configure Permissions") {
                     // Auto-advance to step 2 for PPPC configuration
@@ -123,10 +152,20 @@ struct WizardModeContent: View {
             .padding(.bottom, 20)
         }
     }
+    
+    // MARK: - Helper Functions
+    private func stepTitle(for step: Int) -> String {
+        switch step {
+        case 1: return "Profile Setup"
+        case 2: return "PPPC Config"
+        case 3: return "Review & Submit"
+        default: return "Step \(step)"
+        }
+    }
 }
 
-// MARK: - Expert Mode Content
-struct ExpertModeContent: View {
+// MARK: - Advanced Mode Content
+struct AdvancedModeContent: View {
     @ObservedObject var model: BuilderModel
     @ObservedObject var viewModel: ProfileBuilderViewModel
 
