@@ -33,6 +33,9 @@ final class ProfileBuilderViewModel: ObservableObject {
         self.selectedMDM = selectedMDM
         self.profileExportService = ProfileExportService()
         self.profileSettings = builderModel.settings
+        
+        // Clear any pre-selected payloads when ProfileBuilder is initialized
+        builderModel.dropped.removeAll()
     }
     
     // MARK: - Public Methods

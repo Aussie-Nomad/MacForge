@@ -131,48 +131,93 @@ struct ExpertModeContent: View {
     @ObservedObject var viewModel: ProfileBuilderViewModel
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                // Profile settings
-                SettingsHeader(settings: $viewModel.profileSettings)
+        VStack(spacing: 0) {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    // Profile settings
+                    SettingsHeader(settings: $viewModel.profileSettings)
 
-                // Available payloads
-                Group {
-                    Text("AVAILABLE PAYLOADS")
-                        .font(.headline)
-                        .foregroundStyle(LcarsTheme.amber)
-
-                    LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 3), spacing: 12) {
-                        ForEach(model.library) { payload in
-                            PayloadTile(
-                                payload: payload,
-                                isSelected: model.dropped.contains { $0.id == payload.id },
-                                onToggle: { viewModel.togglePayload(payload) }
-                            )
-                        }
-                    }
-                }
-
-                // Selected payloads
-                if !model.dropped.isEmpty {
+                    // Available payloads
                     Group {
-                        Text("SELECTED PAYLOADS")
+                        Text("AVAILABLE PAYLOADS")
                             .font(.headline)
                             .foregroundStyle(LcarsTheme.amber)
 
                         LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 3), spacing: 12) {
-                            ForEach(model.dropped) { payload in
+                            ForEach(model.library) { payload in
                                 PayloadTile(
                                     payload: payload,
-                                    isSelected: true,
+                                    isSelected: model.dropped.contains { $0.id == payload.id },
                                     onToggle: { viewModel.togglePayload(payload) }
                                 )
                             }
                         }
                     }
+
+                    // Selected payloads
+                    if !model.dropped.isEmpty {
+                        Group {
+                            Text("SELECTED PAYLOADS")
+                                .font(.headline)
+                                .foregroundStyle(LcarsTheme.amber)
+
+                            LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 3), spacing: 12) {
+                                ForEach(model.dropped) { payload in
+                                    PayloadTile(
+                                        payload: payload,
+                                        isSelected: true,
+                                        onToggle: { viewModel.togglePayload(payload) }
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+                .padding(20)
+            }
+            
+            // Expert mode action buttons
+            VStack(spacing: 16) {
+                HStack(spacing: 16) {
+                    Button("Add PPPC Payload") {
+                        viewModel.addPPPCPayload()
+                    }
+                    .disabled(!viewModel.hasPPPCPayload)
+                    .help("Add a Privacy Preferences Policy Control (PPPC) payload to configure app permissions like Full Disk Access, Accessibility, Input Monitoring, and other system services that require user approval.")
+                    .contentShape(Rectangle())
+                    
+                    Button("Configure Permissions") {
+                        // Auto-advance to step 2 for PPPC configuration
+                        if viewModel.hasPPPCPayload {
+                            viewModel.nextStep()
+                        }
+                    }
+                    .disabled(!viewModel.hasPPPCPayload)
+                    .help("Configure the specific permissions and services for the selected application. This allows you to set which system services the app can access.")
+                    .contentShape(Rectangle())
+                }
+                
+                // Export/Submit buttons
+                HStack(spacing: 16) {
+                    Button("Export Profile") {
+                        viewModel.exportProfile()
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.blue)
+                    .contentShape(Rectangle())
+                    
+                    Spacer()
+                    
+                    Button("Submit to MDM") {
+                        viewModel.submitProfile()
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.red)
+                    .contentShape(Rectangle())
                 }
             }
-            .padding(20)
+            .padding(.horizontal, 20)
+            .padding(.bottom, 20)
         }
     }
 }

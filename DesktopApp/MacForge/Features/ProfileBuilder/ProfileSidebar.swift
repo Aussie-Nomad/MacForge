@@ -18,15 +18,27 @@ struct ProfileSidebar: View {
                 SidebarBrandHeader()
 
                 // Mode toggle
-                HStack {
-                    Text("MODE").lcarsPill()
-                    Spacer()
-                    Toggle(isOn: $model.wizardMode) {
-                        Text(model.wizardMode ? "Wizard" : "Expert")
-                            .font(.caption)
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text("MODE").lcarsPill()
+                        Spacer()
+                        Toggle(isOn: $model.wizardMode) {
+                            Text(model.wizardMode ? "Wizard" : "Expert")
+                                .font(.caption)
+                        }
+                        .toggleStyle(.switch)
+                        .labelsHidden()
                     }
-                    .toggleStyle(.switch)
-                    .labelsHidden()
+                    
+                    // Mode explanation
+                    Text(model.wizardMode ? 
+                        "Wizard Mode: Step-by-step guided profile creation with templates and validation" :
+                        "Expert Mode: Advanced configuration with direct payload editing and custom settings"
+                    )
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(3)
+                    .multilineTextAlignment(.leading)
                 }
 
                 // Templates
