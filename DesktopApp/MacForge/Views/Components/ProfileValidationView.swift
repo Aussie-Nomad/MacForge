@@ -575,20 +575,37 @@ struct ValidationReportSheet: View {
     ]
     
     let sampleWarnings = [
-        ProfileValidationWarning.longProfileName("Very Long Profile Name That Exceeds Recommended Length"),
-        ProfileValidationWarning.manyPayloads(15)
+        ProfileValidationWarning(
+            type: .bestPractice,
+            message: "Profile name 'Very Long Profile Name That Exceeds Recommended Length' is longer than recommended (50 characters)",
+            severity: .low,
+            recommendation: "Consider using a shorter, more concise name"
+        ),
+        ProfileValidationWarning(
+            type: .performance,
+            message: "Profile contains 15 payloads, which may impact performance",
+            severity: .medium,
+            recommendation: "Consider splitting into multiple profiles if possible"
+        )
     ]
     
     let sampleComplianceIssues = [
-        ComplianceError.missingRequiredFields("WiFi", ["SSID", "SecurityType"])
+        ComplianceError(
+            type: .apple,
+            message: "WiFi payload is missing required fields: SSID, SecurityType",
+            severity: .critical,
+            requirement: "All required fields must be present for WiFi payloads",
+            remediation: "Add the missing required fields: SSID, SecurityType"
+        )
     ]
     
     let sampleSuggestions = [
         ValidationSuggestion(
-            title: "Add Profile Name",
-            description: "A descriptive name helps identify the profile's purpose",
+            type: .userExperience,
+            message: "Add Profile Name",
             priority: .high,
-            action: "Enter a clear, descriptive name for your profile"
+            impact: "A descriptive name helps identify the profile's purpose",
+            implementation: "Enter a clear, descriptive name for your profile"
         )
     ]
     
