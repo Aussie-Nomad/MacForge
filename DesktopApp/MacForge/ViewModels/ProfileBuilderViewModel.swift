@@ -175,29 +175,22 @@ final class ProfileBuilderViewModel: ObservableObject {
             let downloadsPath = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first
             let fileName = "\(name).mobileconfig"
             
-            guard let downloadsPath = downloadsPath else {
+            guard let fileURL = downloadsPath?.appendingPathComponent(fileName) else {
                 submitError = "Could not access Downloads directory"
                 return
             }
             
-            // Ensure the filename is safe
-            let sanitizedFileName = fileName.replacingOccurrences(of: ":", with: "_")
-                .replacingOccurrences(of: "/", with: "_")
-                .replacingOccurrences(of: "\\", with: "_")
-                .replacingOccurrences(of: "?", with: "_")
-                .replacingOccurrences(of: "%", with: "_")
-                .replacingOccurrences(of: "*", with: "_")
-                .replacingOccurrences(of: "|", with: "_")
-                .replacingOccurrences(of: "\"", with: "_")
-                .replacingOccurrences(of: "<", with: "_")
-                .replacingOccurrences(of: ">", with: "_")
+            try data.write(to: fileURL)
             
-            let safeFileURL = downloadsPath.appendingPathComponent(sanitizedFileName)
+            // Show success feedback
+            DispatchQueue.main.async {
+                // You could add a success message here
+                print("Profile saved successfully to: \(fileURL.path)")
+            }
             
-            try data.write(to: safeFileURL)
-            submitError = nil
         } catch {
             submitError = "Failed to save profile: \(error.localizedDescription)"
+            print("Save error: \(error)")
         }
     }
 }

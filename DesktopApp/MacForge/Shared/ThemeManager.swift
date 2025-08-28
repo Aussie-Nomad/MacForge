@@ -9,16 +9,19 @@ import SwiftUI
 
 // MARK: - Theme Manager
 class ThemeManager: ObservableObject {
-    // MARK: - Theme-Aware Colors
-    var backgroundColor: Color { LCARSTheme.background }
-    var surfaceColor: Color { LCARSTheme.surface }
-    var primaryColor: Color { LCARSTheme.primary }
-    var secondaryColor: Color { LCARSTheme.secondary }
-    var accentColor: Color { LCARSTheme.accent }
-    var panelColor: Color { LCARSTheme.panel }
-    var textPrimaryColor: Color { LCARSTheme.textPrimary }
-    var textSecondaryColor: Color { LCARSTheme.textSecondary }
-    var textMutedColor: Color { LCARSTheme.textMuted }
+    // MARK: - Theme State
+    @Published var isLCARSActive: Bool = true
+    
+    // MARK: - Theme-Aware Colors (self-contained to avoid import issues)
+    var backgroundColor: Color { Color(red: 0.05, green: 0.05, blue: 0.1) }
+    var surfaceColor: Color { Color(red: 0.12, green: 0.12, blue: 0.18) }
+    var primaryColor: Color { Color(red: 0.8, green: 0.4, blue: 0.0) }
+    var secondaryColor: Color { Color(red: 0.6, green: 0.3, blue: 0.8) }
+    var accentColor: Color { Color(red: 1.0, green: 0.53, blue: 0.0) }
+    var panelColor: Color { Color(red: 0.15, green: 0.15, blue: 0.22) }
+    var textPrimaryColor: Color { .white }
+    var textSecondaryColor: Color { Color(red: 0.8, green: 0.8, blue: 0.8) }
+    var textMutedColor: Color { Color(red: 0.6, green: 0.6, blue: 0.6) }
 }
 
 // MARK: - Environment Key

@@ -15,78 +15,95 @@ struct GlobalSidebar: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 16) {
+            VStack(spacing: LCARSTheme.Sidebar.sectionGap) {
                 SidebarBrandHeader()
-
-                // MDM section
-                VStack(alignment: .leading, spacing: 10) {
-                    Text(selectedMDM == nil ? "MOBILE DEVICE MANAGER" : "SELECTED MDM")
-                        .lcarsPill()
-
-                    if let mdm = selectedMDM {
-                        // Show only the chosen MDM with a "Change…" button
-                        LcarsTileRow(
-                            items: [.init(title: mdm.rawValue, imageName: mdm.asset)]
-                        )
-
-                        LcarsSmallButton(title: "Change…") {
-                            onChangeMDM()
-                        }
-                    } else {
-                        // Show all MDMs
-                        LcarsTileRow(
-                            items: MDMVendor.allCases.map { .init(title: $0.rawValue, imageName: $0.asset) },
-                            onTap: { item in
-                                // Map back title -> enum
-                                if let mdm = MDMVendor.allCases.first(where: { $0.rawValue == item.title }) {
-                                    selectedMDM = mdm         // keep sidebar open
-                                    // We *do not* collapse here
-                                    // Authentication will be triggered when user tries to submit
-                                }
-                            }
-                        )
-                    }
-                }
-
-                // Tools
-                VStack(alignment: .leading, spacing: 10) {
-                    Text("TOOLS").lcarsPill()
-
-                    // Enable tools after an MDM is chosen
-                    if selectedMDM != nil {
-                        ForEach(ToolModule.allCases, id: \.self) { tool in
-                            Button {
-                                onSelectTool(tool)   // collapses sidebar handled in ContentView
-                            } label: {
-                                HStack {
-                                    Label(tool.displayName, systemImage: tool.icon)
-                                    Spacer()
-                                    Image(systemName: "chevron.right")
-                                }
-                                .padding(12)
-                                .background(
-                                                            RoundedRectangle(cornerRadius: 12)
-                            .stroke(LCARSTheme.accent, lineWidth: 2)
-                                )
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    } else {
-                        // Show disabled tiles for all tools when no MDM selected
-                        ForEach(ToolModule.allCases, id: \.self) { tool in
-                            LcarsDisabledTile(
-                                title: tool.displayName,
-                                subtitle: "Select an MDM to enable tools."
-                            )
-                        }
-                    }
-                }
+                mdmSection
+                toolsSection
                 Spacer(minLength: 0)
             }
-            .padding(12)
+            .padding(LCARSTheme.Sidebar.outerPadding)
         }
-        .frame(width: 320)
+        .frame(width: LCARSTheme.Sidebar.width)
         .themeAwareBackground()
+    }
+    
+    // MARK: - MDM Section
+    private var mdmSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(selectedMDM == nil ? "MOBILE DEVICE MANAGER" : "SELECTED MDM")
+                .lcarsPill()
+
+            if let mdm = selectedMDM {
+                selectedMDMView(mdm)
+            } else {
+                allMDMsView
+            }
+        }
+    }
+    
+    private func selectedMDMView(_ mdm: MDMVendor) -> some View {
+        VStack(spacing: 8) {
+            LcarsTileRow(
+                items: [.init(title: mdm.rawValue, imageName: mdm.asset)]
+            )
+
+            LcarsSmallButton(title: "Change…") {
+                onChangeMDM()
+            }
+        }
+    }
+    
+    private var allMDMsView: some View {
+        LcarsTileRow(
+            items: MDMVendor.allCases.map { .init(title: $0.rawValue, imageName: $0.asset) },
+            onTap: { item in
+                if let mdm = MDMVendor.allCases.first(where: { $0.rawValue == item.title }) {
+                    selectedMDM = mdm
+                }
+            }
+        )
+    }
+    
+    // MARK: - Tools Section
+    private var toolsSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("TOOLS").lcarsPill()
+
+            if selectedMDM != nil {
+                enabledToolsView
+            } else {
+                disabledToolsView
+            }
+        }
+    }
+    
+    private var enabledToolsView: some View {
+        ForEach(ToolModule.allCases, id: \.self) { tool in
+            Button {
+                onSelectTool(tool)
+            } label: {
+                HStack {
+                    Label(tool.displayName, systemImage: tool.icon)
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                }
+                .padding(12)
+                .background(
+                    RoundedRectangle(cornerRadius: LCARSTheme.Sidebar.tileCorner)
+                        .stroke(LCARSTheme.amber, lineWidth: LCARSTheme.Sidebar.tileStroke)
+                )
+            }
+            .buttonStyle(.plain)
+        }
+    }
+    
+    private var disabledToolsView: some View {
+        ForEach(ToolModule.allCases, id: \.self) { tool in
+            LcarsDisabledTile(
+                title: tool.displayName,
+                subtitle: "Select an MDM to enable tools."
+            )
+        }
     }
 }
 
@@ -107,7 +124,7 @@ struct CompactBrandHeader: View {
         .padding(8) // Reduced padding
         .background(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .stroke(LCARSTheme.accent, lineWidth: 2)
+                .stroke(LcarsTheme.amber, lineWidth: 2)
         )
     }
 }
@@ -187,7 +204,7 @@ struct MDMTileButton: View {
                 // Status indicator
                 Image(systemName: "chevron.right")
                     .font(.system(size: 14, weight: .bold))
-                    .foregroundStyle(LCARSTheme.accent)
+                    .foregroundStyle(LcarsTheme.amber)
             }
             .padding(16) // Increased padding for larger buttons
             .contentShape(Rectangle())
@@ -197,10 +214,10 @@ struct MDMTileButton: View {
             RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .fill(
                     LinearGradient(
-                                        colors: [
-                    LCARSTheme.primary.opacity(isPressed ? 0.9 : 0.7),
-                    LCARSTheme.primary.opacity(isPressed ? 0.7 : 0.5)
-                ],
+                        colors: [
+                            LcarsTheme.orange.opacity(isPressed ? 0.9 : 0.7),
+                            LcarsTheme.orange.opacity(isPressed ? 0.7 : 0.5)
+                        ],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
@@ -208,10 +225,10 @@ struct MDMTileButton: View {
         )
         .overlay(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(LCARSTheme.primary, lineWidth: 3)
+                .stroke(LcarsTheme.orange, lineWidth: 3)
         )
         .scaleEffect(isPressed ? 0.98 : 1.0)
-        .shadow(color: LCARSTheme.primary.opacity(0.4), radius: 6)
+        .shadow(color: LcarsTheme.orange.opacity(0.4), radius: 6)
     }
     
     private func displayName(for vendor: MDMVendor) -> String {

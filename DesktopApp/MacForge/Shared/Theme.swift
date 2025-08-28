@@ -31,6 +31,21 @@ struct LCARSTheme {
     static let bg = background
     static let amber = accent
     static let orange = primary
+    
+    // MARK: - Layout Constants
+    struct Sidebar {
+        static let width: CGFloat = 280
+        static let minWidth: CGFloat = 200
+        static let maxWidth: CGFloat = 400
+        
+        // Spacing and padding
+        static let sectionGap: CGFloat = 16
+        static let outerPadding: CGFloat = 16
+        
+        // Tile styling
+        static let tileCorner: CGFloat = 12
+        static let tileStroke: CGFloat = 2
+    }
 }
 
 // MARK: - Legacy Support (for existing code)
