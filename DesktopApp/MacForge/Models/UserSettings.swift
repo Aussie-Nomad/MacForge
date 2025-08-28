@@ -57,6 +57,30 @@ class UserSettings: ObservableObject {
             generalSettings = decoded
         }
     }
+    
+    // MARK: - MDM Account Management
+    
+    func updateMDMAccountAuth(_ accountId: UUID, token: String, expiry: Date?) {
+        if let index = mdmAccounts.firstIndex(where: { $0.id == accountId }) {
+            mdmAccounts[index].authToken = token
+            mdmAccounts[index].tokenExpiry = expiry
+            mdmAccounts[index].lastUsed = Date()
+            saveSettings()
+        }
+    }
+    
+    func getValidMDMAccount() -> MDMAccount? {
+        return mdmAccounts.first { account in
+            guard let token = account.authToken else { return false }
+            
+            // Check if token is expired
+            if let expiry = account.tokenExpiry, expiry < Date() {
+                return false
+            }
+            
+            return true
+        }
+    }
 }
 
 // MARK: - Profile Defaults
@@ -116,6 +140,8 @@ struct MDMAccount: Codable, Identifiable, Hashable {
     var displayName: String
     var lastUsed: Date
     var isDefault: Bool
+    var authToken: String?
+    var tokenExpiry: Date?
     
     init(vendor: String, serverURL: String, username: String, displayName: String) {
         self.vendor = vendor
@@ -124,6 +150,8 @@ struct MDMAccount: Codable, Identifiable, Hashable {
         self.displayName = displayName
         self.lastUsed = Date()
         self.isDefault = false
+        self.authToken = nil
+        self.tokenExpiry = nil
     }
 }
 

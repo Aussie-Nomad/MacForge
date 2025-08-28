@@ -14,6 +14,9 @@ final class JAMFAuthenticationService: ObservableObject {
     @Published var isAuthenticated = false
     @Published var currentToken: String?
     
+    // Callback for storing tokens in UserSettings
+    var onTokenReceived: ((String, Date?) -> Void)?
+    
     init(session: URLSession = .shared) {
         self.session = session
     }
@@ -41,6 +44,9 @@ final class JAMFAuthenticationService: ObservableObject {
             self.isAuthenticated = true
         }
         
+        // Notify callback about the new token
+        onTokenReceived?(token, nil) // OAuth tokens typically don't have expiry
+        
         return token
     }
     
@@ -64,6 +70,9 @@ final class JAMFAuthenticationService: ObservableObject {
             self.currentToken = token
             self.isAuthenticated = true
         }
+        
+        // Notify callback about the new token
+        onTokenReceived?(token, nil) // Basic auth tokens typically don't have expiry
         
         return token
     }

@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Foundation
 
 struct SettingsView: View {
     @ObservedObject var userSettings: UserSettings
@@ -305,6 +306,27 @@ struct MDMAccountRow: View {
                         .cornerRadius(4)
                 }
                 
+                // Show authentication status
+                if let _ = account.authToken {
+                    HStack(spacing: 4) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundStyle(.green)
+                            .font(.caption2)
+                        Text("Authenticated")
+                            .font(.caption2)
+                            .foregroundStyle(.green)
+                    }
+                } else {
+                    HStack(spacing: 4) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundStyle(.orange)
+                            .font(.caption2)
+                        Text("No Auth")
+                            .font(.caption2)
+                            .foregroundStyle(.orange)
+                    }
+                }
+                
                 Text("Last used: \(account.lastUsed, style: .relative)")
                     .font(.caption2)
                     .foregroundStyle(LCARSTheme.textMuted)
@@ -318,11 +340,16 @@ struct MDMAccountRow: View {
 struct AddMDMAccountView: View {
     @ObservedObject var userSettings: UserSettings
     @Environment(\.dismiss) private var dismiss
+    @StateObject private var authService = JAMFAuthenticationService()
     
     @State private var vendor = ""
     @State private var serverURL = ""
     @State private var username = ""
     @State private var displayName = ""
+    @State private var password = ""
+    @State private var isAuthenticating = false
+    @State private var authStatus = ""
+    @State private var showingPassword = false
     
     private let vendors = ["Jamf Pro", "Microsoft Intune", "Kandji", "Mosyle", "Other"]
     
@@ -360,6 +387,25 @@ struct AddMDMAccountView: View {
                     TextField("My Company MDM", text: $displayName)
                         .textFieldStyle(.roundedBorder)
                 }
+                
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Password")
+                    HStack {
+                        if showingPassword {
+                            TextField("your-password", text: $password)
+                                .textFieldStyle(.roundedBorder)
+                        } else {
+                            SecureField("your-password", text: $password)
+                                .textFieldStyle(.roundedBorder)
+                        }
+                        
+                        Button(action: { showingPassword.toggle() }) {
+                            Image(systemName: showingPassword ? "eye.slash" : "eye")
+                                .foregroundStyle(LCARSTheme.textSecondary)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
             }
             
             HStack {
@@ -372,7 +418,23 @@ struct AddMDMAccountView: View {
                     addAccount()
                 }
                 .buttonStyle(.borderedProminent)
-                .disabled(vendor.isEmpty || serverURL.isEmpty || username.isEmpty || displayName.isEmpty)
+                .disabled(vendor.isEmpty || serverURL.isEmpty || username.isEmpty || displayName.isEmpty || password.isEmpty)
+            }
+            
+            if !authStatus.isEmpty {
+                Text(authStatus)
+                    .font(.caption)
+                    .foregroundStyle(authStatus.contains("success") ? .green : .red)
+                    .multilineTextAlignment(.center)
+            }
+            
+            if isAuthenticating {
+                HStack {
+                    ProgressView()
+                        .scaleEffect(0.8)
+                    Text("Authenticating...")
+                        .font(.caption)
+                }
             }
         }
         .padding()
@@ -381,20 +443,84 @@ struct AddMDMAccountView: View {
     }
     
     private func addAccount() {
-        var newAccount = MDMAccount(
-            vendor: vendor,
-            serverURL: serverURL,
-            username: username,
-            displayName: displayName
-        )
+        isAuthenticating = true
+        authStatus = ""
         
-        // If this is the first account, make it default
-        if userSettings.mdmAccounts.isEmpty {
-            newAccount.isDefault = true
+        // Set up the authentication callback to store the token
+        authService.onTokenReceived = { token, expiry in
+            Task { @MainActor in
+                // Create the account with authentication
+                var newAccount = MDMAccount(
+                    vendor: vendor,
+                    serverURL: serverURL,
+                    username: username,
+                    displayName: displayName
+                )
+                
+                // If this is the first account, make it default
+                if userSettings.mdmAccounts.isEmpty {
+                    newAccount.isDefault = true
+                }
+                
+                // Store the authentication token
+                newAccount.authToken = token
+                newAccount.tokenExpiry = expiry
+                
+                // Add the account to user settings
+                userSettings.mdmAccounts.append(newAccount)
+                
+                // Update the authentication status
+                authStatus = "Account added successfully with authentication!"
+                isAuthenticating = false
+                
+                // Dismiss after a short delay to show success message
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                    dismiss()
+                }
+            }
         }
         
-        userSettings.mdmAccounts.append(newAccount)
-        dismiss()
+        // Attempt authentication
+        Task {
+            do {
+                if vendor == "Jamf Pro" {
+                    // For Jamf Pro, we'll use basic authentication for now
+                    // In a real implementation, you might want to support OAuth
+                    _ = try await authService.authenticateBasic(
+                        username: username,
+                        password: password,
+                        serverURL: serverURL
+                    )
+                } else {
+                    // For other vendors, just create the account without authentication for now
+                    await MainActor.run {
+                        var newAccount = MDMAccount(
+                            vendor: vendor,
+                            serverURL: serverURL,
+                            username: username,
+                            displayName: displayName
+                        )
+                        
+                        if userSettings.mdmAccounts.isEmpty {
+                            newAccount.isDefault = true
+                        }
+                        
+                        userSettings.mdmAccounts.append(newAccount)
+                        authStatus = "Account added successfully!"
+                        isAuthenticating = false
+                        
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                            dismiss()
+                        }
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    authStatus = "Authentication failed: \(error.localizedDescription)"
+                    isAuthenticating = false
+                }
+            }
+        }
     }
 }
 

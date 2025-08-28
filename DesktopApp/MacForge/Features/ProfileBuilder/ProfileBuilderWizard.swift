@@ -1310,6 +1310,24 @@ struct ExportDeployStepView: View {
         
         Task {
             do {
+                // Check if the selected account has a valid authentication token
+                guard let authToken = selectedAccount.authToken else {
+                    await MainActor.run {
+                        deployStatus = "No authentication token found. Please authenticate in Settings first."
+                        isDeploying = false
+                    }
+                    return
+                }
+                
+                // Check if token is expired
+                if let tokenExpiry = selectedAccount.tokenExpiry, tokenExpiry < Date() {
+                    await MainActor.run {
+                        deployStatus = "Authentication token has expired. Please re-authenticate in Settings."
+                        isDeploying = false
+                    }
+                    return
+                }
+                
                 // Generate the profile content
                 let profileContent = generateProfileContent()
                 let profileData = Data(profileContent.utf8)
@@ -1324,29 +1342,22 @@ struct ExportDeployStepView: View {
                 }
                 
                 await MainActor.run {
-                    deployStatus = "Authenticating with \(selectedAccount.vendor)..."
+                    deployStatus = "Uploading profile to \(selectedAccount.vendor)..."
                 }
                 
-                // TODO: Implement proper token retrieval/storage
-                // For now, we'll show a message that authentication is needed
-                await MainActor.run {
-                    deployStatus = "Authentication required. Please authenticate in Settings first."
-                    isDeploying = false
-                }
-                
-                // When authentication is properly implemented, this would work:
-                /*
-                let jamfService = JAMFService(baseURL: serverURL, token: token)
+                // Create JAMF service and deploy the profile
+                let jamfService = JAMFService(baseURL: serverURL, token: authToken)
                 try await jamfService.uploadOrUpdateProfile(
                     name: profileSettings.name,
                     xmlData: profileData
                 )
                 
+                // Update last used timestamp
                 await MainActor.run {
+                    userSettings.updateMDMAccountAuth(selectedAccount.id, token: authToken, expiry: selectedAccount.tokenExpiry)
                     deployStatus = "Profile deployed successfully to \(selectedAccount.displayName)!"
                     isDeploying = false
                 }
-                */
                 
             } catch {
                 await MainActor.run {
