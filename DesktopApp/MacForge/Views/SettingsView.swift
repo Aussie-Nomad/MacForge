@@ -179,6 +179,11 @@ struct ThemeSettingsTab: View {
                         .foregroundStyle(LCARSTheme.accent)
                     
                     VStack(alignment: .leading, spacing: 8) {
+                        Toggle("LCARS Theme", isOn: $userSettings.themePreferences.isLCARSActive)
+                            .toggleStyle(.switch)
+                    }
+                    
+                    VStack(alignment: .leading, spacing: 8) {
                         Text("Accent Color")
                         Picker("Accent Color", selection: $userSettings.themePreferences.accentColor) {
                             ForEach(ThemePreferences.AccentColor.allCases, id: \.self) { color in

@@ -98,6 +98,7 @@ struct ProfileDefaults: Codable {
 
 // MARK: - Theme Preferences
 struct ThemePreferences: Codable {
+    var isLCARSActive: Bool = true
     var panelOpacity: Double = 0.3
     var animationSpeed: AnimationSpeed = .normal
     var accentColor: AccentColor = .amber

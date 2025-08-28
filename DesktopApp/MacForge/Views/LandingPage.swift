@@ -22,36 +22,34 @@ struct LandingPage: View {
             // Animated background effect
             AnimatedBackground()
             
-            ScrollView {
-                VStack(spacing: 24) {
-                    // Hero Section
-                    heroSection
-                    
-                    // Responsive layout that adapts to window size
-                    LazyVGrid(columns: [
-                        GridItem(.flexible(), spacing: 24),
-                        GridItem(.flexible(), spacing: 24)
-                    ], spacing: 24) {
-                        // Left Column
-                        VStack(spacing: 20) {
-                            authorsNotesSection
-                            currentWorkSection
-                        }
-                        .frame(maxWidth: .infinity)
-                        
-                        // Right Column
-                        VStack(spacing: 20) {
-                            contactSection
-                            bugsSection
-                            versionSection
-                        }
-                        .frame(maxWidth: .infinity)
+            VStack(spacing: 24) {
+                // Hero Section
+                heroSection
+                
+                // Responsive layout that adapts to window size
+                LazyVGrid(columns: [
+                    GridItem(.flexible(), spacing: 24),
+                    GridItem(.flexible(), spacing: 24)
+                ], spacing: 24) {
+                    // Left Column
+                    VStack(spacing: 20) {
+                        authorsNotesSection
+                        currentWorkSection
                     }
+                    .frame(maxWidth: .infinity)
+                    
+                    // Right Column
+                    VStack(spacing: 20) {
+                        contactSection
+                        bugsSection
+                        versionSection
+                    }
+                    .frame(maxWidth: .infinity)
                 }
-                .padding(.horizontal, 32)
-                .padding(.vertical, 24)
-                .frame(maxWidth: .infinity, minHeight: 600)
             }
+            .padding(.horizontal, 32)
+            .padding(.vertical, 24)
+            .frame(maxWidth: .infinity, minHeight: 600)
         }
         .themeAwareBackground()
     }
@@ -90,10 +88,6 @@ struct LandingPage: View {
             Text("Choose an MDM from the left to begin.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
-            
-            // Theme Switcher
-            ThemeSwitcher()
-                .frame(maxWidth: 400)
         }
     }
     
