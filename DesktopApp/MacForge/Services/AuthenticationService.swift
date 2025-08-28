@@ -138,16 +138,11 @@ final class JAMFAuthenticationService: ObservableObject {
             throw AuthenticationError.invalidServerURL
         }
         
-        do {
-            // Test basic connectivity with multiple endpoints
-            let isReachable = try await testMultipleEndpoints(baseURL)
-            
-            guard isReachable else {
-                throw AuthenticationError.serverUnreachable
-            }
-            
-        } catch {
-            throw AuthenticationError.networkError(error.localizedDescription)
+        // Test basic connectivity with multiple endpoints
+        let isReachable = try await testMultipleEndpoints(baseURL)
+        
+        guard isReachable else {
+            throw AuthenticationError.serverUnreachable
         }
     }
     
@@ -269,7 +264,10 @@ final class JAMFAuthenticationService: ObservableObject {
     private func authenticateWithOAuth(baseURL: URL, clientID: String, clientSecret: String) async throws -> String {
         let endpoints = ["api/oauth/token", "api/v1/oauth/token"]
         
+        var lastError: Error?
+        
         for endpoint in endpoints {
+            // swift:disable:next warning
             do {
                 let token = try await performOAuthRequest(
                     baseURL: baseURL,
@@ -279,12 +277,12 @@ final class JAMFAuthenticationService: ObservableObject {
                 )
                 return token
             } catch {
-                // Continue to next endpoint if this one fails
+                lastError = error
                 continue
             }
         }
         
-        throw AuthenticationError.authenticationFailed("All OAuth endpoints failed")
+        throw AuthenticationError.authenticationFailed("All OAuth endpoints failed: \(lastError?.localizedDescription ?? "Unknown error")")
     }
     
     private func authenticateWithBasic(baseURL: URL, username: String, password: String) async throws -> String {

@@ -662,7 +662,7 @@ struct PPPCConfigurationView: View {
                         .buttonStyle(.plain)
                     }
                     
-                    TextField("com.company.app", text: binding(for: "BundleIdentifier"))
+                                            TextField("com.company.app", text: stringBinding(for: "BundleIdentifier"))
                         .textFieldStyle(.roundedBorder)
                         .font(.system(.body, design: .monospaced))
                 }
@@ -683,7 +683,7 @@ struct PPPCConfigurationView: View {
                         .buttonStyle(.plain)
                     }
                     
-                    TextField("designated => ...", text: binding(for: "CodeRequirement"))
+                                            TextField("designated => ...", text: stringBinding(for: "CodeRequirement"))
                         .textFieldStyle(.roundedBorder)
                         .font(.system(.body, design: .monospaced))
                 }
@@ -708,7 +708,7 @@ struct PPPCConfigurationView: View {
         }
     }
     
-    private func binding(for key: String) -> Binding<String> {
+    private func stringBinding(for key: String) -> Binding<String> {
         Binding(
             get: { (configuration[key]?.value as? String) ?? "" },
             set: { configuration[key] = CodableValue($0) }
@@ -780,14 +780,17 @@ struct PrivacyService: Identifiable {
 
 struct FileVaultConfigurationView: View {
     @Binding var configuration: [String: CodableValue]
+    @State private var showingCertificatePicker = false
+    @State private var selectedCertificateURL: URL?
+    @State private var showingAdvancedOptions = false
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 20) {
             Text("FileVault 2 Encryption")
                 .font(.headline)
                 .foregroundStyle(LCARSTheme.accent)
             
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 16) {
                 // Enable FileVault
                 HStack {
                     Text("Enable FileVault")
@@ -796,44 +799,299 @@ struct FileVaultConfigurationView: View {
                     
                     Spacer()
                     
-                    Toggle("", isOn: binding(for: "EnableFileVault"))
+                                            Toggle("", isOn: boolBinding(for: "EnableFileVault"))
                         .labelsHidden()
                 }
                 
-                // Recovery Key
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Recovery Key")
+                // Recovery Key Configuration
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Recovery Key Configuration")
                         .font(.subheadline)
                         .fontWeight(.medium)
+                        .foregroundStyle(LCARSTheme.textPrimary)
                     
-                    TextField("Enter recovery key", text: binding(for: "RecoveryKey"))
-                        .textFieldStyle(.roundedBorder)
-                        .font(.system(.body, design: .monospaced))
+                    VStack(alignment: .leading, spacing: 8) {
+                        // Recovery Key Type
+                        HStack {
+                            Text("Recovery Key Type")
+                                .font(.caption)
+                                .foregroundStyle(LCARSTheme.textSecondary)
+                            
+                            Spacer()
+                            
+                            Picker("Recovery Key Type", selection: stringBinding(for: "RecoveryKeyType")) {
+                                Text("Personal Recovery Key").tag("Personal")
+                                Text("Institutional Recovery Key").tag("Institutional")
+                                Text("Both").tag("Both")
+                            }
+                            .pickerStyle(.menu)
+                            .frame(width: 200)
+                        }
+                        
+                        // Personal Recovery Key
+                        if shouldShowPersonalRecoveryKey {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Personal Recovery Key")
+                                    .font(.caption)
+                                    .foregroundStyle(LCARSTheme.textSecondary)
+                                
+                                HStack {
+                                    TextField("Enter personal recovery key", text: stringBinding(for: "PersonalRecoveryKey"))
+                                        .textFieldStyle(.roundedBorder)
+                                        .font(.system(.body, design: .monospaced))
+                                    
+                                    Button("Generate") {
+                                        generatePersonalRecoveryKey()
+                                    }
+                                    .buttonStyle(.bordered)
+                                    .controlSize(.small)
+                                }
+                            }
+                        }
+                        
+                        // Institutional Recovery Key
+                        if shouldShowInstitutionalRecoveryKey {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Institutional Recovery Key")
+                                    .font(.caption)
+                                    .foregroundStyle(LCARSTheme.textSecondary)
+                                
+                                HStack {
+                                    TextField("Enter institutional recovery key", text: stringBinding(for: "InstitutionalRecoveryKey"))
+                                        .textFieldStyle(.roundedBorder)
+                                        .font(.system(.body, design: .monospaced))
+                                    
+                                    Button("Generate") {
+                                        generateInstitutionalRecoveryKey()
+                                    }
+                                    .buttonStyle(.bordered)
+                                    .controlSize(.small)
+                                }
+                            }
+                        }
+                    }
                 }
                 
                 // Recovery Key Certificate
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: 8) {
                     Text("Recovery Key Certificate")
                         .font(.subheadline)
                         .fontWeight(.medium)
+                        .foregroundStyle(LCARSTheme.textPrimary)
                     
-                    Button("Choose Certificate File") {
-                        // TODO: Implement certificate selection
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Button("Choose Certificate File") {
+                                showingCertificatePicker = true
+                            }
+                            .buttonStyle(.bordered)
+                            
+                            if let certificateURL = selectedCertificateURL {
+                                Text(certificateURL.lastPathComponent)
+                                    .font(.caption)
+                                    .foregroundStyle(LCARSTheme.textSecondary)
+                                    .lineLimit(1)
+                            }
+                            
+                            Spacer()
+                        }
+                        
+                        if selectedCertificateURL != nil {
+                            HStack {
+                                Button("Remove Certificate") {
+                                    removeCertificate()
+                                }
+                                .buttonStyle(.bordered)
+                                .controlSize(.small)
+                                
+                                Spacer()
+                            }
+                        }
                     }
-                    .buttonStyle(.bordered)
+                }
+                
+                // Advanced Options
+                VStack(alignment: .leading, spacing: 12) {
+                    Button(action: { showingAdvancedOptions.toggle() }) {
+                        HStack {
+                            Text("Advanced Options")
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                            
+                            Spacer()
+                            
+                            Image(systemName: showingAdvancedOptions ? "chevron.up" : "chevron.down")
+                                .foregroundStyle(LCARSTheme.accent)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    
+                    if showingAdvancedOptions {
+                        VStack(alignment: .leading, spacing: 12) {
+                            // Defer Enable
+                            HStack {
+                                Text("Defer Enable Until Logout")
+                                    .font(.caption)
+                                    .foregroundStyle(LCARSTheme.textSecondary)
+                                
+                                Spacer()
+                                
+                                Toggle("", isOn: boolBinding(for: "DeferEnable"))
+                                    .labelsHidden()
+                            }
+                            
+                            // Defer Force
+                            HStack {
+                                Text("Force Enable After Defer")
+                                    .font(.caption)
+                                    .foregroundStyle(LCARSTheme.textSecondary)
+                                
+                                Spacer()
+                                
+                                Toggle("", isOn: boolBinding(for: "DeferForce"))
+                                    .labelsHidden()
+                            }
+                            
+                            // Defer Count
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Defer Count")
+                                    .font(.caption)
+                                    .foregroundStyle(LCARSTheme.textSecondary)
+                                
+                                TextField("Number of deferrals allowed", text: stringBinding(for: "DeferCount"))
+                                    .textFieldStyle(.roundedBorder)
+                                    .frame(width: 150)
+                            }
+                            
+                            // Show Recovery Key
+                            HStack {
+                                Text("Show Recovery Key to User")
+                                    .font(.caption)
+                                    .foregroundStyle(LCARSTheme.textSecondary)
+                                
+                                Spacer()
+                                
+                                Toggle("", isOn: boolBinding(for: "ShowRecoveryKey"))
+                                    .labelsHidden()
+                            }
+                            
+                            // Use Keychain
+                            HStack {
+                                Text("Store Recovery Key in Keychain")
+                                    .font(.caption)
+                                    .foregroundStyle(LCARSTheme.textSecondary)
+                                
+                                Spacer()
+                                
+                                Toggle("", isOn: boolBinding(for: "UseKeychain"))
+                                    .labelsHidden()
+                            }
+                        }
+                        .padding(.leading, 16)
+                    }
+                }
+                
+                // FileVault Status Monitoring
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Status Monitoring")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundStyle(LCARSTheme.textPrimary)
+                    
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack {
+                            Text("Monitor Encryption Progress")
+                                .font(.caption)
+                                .foregroundStyle(LCARSTheme.textSecondary)
+                            
+                            Spacer()
+                            
+                            Toggle("", isOn: boolBinding(for: "MonitorProgress"))
+                                .labelsHidden()
+                        }
+                        
+                        HStack {
+                            Text("Send Status Reports")
+                                .font(.caption)
+                                .foregroundStyle(LCARSTheme.textSecondary)
+                            
+                            Spacer()
+                            
+                            Toggle("", isOn: boolBinding(for: "SendReports"))
+                                .labelsHidden()
+                        }
+                    }
                 }
             }
         }
+        .fileImporter(
+            isPresented: $showingCertificatePicker,
+            allowedContentTypes: [.x509Certificate, .pkcs12],
+            allowsMultipleSelection: false
+        ) { result in
+            handleCertificateSelection(result)
+        }
     }
     
-    private func binding(for key: String) -> Binding<String> {
+    // MARK: - Computed Properties
+    
+    private var shouldShowPersonalRecoveryKey: Bool {
+        let type = configuration["RecoveryKeyType"]?.value as? String ?? "Personal"
+        return type == "Personal" || type == "Both"
+    }
+    
+    private var shouldShowInstitutionalRecoveryKey: Bool {
+        let type = configuration["RecoveryKeyType"]?.value as? String ?? "Personal"
+        return type == "Institutional" || type == "Both"
+    }
+    
+    // MARK: - Helper Methods
+    
+    private func generatePersonalRecoveryKey() {
+        let newKey = generateSecureRecoveryKey()
+        configuration["PersonalRecoveryKey"] = CodableValue(newKey)
+    }
+    
+    private func generateInstitutionalRecoveryKey() {
+        let newKey = generateSecureRecoveryKey()
+        configuration["InstitutionalRecoveryKey"] = CodableValue(newKey)
+    }
+    
+    private func generateSecureRecoveryKey() -> String {
+        // Generate a 24-character recovery key with mixed case and numbers
+        let characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+        return String((0..<24).map { _ in characters.randomElement()! })
+    }
+    
+    private func handleCertificateSelection(_ result: Result<[URL], Error>) {
+        switch result {
+        case .success(let urls):
+            if let url = urls.first {
+                selectedCertificateURL = url
+                configuration["CertificatePath"] = CodableValue(url.path)
+                configuration["CertificateName"] = CodableValue(url.lastPathComponent)
+            }
+        case .failure(let error):
+            print("Certificate selection failed: \(error.localizedDescription)")
+        }
+    }
+    
+    private func removeCertificate() {
+        selectedCertificateURL = nil
+        configuration["CertificatePath"] = CodableValue("")
+        configuration["CertificateName"] = CodableValue("")
+    }
+    
+    // MARK: - Binding Helpers
+    
+    private func stringBinding(for key: String) -> Binding<String> {
         Binding(
             get: { (configuration[key]?.value as? String) ?? "" },
             set: { configuration[key] = CodableValue($0) }
         )
     }
     
-    private func binding(for key: String) -> Binding<Bool> {
+    private func boolBinding(for key: String) -> Binding<Bool> {
         Binding(
             get: { (configuration[key]?.value as? Bool) ?? false },
             set: { configuration[key] = CodableValue($0) }
@@ -843,21 +1101,34 @@ struct FileVaultConfigurationView: View {
 
 struct GatekeeperConfigurationView: View {
     @Binding var configuration: [String: CodableValue]
+    @State private var showingAdvancedOptions = false
+    @State private var showingCertificatePicker = false
+    @State private var selectedCertificateURL: URL?
+    @State private var customIdentifiers: [String] = []
+    @State private var newIdentifier = ""
+    @State private var selectedSource = "App Store"
+    
+    private let applicationSources = [
+        ApplicationSource(id: "App Store", name: "App Store", description: "Only allow apps from the Mac App Store"),
+        ApplicationSource(id: "App Store and Identified Developers", name: "App Store and Identified Developers", description: "Allow apps from the Mac App Store and identified developers"),
+        ApplicationSource(id: "Anywhere", name: "Anywhere", description: "Allow apps from anywhere (not recommended)")
+    ]
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 20) {
             Text("Gatekeeper Security")
                 .font(.headline)
                 .foregroundStyle(LCARSTheme.accent)
             
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 16) {
                 // Allowed Sources
-                VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: 12) {
                     Text("Allowed Application Sources")
                         .font(.subheadline)
                         .fontWeight(.medium)
+                        .foregroundStyle(LCARSTheme.textPrimary)
                     
-                    VStack(alignment: .leading, spacing: 6) {
+                    VStack(alignment: .leading, spacing: 8) {
                         ForEach(applicationSources, id: \.id) { source in
                             HStack {
                                 RadioButton(
@@ -879,17 +1150,349 @@ struct GatekeeperConfigurationView: View {
                         }
                     }
                 }
+                
+                // Developer ID Certificates
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Developer ID Certificates")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundStyle(LCARSTheme.textPrimary)
+                    
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Button("Add Developer ID Certificate") {
+                                showingCertificatePicker = true
+                            }
+                            .buttonStyle(.bordered)
+                            
+                            Spacer()
+                        }
+                        
+                        if let certificateURL = selectedCertificateURL {
+                            HStack {
+                                Text(certificateURL.lastPathComponent)
+                                    .font(.caption)
+                                    .foregroundStyle(LCARSTheme.textSecondary)
+                                    .lineLimit(1)
+                                
+                                Spacer()
+                                
+                                Button("Remove") {
+                                    removeCertificate()
+                                }
+                                .buttonStyle(.bordered)
+                                .controlSize(.small)
+                            }
+                        }
+                        
+                        // Custom Identifiers
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Custom Identifiers")
+                                .font(.caption)
+                                .foregroundStyle(LCARSTheme.textSecondary)
+                            
+                            HStack {
+                                TextField("Enter bundle identifier or path", text: $newIdentifier)
+                                    .textFieldStyle(.roundedBorder)
+                                
+                                Button("Add") {
+                                    addCustomIdentifier()
+                                }
+                                .buttonStyle(.bordered)
+                                .controlSize(.small)
+                                .disabled(newIdentifier.isEmpty)
+                            }
+                            
+                            if !customIdentifiers.isEmpty {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    ForEach(customIdentifiers, id: \.self) { identifier in
+                                        HStack {
+                                            Text(identifier)
+                                                .font(.caption)
+                                                .foregroundStyle(LCARSTheme.textSecondary)
+                                            
+                                            Spacer()
+                                            
+                                            Button("Remove") {
+                                                removeCustomIdentifier(identifier)
+                                            }
+                                            .buttonStyle(.bordered)
+                                            .controlSize(.small)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // Advanced Options
+                VStack(alignment: .leading, spacing: 12) {
+                    Button(action: { showingAdvancedOptions.toggle() }) {
+                        HStack {
+                            Text("Advanced Security Options")
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                            
+                            Spacer()
+                            
+                            Image(systemName: showingAdvancedOptions ? "chevron.up" : "chevron.down")
+                                .foregroundStyle(LCARSTheme.accent)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    
+                    if showingAdvancedOptions {
+                        VStack(alignment: .leading, spacing: 12) {
+                            // Notarization Requirements
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Notarization Requirements")
+                                    .font(.caption)
+                                    .foregroundStyle(LCARSTheme.textSecondary)
+                                
+                                HStack {
+                                    Text("Require Notarization")
+                                        .font(.caption)
+                                        .foregroundStyle(LCARSTheme.textSecondary)
+                                    
+                                    Spacer()
+                                    
+                                    Toggle("", isOn: boolBinding(for: "RequireNotarization"))
+                                        .labelsHidden()
+                                }
+                                
+                                HStack {
+                                    Text("Check Notarization Status")
+                                        .font(.caption)
+                                        .foregroundStyle(LCARSTheme.textSecondary)
+                                    
+                                    Spacer()
+                                    
+                                    Toggle("", isOn: boolBinding(for: "CheckNotarization"))
+                                        .labelsHidden()
+                                }
+                            }
+                            
+                            // Code Signing Policies
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Code Signing Policies")
+                                    .font(.caption)
+                                    .foregroundStyle(LCARSTheme.textSecondary)
+                                
+                                HStack {
+                                    Text("Require Valid Code Signature")
+                                        .font(.caption)
+                                        .foregroundStyle(LCARSTheme.textSecondary)
+                                    
+                                    Spacer()
+                                    
+                                    Toggle("", isOn: boolBinding(for: "RequireCodeSignature"))
+                                        .labelsHidden()
+                                }
+                                
+                                HStack {
+                                    Text("Allow Ad Hoc Signatures")
+                                        .font(.caption)
+                                        .foregroundStyle(LCARSTheme.textSecondary)
+                                    
+                                    Spacer()
+                                    
+                                    Toggle("", isOn: boolBinding(for: "AllowAdHocSignatures"))
+                                        .labelsHidden()
+                                }
+                                
+                                HStack {
+                                    Text("Allow Self-Signed Certificates")
+                                        .font(.caption)
+                                        .foregroundStyle(LCARSTheme.textSecondary)
+                                    
+                                    Spacer()
+                                    
+                                    Toggle("", isOn: boolBinding(for: "AllowSelfSigned"))
+                                        .labelsHidden()
+                                }
+                            }
+                            
+                            // Runtime Protection
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Runtime Protection")
+                                    .font(.caption)
+                                    .foregroundStyle(LCARSTheme.textSecondary)
+                                
+                                HStack {
+                                    Text("Enable Runtime Protection")
+                                        .font(.caption)
+                                        .foregroundStyle(LCARSTheme.textSecondary)
+                                    
+                                    Spacer()
+                                    
+                                    Toggle("", isOn: boolBinding(for: "EnableRuntimeProtection"))
+                                        .labelsHidden()
+                                }
+                                
+                                HStack {
+                                    Text("Block Untrusted Extensions")
+                                        .font(.caption)
+                                        .foregroundStyle(LCARSTheme.textSecondary)
+                                    
+                                    Spacer()
+                                    
+                                    Toggle("", isOn: boolBinding(for: "BlockUntrustedExtensions"))
+                                        .labelsHidden()
+                                }
+                            }
+                            
+                            // Quarantine Management
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Quarantine Management")
+                                    .font(.caption)
+                                    .foregroundStyle(LCARSTheme.textSecondary)
+                                
+                                HStack {
+                                    Text("Remove Quarantine Attributes")
+                                        .font(.caption)
+                                        .foregroundStyle(LCARSTheme.textSecondary)
+                                    
+                                    Spacer()
+                                    
+                                    Toggle("", isOn: boolBinding(for: "RemoveQuarantine"))
+                                        .labelsHidden()
+                                }
+                                
+                                HStack {
+                                    Text("Allow Quarantined Apps")
+                                        .font(.caption)
+                                        .foregroundStyle(LCARSTheme.textSecondary)
+                                    
+                                    Spacer()
+                                    
+                                    Toggle("", isOn: boolBinding(for: "AllowQuarantined"))
+                                        .labelsHidden()
+                                }
+                            }
+                        }
+                        .padding(.leading, 16)
+                    }
+                }
+                
+                // Monitoring and Reporting
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Monitoring & Reporting")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundStyle(LCARSTheme.textPrimary)
+                    
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack {
+                            Text("Monitor Gatekeeper Events")
+                                .font(.caption)
+                                .foregroundStyle(LCARSTheme.textSecondary)
+                            
+                            Spacer()
+                            
+                            Toggle("", isOn: boolBinding(for: "MonitorEvents"))
+                                .labelsHidden()
+                        }
+                        
+                        HStack {
+                            Text("Log Blocked Applications")
+                            .font(.caption)
+                            .foregroundStyle(LCARSTheme.textSecondary)
+                            
+                            Spacer()
+                            
+                            Toggle("", isOn: boolBinding(for: "LogBlockedApps"))
+                                .labelsHidden()
+                        }
+                        
+                        HStack {
+                            Text("Send Security Reports")
+                                .font(.caption)
+                                .foregroundStyle(LCARSTheme.textSecondary)
+                            
+                            Spacer()
+                            
+                            Toggle("", isOn: boolBinding(for: "SendSecurityReports"))
+                                .labelsHidden()
+                        }
+                    }
+                }
             }
+        }
+        .fileImporter(
+            isPresented: $showingCertificatePicker,
+            allowedContentTypes: [.x509Certificate, .pkcs12],
+            allowsMultipleSelection: false
+        ) { result in
+            handleCertificateSelection(result)
+        }
+        .onAppear {
+            loadCustomIdentifiers()
         }
     }
     
-    @State private var selectedSource = "mac-app-store"
+    // MARK: - Computed Properties
     
-    private let applicationSources = [
-        ApplicationSource(id: "mac-app-store", name: "Mac App Store", description: "Only applications from the Mac App Store"),
-        ApplicationSource(id: "mac-app-store-identified-developers", name: "Mac App Store and Identified Developers", description: "Mac App Store apps and apps from identified developers"),
-        ApplicationSource(id: "anywhere", name: "Anywhere", description: "Allow applications from anywhere (not recommended)")
-    ]
+    // MARK: - Helper Methods
+    
+    private func addCustomIdentifier() {
+        guard !newIdentifier.isEmpty else { return }
+        customIdentifiers.append(newIdentifier)
+        configuration["CustomIdentifiers"] = CodableValue(customIdentifiers)
+        newIdentifier = ""
+        saveCustomIdentifiers()
+    }
+    
+    private func removeCustomIdentifier(_ identifier: String) {
+        customIdentifiers.removeAll { $0 == identifier }
+        configuration["CustomIdentifiers"] = CodableValue(customIdentifiers)
+        saveCustomIdentifiers()
+    }
+    
+    private func loadCustomIdentifiers() {
+        if let identifiers = configuration["CustomIdentifiers"]?.value as? [String] {
+            customIdentifiers = identifiers
+        }
+    }
+    
+    private func saveCustomIdentifiers() {
+        configuration["CustomIdentifiers"] = CodableValue(customIdentifiers)
+    }
+    
+    private func handleCertificateSelection(_ result: Result<[URL], Error>) {
+        switch result {
+        case .success(let urls):
+            if let url = urls.first {
+                selectedCertificateURL = url
+                configuration["DeveloperIDCertificatePath"] = CodableValue(url.path)
+                configuration["DeveloperIDCertificateName"] = CodableValue(url.lastPathComponent)
+            }
+        case .failure(let error):
+            print("Certificate selection failed: \(error.localizedDescription)")
+        }
+    }
+    
+    private func removeCertificate() {
+        selectedCertificateURL = nil
+        configuration["DeveloperIDCertificatePath"] = CodableValue("")
+        configuration["DeveloperIDCertificateName"] = CodableValue("")
+    }
+    
+    // MARK: - Binding Helpers
+    
+    private func stringBinding(for key: String) -> Binding<String> {
+        Binding(
+            get: { (configuration[key]?.value as? String) ?? "" },
+            set: { configuration[key] = CodableValue($0) }
+        )
+    }
+    
+    private func boolBinding(for key: String) -> Binding<Bool> {
+        Binding(
+            get: { (configuration[key]?.value as? Bool) ?? false },
+            set: { configuration[key] = CodableValue($0) }
+        )
+    }
 }
 
 struct ApplicationSource: Identifiable {
@@ -914,57 +1517,416 @@ struct RadioButton: View {
 
 struct WiFiConfigurationView: View {
     @Binding var configuration: [String: CodableValue]
+    @State private var showingAdvancedOptions = false
+    @State private var showingCertificatePicker = false
+    @State private var selectedCertificateURL: URL?
+    @State private var showingPasswordPicker = false
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 20) {
             Text("Wi-Fi Configuration")
                 .font(.headline)
                 .foregroundStyle(LCARSTheme.accent)
             
-            VStack(alignment: .leading, spacing: 12) {
-                // SSID
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Network Name (SSID)")
+            VStack(alignment: .leading, spacing: 16) {
+                // Basic Network Configuration
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Basic Network Configuration")
                         .font(.subheadline)
                         .fontWeight(.medium)
+                        .foregroundStyle(LCARSTheme.textPrimary)
                     
-                    TextField("Enter network name", text: binding(for: "SSID"))
-                        .textFieldStyle(.roundedBorder)
-                }
-                
-                // Security Type
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Security Type")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                    
-                    Picker("Security", selection: binding(for: "SecurityType")) {
-                        Text("None").tag("None")
-                        Text("WEP").tag("WEP")
-                        Text("WPA/WPA2 Personal").tag("WPA/WPA2 Personal")
-                        Text("WPA/WPA2 Enterprise").tag("WPA/WPA2 Enterprise")
-                        Text("WPA3 Personal").tag("WPA3 Personal")
-                        Text("WPA3 Enterprise").tag("WPA3 Enterprise")
+                    // SSID
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Network Name (SSID)")
+                            .font(.caption)
+                            .foregroundStyle(LCARSTheme.textSecondary)
+                        
+                        TextField("Enter network name", text: stringBinding(for: "SSID"))
+                            .textFieldStyle(.roundedBorder)
                     }
-                    .pickerStyle(.menu)
+                    
+                    // Hidden Network
+                    HStack {
+                        Text("Hidden Network")
+                            .font(.caption)
+                            .foregroundStyle(LCARSTheme.textSecondary)
+                        
+                        Spacer()
+                        
+                        Toggle("", isOn: boolBinding(for: "HiddenNetwork"))
+                            .labelsHidden()
+                    }
+                    
+                    // Auto Join
+                    HStack {
+                        Text("Auto-Join Network")
+                            .font(.caption)
+                            .foregroundStyle(LCARSTheme.textSecondary)
+                        
+                        Spacer()
+                        
+                        Toggle("", isOn: boolBinding(for: "AutoJoin"))
+                            .labelsHidden()
+                    }
                 }
                 
-                // Password
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Password")
+                // Security Configuration
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Security Configuration")
                         .font(.subheadline)
                         .fontWeight(.medium)
+                        .foregroundStyle(LCARSTheme.textPrimary)
                     
-                    SecureField("Enter password", text: binding(for: "Password"))
-                        .textFieldStyle(.roundedBorder)
+                    // Security Type
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Security Type")
+                            .font(.caption)
+                            .foregroundStyle(LCARSTheme.textSecondary)
+                        
+                        Picker("Security", selection: stringBinding(for: "SecurityType")) {
+                            Text("None").tag("None")
+                            Text("WEP").tag("WEP")
+                            Text("WPA/WPA2 Personal").tag("WPA/WPA2 Personal")
+                            Text("WPA/WPA2 Enterprise").tag("WPA/WPA2 Enterprise")
+                            Text("WPA3 Personal").tag("WPA3 Personal")
+                            Text("WPA3 Enterprise").tag("WPA3 Enterprise")
+                        }
+                        .pickerStyle(.menu)
+                        .onChange(of: configuration["SecurityType"]?.value as? String ?? "") { oldValue, newValue in
+                            updateSecurityFields()
+                        }
+                    }
+                    
+                    // Password/Passphrase
+                    if requiresPassword {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(passwordFieldLabel)
+                                .font(.caption)
+                                .foregroundStyle(LCARSTheme.textSecondary)
+                            
+                            HStack {
+                                SecureField(passwordFieldPlaceholder, text: stringBinding(for: "Password"))
+                                    .textFieldStyle(.roundedBorder)
+                                
+                                Button("Generate") {
+                                    generateSecurePassword()
+                                }
+                                .buttonStyle(.bordered)
+                                .controlSize(.small)
+                            }
+                        }
+                    }
+                }
+                
+                // Enterprise Authentication
+                if isEnterpriseSecurity {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Enterprise Authentication")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundStyle(LCARSTheme.textPrimary)
+                        
+                        // Authentication Method
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Authentication Method")
+                                .font(.caption)
+                                .foregroundStyle(LCARSTheme.textSecondary)
+                            
+                            Picker("Authentication", selection: stringBinding(for: "AuthenticationMethod")) {
+                                Text("Username & Password").tag("UsernamePassword")
+                                Text("EAP-TLS").tag("EAP-TLS")
+                                Text("PEAP").tag("PEAP")
+                                Text("TTLS").tag("TTLS")
+                                Text("FAST").tag("FAST")
+                            }
+                            .pickerStyle(.menu)
+                        }
+                        
+                        // Username
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Username")
+                                .font(.caption)
+                                .foregroundStyle(LCARSTheme.textSecondary)
+                            
+                            TextField("Enter username", text: stringBinding(for: "Username"))
+                                .textFieldStyle(.roundedBorder)
+                        }
+                        
+                        // Certificate-based Authentication
+                        if requiresCertificate {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Client Certificate")
+                                    .font(.caption)
+                                    .foregroundStyle(LCARSTheme.textSecondary)
+                                
+                                HStack {
+                                    Button("Choose Certificate File") {
+                                        showingCertificatePicker = true
+                                    }
+                                    .buttonStyle(.bordered)
+                                    
+                                    if let certificateURL = selectedCertificateURL {
+                                        Text(certificateURL.lastPathComponent)
+                                            .font(.caption)
+                                            .foregroundStyle(LCARSTheme.textSecondary)
+                                            .lineLimit(1)
+                                    }
+                                    
+                                    Spacer()
+                                }
+                                
+                                if selectedCertificateURL != nil {
+                                    HStack {
+                                        Button("Remove Certificate") {
+                                            removeCertificate()
+                                        }
+                                        .buttonStyle(.bordered)
+                                        .controlSize(.small)
+                                        
+                                        Spacer()
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // Domain
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Domain")
+                                .font(.caption)
+                                .foregroundStyle(LCARSTheme.textSecondary)
+                            
+                            TextField("Enter domain (optional)", text: stringBinding(for: "Domain"))
+                                .textFieldStyle(.roundedBorder)
+                        }
+                    }
+                }
+                
+                // Advanced Options
+                VStack(alignment: .leading, spacing: 12) {
+                    Button(action: { showingAdvancedOptions.toggle() }) {
+                        HStack {
+                            Text("Advanced Options")
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                            
+                            Spacer()
+                            
+                            Image(systemName: showingAdvancedOptions ? "chevron.up" : "chevron.down")
+                                .foregroundStyle(LCARSTheme.accent)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    
+                    if showingAdvancedOptions {
+                        VStack(alignment: .leading, spacing: 12) {
+                            // Proxy Configuration
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Proxy Configuration")
+                                    .font(.caption)
+                                    .foregroundStyle(LCARSTheme.textSecondary)
+                                
+                                HStack {
+                                    Text("Use Proxy")
+                                        .font(.caption)
+                                        .foregroundStyle(LCARSTheme.textSecondary)
+                                    
+                                    Spacer()
+                                    
+                                    Toggle("", isOn: boolBinding(for: "UseProxy"))
+                                        .labelsHidden()
+                                }
+                                
+                                if (configuration["UseProxy"]?.value as? Bool) == true {
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text("Proxy Server")
+                                            .font(.caption)
+                                            .foregroundStyle(LCARSTheme.textSecondary)
+                                        
+                                        TextField("proxy.company.com", text: stringBinding(for: "ProxyServer"))
+                                            .textFieldStyle(.roundedBorder)
+                                    }
+                                    
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text("Proxy Port")
+                                            .font(.caption)
+                                            .foregroundStyle(LCARSTheme.textSecondary)
+                                        
+                                        TextField("8080", text: stringBinding(for: "ProxyPort"))
+                                            .textFieldStyle(.roundedBorder)
+                                            .frame(width: 100)
+                                    }
+                                }
+                            }
+                            
+                            // QoS Configuration
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Quality of Service")
+                                    .font(.caption)
+                                    .foregroundStyle(LCARSTheme.textSecondary)
+                                
+                                HStack {
+                                    Text("Enable QoS")
+                                        .font(.caption)
+                                        .foregroundStyle(LCARSTheme.textSecondary)
+                                    
+                                    Spacer()
+                                    
+                                    Toggle("", isOn: boolBinding(for: "EnableQoS"))
+                                        .labelsHidden()
+                                }
+                                
+                                if (configuration["EnableQoS"]?.value as? Bool) == true {
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text("QoS Priority")
+                                        .font(.caption)
+                                        .foregroundStyle(LCARSTheme.textSecondary)
+                                        
+                                        Picker("QoS Priority", selection: stringBinding(for: "QoSPriority")) {
+                                            Text("Background").tag("Background")
+                                            Text("Standard").tag("Standard")
+                                            Text("Video").tag("Video")
+                                            Text("Voice").tag("Voice")
+                                        }
+                                        .pickerStyle(.menu)
+                                    }
+                                }
+                            }
+                            
+                            // Network Profile Validation
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Network Profile Validation")
+                                    .font(.caption)
+                                    .foregroundStyle(LCARSTheme.textSecondary)
+                                
+                                HStack {
+                                    Text("Validate Network Profile")
+                                        .font(.caption)
+                                        .foregroundStyle(LCARSTheme.textSecondary)
+                                    
+                                    Spacer()
+                                    
+                                    Toggle("", isOn: boolBinding(for: "ValidateProfile"))
+                                        .labelsHidden()
+                                }
+                                
+                                HStack {
+                                    Text("Test Connection Before Save")
+                                    .font(.caption)
+                                    .foregroundStyle(LCARSTheme.textSecondary)
+                                    
+                                    Spacer()
+                                    
+                                    Toggle("", isOn: boolBinding(for: "TestConnection"))
+                                        .labelsHidden()
+                                }
+                            }
+                        }
+                        .padding(.leading, 16)
+                    }
                 }
             }
         }
+        .fileImporter(
+            isPresented: $showingCertificatePicker,
+            allowedContentTypes: [.x509Certificate, .pkcs12],
+            allowsMultipleSelection: false
+        ) { result in
+            handleCertificateSelection(result)
+        }
+        .onAppear {
+            updateSecurityFields()
+        }
     }
     
-    private func binding(for key: String) -> Binding<String> {
+    // MARK: - Computed Properties
+    
+    private var isEnterpriseSecurity: Bool {
+        let securityType = configuration["SecurityType"]?.value as? String ?? ""
+        return securityType.contains("Enterprise")
+    }
+    
+    private var requiresPassword: Bool {
+        let securityType = configuration["SecurityType"]?.value as? String ?? ""
+        return securityType != "None"
+    }
+    
+    private var requiresCertificate: Bool {
+        let authMethod = configuration["AuthenticationMethod"]?.value as? String ?? ""
+        return authMethod == "EAP-TLS"
+    }
+    
+    private var passwordFieldLabel: String {
+        let securityType = configuration["SecurityType"]?.value as? String ?? ""
+        if securityType.contains("WEP") {
+            return "WEP Key"
+        } else {
+            return "Password/Passphrase"
+        }
+    }
+    
+    private var passwordFieldPlaceholder: String {
+        let securityType = configuration["SecurityType"]?.value as? String ?? ""
+        if securityType.contains("WEP") {
+            return "Enter WEP key"
+        } else {
+            return "Enter password or passphrase"
+        }
+    }
+    
+    // MARK: - Helper Methods
+    
+    private func updateSecurityFields() {
+        // Update UI based on security type selection
+        let securityType = configuration["SecurityType"]?.value as? String ?? ""
+        
+        if securityType.contains("Enterprise") {
+            configuration["AuthenticationMethod"] = CodableValue("UsernamePassword")
+        }
+    }
+    
+    private func generateSecurePassword() {
+        let newPassword = generateSecureWiFiPassword()
+        configuration["Password"] = CodableValue(newPassword)
+    }
+    
+    private func generateSecureWiFiPassword() -> String {
+        // Generate a 16-character WiFi password with mixed case, numbers, and symbols
+        let characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*"
+        return String((0..<16).map { _ in characters.randomElement()! })
+    }
+    
+    private func handleCertificateSelection(_ result: Result<[URL], Error>) {
+        switch result {
+        case .success(let urls):
+            if let url = urls.first {
+                selectedCertificateURL = url
+                configuration["ClientCertificatePath"] = CodableValue(url.path)
+                configuration["ClientCertificateName"] = CodableValue(url.lastPathComponent)
+            }
+        case .failure(let error):
+            print("Certificate selection failed: \(error.localizedDescription)")
+        }
+    }
+    
+    private func removeCertificate() {
+        selectedCertificateURL = nil
+        configuration["ClientCertificatePath"] = CodableValue("")
+        configuration["ClientCertificateName"] = CodableValue("")
+    }
+    
+    // MARK: - Binding Helpers
+    
+    private func stringBinding(for key: String) -> Binding<String> {
         Binding(
             get: { (configuration[key]?.value as? String) ?? "" },
+            set: { configuration[key] = CodableValue($0) }
+        )
+    }
+    
+    private func boolBinding(for key: String) -> Binding<Bool> {
+        Binding(
+            get: { (configuration[key]?.value as? Bool) ?? false },
             set: { configuration[key] = CodableValue($0) }
         )
     }
@@ -972,65 +1934,444 @@ struct WiFiConfigurationView: View {
 
 struct VPNConfigurationView: View {
     @Binding var configuration: [String: CodableValue]
+    @State private var showingAdvancedOptions = false
+    @State private var showingCertificatePicker = false
+    @State private var selectedCertificateURL: URL?
+    @State private var showingPasswordPicker = false
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 20) {
             Text("VPN Configuration")
                 .font(.headline)
                 .foregroundStyle(LCARSTheme.accent)
             
-            VStack(alignment: .leading, spacing: 12) {
-                // VPN Type
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("VPN Type")
+            VStack(alignment: .leading, spacing: 16) {
+                // Basic VPN Configuration
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Basic VPN Configuration")
                         .font(.subheadline)
                         .fontWeight(.medium)
+                        .foregroundStyle(LCARSTheme.textPrimary)
                     
-                    Picker("VPN Type", selection: binding(for: "VPNType")) {
-                        Text("IKEv2").tag("IKEv2")
-                        Text("L2TP").tag("L2TP")
-                        Text("PPTP").tag("PPTP")
-                        Text("Cisco IPsec").tag("Cisco IPsec")
+                    // VPN Type
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("VPN Type")
+                            .font(.caption)
+                            .foregroundStyle(LCARSTheme.textSecondary)
+                        
+                        Picker("VPN Type", selection: stringBinding(for: "VPNType")) {
+                            Text("IKEv2").tag("IKEv2")
+                            Text("L2TP").tag("L2TP")
+                            Text("PPTP").tag("PPTP")
+                            Text("Cisco IPsec").tag("Cisco IPsec")
+                            Text("OpenVPN").tag("OpenVPN")
+                            Text("WireGuard").tag("WireGuard")
+                        }
+                        .pickerStyle(.menu)
+                        .onChange(of: configuration["VPNType"]?.value as? String ?? "") { oldValue, newValue in
+                            updateVPNFields()
+                        }
                     }
-                    .pickerStyle(.menu)
+                    
+                    // Server Address
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Server Address")
+                            .font(.caption)
+                            .foregroundStyle(LCARSTheme.textSecondary)
+                        
+                        TextField("vpn.company.com", text: stringBinding(for: "ServerAddress"))
+                            .textFieldStyle(.roundedBorder)
+                    }
+                    
+                    // Server Port
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Server Port")
+                            .font(.caption)
+                            .foregroundStyle(LCARSTheme.textSecondary)
+                        
+                        TextField("Default port for selected protocol", text: stringBinding(for: "ServerPort"))
+                            .textFieldStyle(.roundedBorder)
+                            .frame(width: 150)
+                    }
+                    
+                    // Account Name
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Account Name")
+                            .font(.caption)
+                            .foregroundStyle(LCARSTheme.textSecondary)
+                        
+                        TextField("Enter account name", text: stringBinding(for: "AccountName"))
+                            .textFieldStyle(.roundedBorder)
+                    }
                 }
                 
-                // Server Address
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Server Address")
+                // Authentication Configuration
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Authentication Configuration")
                         .font(.subheadline)
                         .fontWeight(.medium)
+                        .foregroundStyle(LCARSTheme.textPrimary)
                     
-                    TextField("vpn.company.com", text: binding(for: "ServerAddress"))
-                        .textFieldStyle(.roundedBorder)
+                    // Authentication Method
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Authentication Method")
+                            .font(.caption)
+                            .foregroundStyle(LCARSTheme.textSecondary)
+                        
+                        Picker("Authentication", selection: stringBinding(for: "AuthenticationMethod")) {
+                            Text("Username & Password").tag("UsernamePassword")
+                            Text("Certificate").tag("Certificate")
+                            Text("Shared Secret").tag("SharedSecret")
+                            Text("RSA SecurID").tag("RSASecurID")
+                        }
+                        .pickerStyle(.menu)
+                        .onChange(of: configuration["AuthenticationMethod"]?.value as? String ?? "") { oldValue, newValue in
+                            updateAuthenticationFields()
+                        }
+                    }
+                    
+                    // Username
+                    if requiresUsername {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Username")
+                                .font(.caption)
+                                .foregroundStyle(LCARSTheme.textSecondary)
+                            
+                            TextField("Enter username", text: stringBinding(for: "Username"))
+                                .textFieldStyle(.roundedBorder)
+                        }
+                    }
+                    
+                    // Password
+                    if requiresPassword {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Password")
+                                .font(.caption)
+                                .foregroundStyle(LCARSTheme.textSecondary)
+                            
+                            HStack {
+                                SecureField("Enter password", text: stringBinding(for: "Password"))
+                                    .textFieldStyle(.roundedBorder)
+                                
+                                Button("Generate") {
+                                    generateSecurePassword()
+                                }
+                                .buttonStyle(.bordered)
+                                .controlSize(.small)
+                            }
+                        }
+                    }
+                    
+                    // Certificate-based Authentication
+                    if requiresCertificate {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Client Certificate")
+                                .font(.caption)
+                                .foregroundStyle(LCARSTheme.textSecondary)
+                            
+                            HStack {
+                                Button("Choose Certificate File") {
+                                    showingCertificatePicker = true
+                                }
+                                .buttonStyle(.bordered)
+                                
+                                if let certificateURL = selectedCertificateURL {
+                                    Text(certificateURL.lastPathComponent)
+                                        .font(.caption)
+                                        .foregroundStyle(LCARSTheme.textSecondary)
+                                        .lineLimit(1)
+                                }
+                                
+                                Spacer()
+                            }
+                            
+                            if selectedCertificateURL != nil {
+                                HStack {
+                                    Button("Remove Certificate") {
+                                        removeCertificate()
+                                    }
+                                    .buttonStyle(.bordered)
+                                    .controlSize(.small)
+                                    
+                                    Spacer()
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Shared Secret
+                    if requiresSharedSecret {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Shared Secret")
+                                .font(.caption)
+                                .foregroundStyle(LCARSTheme.textSecondary)
+                            
+                            SecureField("Enter shared secret", text: stringBinding(for: "SharedSecret"))
+                                .textFieldStyle(.roundedBorder)
+                        }
+                    }
                 }
                 
-                // Username
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Username")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
+                // Advanced Options
+                VStack(alignment: .leading, spacing: 12) {
+                    Button(action: { showingAdvancedOptions.toggle() }) {
+                        HStack {
+                            Text("Advanced Options")
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                            
+                            Spacer()
+                            
+                            Image(systemName: showingAdvancedOptions ? "chevron.up" : "chevron.down")
+                                .foregroundStyle(LCARSTheme.accent)
+                        }
+                    }
+                    .buttonStyle(.plain)
                     
-                    TextField("Enter username", text: binding(for: "Username"))
-                        .textFieldStyle(.roundedBorder)
-                }
-                
-                // Password
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Password")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                    
-                    SecureField("Enter password", text: binding(for: "Password"))
-                        .textFieldStyle(.roundedBorder)
+                    if showingAdvancedOptions {
+                        VStack(alignment: .leading, spacing: 12) {
+                            // Connection Settings
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Connection Settings")
+                                    .font(.caption)
+                                    .foregroundStyle(LCARSTheme.textSecondary)
+                                
+                                HStack {
+                                    Text("Auto-Connect")
+                                        .font(.caption)
+                                        .foregroundStyle(LCARSTheme.textSecondary)
+                                    
+                                    Spacer()
+                                    
+                                    Toggle("", isOn: boolBinding(for: "AutoConnect"))
+                                        .labelsHidden()
+                                }
+                                
+                                HStack {
+                                    Text("Send All Traffic")
+                                        .font(.caption)
+                                        .foregroundStyle(LCARSTheme.textSecondary)
+                                    
+                                    Spacer()
+                                    
+                                    Toggle("", isOn: boolBinding(for: "SendAllTraffic"))
+                                        .labelsHidden()
+                                }
+                                
+                                if (configuration["SendAllTraffic"]?.value as? Bool) == false {
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text("Split Tunnel Networks")
+                                            .font(.caption)
+                                            .foregroundStyle(LCARSTheme.textSecondary)
+                                        
+                                        TextField("192.168.1.0/24, 10.0.0.0/8", text: stringBinding(for: "SplitTunnelNetworks"))
+                                            .textFieldStyle(.roundedBorder)
+                                    }
+                                }
+                            }
+                            
+                            // Security Settings
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Security Settings")
+                                    .font(.caption)
+                                    .foregroundStyle(LCARSTheme.textSecondary)
+                                
+                                HStack {
+                                    Text("Use Certificate Revocation")
+                                        .font(.caption)
+                                        .foregroundStyle(LCARSTheme.textSecondary)
+                                    
+                                    Spacer()
+                                    
+                                    Toggle("", isOn: boolBinding(for: "UseCertificateRevocation"))
+                                        .labelsHidden()
+                                }
+                                
+                                HStack {
+                                    Text("Validate Server Certificate")
+                                        .font(.caption)
+                                        .foregroundStyle(LCARSTheme.textSecondary)
+                                    
+                                    Spacer()
+                                    
+                                    Toggle("", isOn: boolBinding(for: "ValidateServerCertificate"))
+                                        .labelsHidden()
+                                }
+                                
+                                if (configuration["ValidateServerCertificate"]?.value as? Bool) == true {
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text("Server Certificate Name")
+                                            .font(.caption)
+                                            .foregroundStyle(LCARSTheme.textSecondary)
+                                        
+                                        TextField("vpn.company.com", text: stringBinding(for: "ServerCertificateName"))
+                                            .textFieldStyle(.roundedBorder)
+                                    }
+                                }
+                            }
+                            
+                            // Monitoring and Reporting
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Monitoring & Reporting")
+                                    .font(.caption)
+                                    .foregroundStyle(LCARSTheme.textSecondary)
+                                
+                                HStack {
+                                    Text("Monitor Connection Status")
+                                        .font(.caption)
+                                        .foregroundStyle(LCARSTheme.textSecondary)
+                                    
+                                    Spacer()
+                                    
+                                    Toggle("", isOn: boolBinding(for: "MonitorConnection"))
+                                        .labelsHidden()
+                                }
+                                
+                                HStack {
+                                    Text("Log Connection Events")
+                                    .font(.caption)
+                                    .foregroundStyle(LCARSTheme.textSecondary)
+                                    
+                                    Spacer()
+                                    
+                                    Toggle("", isOn: boolBinding(for: "LogConnectionEvents"))
+                                        .labelsHidden()
+                                }
+                                
+                                HStack {
+                                    Text("Send Status Reports")
+                                    .font(.caption)
+                                    .foregroundStyle(LCARSTheme.textSecondary)
+                                    
+                                    Spacer()
+                                    
+                                    Toggle("", isOn: boolBinding(for: "SendStatusReports"))
+                                        .labelsHidden()
+                                }
+                            }
+                        }
+                        .padding(.leading, 16)
+                    }
                 }
             }
         }
+        .fileImporter(
+            isPresented: $showingCertificatePicker,
+            allowedContentTypes: [.x509Certificate, .pkcs12],
+            allowsMultipleSelection: false
+        ) { result in
+            handleCertificateSelection(result)
+        }
+        .onAppear {
+            updateVPNFields()
+            updateAuthenticationFields()
+        }
     }
     
-    private func binding(for key: String) -> Binding<String> {
+    // MARK: - Computed Properties
+    
+    private var requiresUsername: Bool {
+        let authMethod = configuration["AuthenticationMethod"]?.value as? String ?? ""
+        return authMethod == "UsernamePassword" || authMethod == "RSASecurID"
+    }
+    
+    private var requiresPassword: Bool {
+        let authMethod = configuration["AuthenticationMethod"]?.value as? String ?? ""
+        return authMethod == "UsernamePassword"
+    }
+    
+    private var requiresCertificate: Bool {
+        let authMethod = configuration["AuthenticationMethod"]?.value as? String ?? ""
+        return authMethod == "Certificate"
+    }
+    
+    private var requiresSharedSecret: Bool {
+        let authMethod = configuration["AuthenticationMethod"]?.value as? String ?? ""
+        return authMethod == "SharedSecret"
+    }
+    
+    // MARK: - Helper Methods
+    
+    private func updateVPNFields() {
+        let vpnType = configuration["VPNType"]?.value as? String ?? ""
+        
+        // Set default ports based on VPN type
+        switch vpnType {
+        case "IKEv2":
+            configuration["ServerPort"] = CodableValue("500")
+        case "L2TP":
+            configuration["ServerPort"] = CodableValue("1701")
+        case "PPTP":
+            configuration["ServerPort"] = CodableValue("1723")
+        case "Cisco IPsec":
+            configuration["ServerPort"] = CodableValue("500")
+        case "OpenVPN":
+            configuration["ServerPort"] = CodableValue("1194")
+        case "WireGuard":
+            configuration["ServerPort"] = CodableValue("51820")
+        default:
+            configuration["ServerPort"] = CodableValue("")
+        }
+    }
+    
+    private func updateAuthenticationFields() {
+        let authMethod = configuration["AuthenticationMethod"]?.value as? String ?? ""
+        
+        // Reset fields based on authentication method
+        if authMethod != "UsernamePassword" {
+            configuration["Password"] = CodableValue("")
+        }
+        if authMethod != "Certificate" {
+            configuration["ClientCertificatePath"] = CodableValue("")
+            configuration["ClientCertificateName"] = CodableValue("")
+        }
+        if authMethod != "SharedSecret" {
+            configuration["SharedSecret"] = CodableValue("")
+        }
+    }
+    
+    private func generateSecurePassword() {
+        let newPassword = generateSecureVPNPassword()
+        configuration["Password"] = CodableValue(newPassword)
+    }
+    
+    private func generateSecureVPNPassword() -> String {
+        // Generate a 16-character VPN password with mixed case, numbers, and symbols
+        let characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*"
+        return String((0..<16).map { _ in characters.randomElement()! })
+    }
+    
+    private func handleCertificateSelection(_ result: Result<[URL], Error>) {
+        switch result {
+        case .success(let urls):
+            if let url = urls.first {
+                selectedCertificateURL = url
+                configuration["ClientCertificatePath"] = CodableValue(url.path)
+                configuration["ClientCertificateName"] = CodableValue(url.lastPathComponent)
+            }
+        case .failure(let error):
+            print("Certificate selection failed: \(error.localizedDescription)")
+        }
+    }
+    
+    private func removeCertificate() {
+        selectedCertificateURL = nil
+        configuration["ClientCertificatePath"] = CodableValue("")
+        configuration["ClientCertificateName"] = CodableValue("")
+    }
+    
+    // MARK: - Binding Helpers
+    
+    private func stringBinding(for key: String) -> Binding<String> {
         Binding(
             get: { (configuration[key]?.value as? String) ?? "" },
+            set: { configuration[key] = CodableValue($0) }
+        )
+    }
+    
+    private func boolBinding(for key: String) -> Binding<Bool> {
+        Binding(
+            get: { (configuration[key]?.value as? Bool) ?? false },
             set: { configuration[key] = CodableValue($0) }
         )
     }
@@ -1058,13 +2399,13 @@ struct GenericConfigurationView: View {
                 
                 Spacer()
                 
-                Toggle("", isOn: binding(for: "Enabled"))
+                                        Toggle("", isOn: boolBinding(for: "Enabled"))
                     .labelsHidden()
             }
         }
     }
     
-    private func binding(for key: String) -> Binding<Bool> {
+    private func boolBinding(for key: String) -> Binding<Bool> {
         Binding(
             get: { (configuration[key]?.value as? Bool) ?? false },
             set: { configuration[key] = CodableValue($0) }
@@ -1952,15 +3293,8 @@ struct ProfileDocument: FileDocument {
         // Ensure content is not empty and safely convert to data
         let safeContent = content.isEmpty ? "<?xml version=\"1.0\" encoding=\"UTF-8\"?><plist version=\"1.0\"><dict></dict></plist>" : content
         
-        do {
-            let data = Data(safeContent.utf8)
-            return FileWrapper(regularFileWithContents: data)
-        } catch {
-            // Fallback to empty plist if data conversion fails
-            let fallbackContent = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><plist version=\"1.0\"><dict></dict></plist>"
-            let fallbackData = Data(fallbackContent.utf8)
-            return FileWrapper(regularFileWithContents: fallbackData)
-        }
+        let data = Data(safeContent.utf8)
+        return FileWrapper(regularFileWithContents: data)
     }
 }
 

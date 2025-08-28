@@ -71,7 +71,7 @@ class UserSettings: ObservableObject {
     
     func getValidMDMAccount() -> MDMAccount? {
         return mdmAccounts.first { account in
-            guard let token = account.authToken else { return false }
+            guard account.authToken != nil else { return false }
             
             // Check if token is expired
             if let expiry = account.tokenExpiry, expiry < Date() {

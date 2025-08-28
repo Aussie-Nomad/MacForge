@@ -270,3 +270,20 @@ enum PayloadComplexity: String, CaseIterable {
         }
     }
 }
+
+// MARK: - Profile Validation Result
+struct ProfileValidationResult {
+    let isValid: Bool
+    let errors: [ProfileValidationError]
+    let warnings: [ProfileValidationWarning]
+    let complianceIssues: [ComplianceError]
+    let suggestions: [ValidationSuggestion]
+    
+    init(isValid: Bool, errors: [ProfileValidationError], warnings: [ProfileValidationWarning], complianceIssues: [ComplianceError], suggestions: [ValidationSuggestion]) {
+        self.isValid = isValid
+        self.errors = errors
+        self.warnings = warnings
+        self.complianceIssues = complianceIssues
+        self.suggestions = suggestions
+    }
+}
