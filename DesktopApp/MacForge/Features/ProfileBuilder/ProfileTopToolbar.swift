@@ -22,13 +22,24 @@ struct ProfileTopToolbar: View {
             Spacer()
 
             Button("Download .mobileconfig") { 
-                // Direct export - no need for file picker since we're saving to Downloads
-                onExport()
+                showingExportPanel = true
             }
-            .buttonStyle(.borderedProminent)
-            .tint(LCARSTheme.accent)
+            .buttonStyle(.bordered)
             .contentShape(Rectangle())
-            .help("Download the configuration profile to your Downloads folder")
+            .fileExporter(
+                isPresented: $showingExportPanel,
+                document: ProfileDocument(content: "Profile content will be generated here"),
+                contentType: UTType(filenameExtension: "mobileconfig") ?? .data,
+                defaultFilename: "profile.mobileconfig"
+            ) { result in
+                switch result {
+                case .success(_):
+                    // Trigger the actual export when user chooses location
+                    onExport()
+                case .failure(let error):
+                    print("Export failed: \(error.localizedDescription)")
+                }
+            }
         }
         .contentShape(Rectangle())
         .padding(.horizontal, 16)

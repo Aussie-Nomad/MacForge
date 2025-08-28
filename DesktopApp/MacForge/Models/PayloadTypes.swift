@@ -271,6 +271,189 @@ enum PayloadComplexity: String, CaseIterable {
     }
 }
 
+// MARK: - Profile Validation Error
+enum ProfileValidationError: LocalizedError, Equatable {
+    case emptyName
+    case emptyIdentifier
+    case invalidIdentifier
+    case noPayloads
+    case duplicatePayloadIdentifier(String)
+    
+    var errorDescription: String? {
+        switch self {
+        case .emptyName:
+            return "Profile name cannot be empty"
+        case .emptyIdentifier:
+            return "Profile identifier cannot be empty"
+        case .invalidIdentifier:
+            return "Profile identifier must be a valid reverse domain name (e.g., com.company.profile)"
+        case .noPayloads:
+            return "Profile must contain at least one payload"
+        case .duplicatePayloadIdentifier(let identifier):
+            return "Duplicate payload identifier: \(identifier)"
+        }
+    }
+}
+
+// MARK: - Profile Validation Warning
+struct ProfileValidationWarning {
+    let type: WarningType
+    let message: String
+    let severity: WarningSeverity
+    let recommendation: String?
+    
+    enum WarningType: String, CaseIterable {
+        case deprecatedAPI = "Deprecated API"
+        case missingOptional = "Missing Optional Field"
+        case versionMismatch = "Version Mismatch"
+        case performance = "Performance Consideration"
+        case security = "Security Consideration"
+        case compatibility = "Compatibility Issue"
+        case bestPractice = "Best Practice"
+        
+        var description: String {
+            switch self {
+            case .deprecatedAPI: return "Uses deprecated or legacy API"
+            case .missingOptional: return "Missing optional but recommended field"
+            case .versionMismatch: return "Version compatibility issue detected"
+            case .performance: return "May impact performance"
+            case .security: return "Security consideration to review"
+            case .compatibility: return "Potential compatibility issue"
+            case .bestPractice: return "Recommendation for best practices"
+            }
+        }
+    }
+    
+    enum WarningSeverity: String, CaseIterable {
+        case low = "Low"
+        case medium = "Medium"
+        case high = "High"
+        
+        var color: String {
+            switch self {
+            case .low: return "yellow"
+            case .medium: return "orange"
+            case .high: return "red"
+            }
+        }
+    }
+    
+    init(type: WarningType, message: String, severity: WarningSeverity = .medium, recommendation: String? = nil) {
+        self.type = type
+        self.message = message
+        self.severity = severity
+        self.recommendation = recommendation
+    }
+}
+
+// MARK: - Compliance Error
+struct ComplianceError {
+    let type: ComplianceType
+    let message: String
+    let severity: ComplianceSeverity
+    let requirement: String
+    let remediation: String?
+    
+    enum ComplianceType: String, CaseIterable {
+        case gdpr = "GDPR"
+        case hipaa = "HIPAA"
+        case sox = "SOX"
+        case pci = "PCI DSS"
+        case iso27001 = "ISO 27001"
+        case nist = "NIST"
+        case apple = "Apple Requirements"
+        case enterprise = "Enterprise Policy"
+        
+        var description: String {
+            switch self {
+            case .gdpr: return "General Data Protection Regulation"
+            case .hipaa: return "Health Insurance Portability and Accountability Act"
+            case .sox: return "Sarbanes-Oxley Act"
+            case .pci: return "Payment Card Industry Data Security Standard"
+            case .iso27001: return "Information Security Management"
+            case .nist: return "National Institute of Standards and Technology"
+            case .apple: return "Apple Developer Requirements"
+            case .enterprise: return "Enterprise Security Policy"
+            }
+        }
+    }
+    
+    enum ComplianceSeverity: String, CaseIterable {
+        case minor = "Minor"
+        case moderate = "Moderate"
+        case critical = "Critical"
+        
+        var color: String {
+            switch self {
+            case .minor: return "yellow"
+            case .moderate: return "orange"
+            case .critical: return "red"
+            }
+        }
+    }
+    
+    init(type: ComplianceType, message: String, severity: ComplianceSeverity, requirement: String, remediation: String? = nil) {
+        self.type = type
+        self.message = message
+        self.severity = severity
+        self.requirement = requirement
+        self.remediation = remediation
+    }
+}
+
+// MARK: - Validation Suggestion
+struct ValidationSuggestion {
+    let type: SuggestionType
+    let message: String
+    let priority: SuggestionPriority
+    let impact: String
+    let implementation: String?
+    
+    enum SuggestionType: String, CaseIterable {
+        case optimization = "Optimization"
+        case security = "Security Enhancement"
+        case compatibility = "Compatibility"
+        case performance = "Performance"
+        case userExperience = "User Experience"
+        case maintenance = "Maintenance"
+        case documentation = "Documentation"
+        
+        var description: String {
+            switch self {
+            case .optimization: return "Improve efficiency or reduce complexity"
+            case .security: return "Enhance security posture"
+            case .compatibility: return "Improve cross-platform compatibility"
+            case .performance: return "Enhance performance characteristics"
+            case .userExperience: return "Improve user interface or workflow"
+            case .maintenance: return "Easier maintenance and updates"
+            case .documentation: return "Better documentation or examples"
+            }
+        }
+    }
+    
+    enum SuggestionPriority: String, CaseIterable {
+        case low = "Low"
+        case medium = "Medium"
+        case high = "High"
+        
+        var color: String {
+            switch self {
+            case .low: return "blue"
+            case .medium: return "green"
+            case .high: return "purple"
+            }
+        }
+    }
+    
+    init(type: SuggestionType, message: String, priority: SuggestionPriority = .medium, impact: String, implementation: String? = nil) {
+        self.type = type
+        self.message = message
+        self.priority = priority
+        self.impact = impact
+        self.implementation = implementation
+    }
+}
+
 // MARK: - Profile Validation Result
 struct ProfileValidationResult {
     let isValid: Bool
