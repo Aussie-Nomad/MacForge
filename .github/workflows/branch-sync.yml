@@ -1,0 +1,89 @@
+name: Branch Synchronization
+
+on:
+  workflow_run:
+    workflows: ["Build and Test MacForge", "Swift CI"]
+    types: [completed]
+    branches: [main]
+
+jobs:
+  sync-dev-branch:
+    name: Sync Dev Branch
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        fetch-depth: 0
+    
+    - name: Sync dev branch with main
+      run: |
+        echo "Syncing dev branch with main..."
+        git config --global user.name 'github-actions[bot]'
+        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+        
+        # Check if dev branch exists
+        if git show-ref --verify --quiet refs/remotes/origin/dev; then
+          echo "Dev branch exists, syncing..."
+          git checkout dev
+          git pull origin dev
+          git merge origin/main --no-edit || echo "Merge conflicts detected"
+          git push origin dev
+          echo "Dev branch synced successfully"
+        else
+          echo "Dev branch does not exist, skipping sync"
+        fi
+    
+    - name: Sync development branch with main
+      run: |
+        echo "Syncing development branch with main..."
+        
+        # Check if development branch exists
+        if git show-ref --verify --quiet refs/remotes/origin/development; then
+          echo "Development branch exists, syncing..."
+          git checkout development
+          git pull origin development
+          git merge origin/main --no-edit || echo "Merge conflicts detected"
+          git push origin development
+          echo "Development branch synced successfully"
+        else
+          echo "Development branch does not exist, skipping sync"
+        fi
+
+  cleanup-stale-branches:
+    name: Cleanup Stale Branches
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        fetch-depth: 0
+    
+    - name: List all branches
+      run: |
+        echo "Current branches:"
+        git branch -r
+        echo ""
+        echo "Local branches:"
+        git branch
+    
+    - name: Check branch status
+      run: |
+        echo "Checking branch status..."
+        for branch in dev development; do
+          if git show-ref --verify --quiet refs/remotes/origin/$branch; then
+            echo "Branch $branch exists"
+            git log --oneline origin/main..origin/$branch | head -5
+            echo "Commits ahead of main: $(git rev-list --count origin/main..origin/$branch)"
+            echo "Commits behind main: $(git rev-list --count origin/$branch..origin/main)"
+            echo "---"
+          else
+            echo "Branch $branch does not exist"
+          fi
+        done

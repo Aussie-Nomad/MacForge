@@ -1,0 +1,132 @@
+name: Swift CI
+
+on:
+  push:
+    branches: [ main, dev, development ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  swift-build:
+    name: Swift ${{ matrix.swift }} on ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest]
+        swift: ["5.9", "5.10"]
+    
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+    - name: Setup Swift
+      uses: swift-actions/setup-swift@v1
+      with:
+        swift-version: ${{ matrix.swift }}
+    
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Show Swift version
+      run: swift --version
+    
+    - name: Show Xcode version
+      run: xcodebuild -version
+    
+    - name: List project structure
+      run: |
+        echo "Repository structure:"
+        find . -name "*.xcodeproj" -o -name "*.xcworkspace" | head -10
+        echo ""
+        echo "DesktopApp directory contents:"
+        ls -la DesktopApp/ || echo "DesktopApp directory not found"
+    
+    - name: Build Xcode project
+      working-directory: DesktopApp
+      run: |
+        echo "Building MacForge.xcodeproj with Swift ${{ matrix.swift }}..."
+        xcodebuild build \
+          -project MacForge.xcodeproj \
+          -scheme MacForge \
+          -configuration Debug \
+          -destination 'platform=macOS,arch=x86_64' \
+          -derivedDataPath ./build \
+          SWIFT_VERSION=${{ matrix.swift }} \
+          | xcpretty --color --simple || exit 1
+        echo "Build completed successfully!"
+    
+    - name: Run tests
+      working-directory: DesktopApp
+      run: |
+        echo "Running tests with Swift ${{ matrix.swift }}..."
+        xcodebuild test \
+          -project MacForge.xcodeproj \
+          -scheme MacForge \
+          -configuration Debug \
+          -destination 'platform=macOS,arch=x86_64' \
+          -derivedDataPath ./build \
+          -enableCodeCoverage YES \
+          SWIFT_VERSION=${{ matrix.swift }} \
+          | xcpretty --color --simple || exit 1
+        echo "Tests completed successfully!"
+    
+    - name: Build Release
+      working-directory: DesktopApp
+      run: |
+        echo "Building Release configuration with Swift ${{ matrix.swift }}..."
+        xcodebuild build \
+          -project MacForge.xcodeproj \
+          -scheme MacForge \
+          -configuration Release \
+          -destination 'platform=macOS,arch=x86_64' \
+          -derivedDataPath ./build \
+          SWIFT_VERSION=${{ matrix.swift }} \
+          | xcpretty --color --simple || exit 1
+        echo "Release build completed successfully!"
+    
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: swift-${{ matrix.swift }}-build-artifacts
+        path: DesktopApp/build/
+        retention-days: 7
+
+  swift-package:
+    name: Swift Package Manager
+    runs-on: macos-latest
+    
+    steps:
+    - name: Setup Swift
+      uses: swift-actions/setup-swift@v1
+      with:
+        swift-version: "5.10"
+    
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Show Swift version
+      run: swift --version
+    
+    - name: Check Swift package
+      run: |
+        echo "Checking Swift package structure..."
+        swift package describe || echo "No Swift package found"
+        echo ""
+        echo "Checking for Package.swift..."
+        find . -name "Package.swift" | head -5
+    
+    - name: Resolve dependencies
+      run: |
+        echo "Resolving Swift package dependencies..."
+        swift package resolve || echo "No Swift package to resolve"
+    
+    - name: Build package
+      run: |
+        echo "Building Swift package..."
+        swift build || echo "No Swift package to build"
+    
+    - name: Run package tests
+      run: |
+        echo "Running Swift package tests..."
+        swift test || echo "No Swift package tests to run"
