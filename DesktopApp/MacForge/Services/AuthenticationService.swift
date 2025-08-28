@@ -157,6 +157,50 @@ final class JAMFAuthenticationService: ObservableObject {
         isAuthenticated = false
     }
     
+    /// Debug method to test JAMF Pro endpoints and see what's available
+    func debugJAMFEndpoints(serverURL: String) async -> String {
+        guard let baseURL = normalizeServerURL(serverURL) else {
+            return "❌ Invalid server URL: \(serverURL)"
+        }
+        
+        var debugInfo = "🔍 JAMF Pro Endpoint Debug for: \(serverURL)\n\n"
+        
+        let testEndpoints = [
+            "api/v1/ping",
+            "api/ping", 
+            "api/v1/health",
+            "api/health",
+            "api/v1/version",
+            "api/version",
+            "api/v1/auth/token",
+            "api/auth/token",
+            "api/v1/oauth/token",
+            "api/oauth/token"
+        ]
+        
+        for endpoint in testEndpoints {
+            do {
+                let url = baseURL.appendingPathComponent(endpoint)
+                let (data, response) = try await session.data(from: url)
+                
+                if let httpResponse = response as? HTTPURLResponse {
+                    let status = httpResponse.statusCode
+                    let statusIcon = status == 200 ? "✅" : status < 400 ? "⚠️" : "❌"
+                    
+                    debugInfo += "\(statusIcon) \(endpoint): HTTP \(status)\n"
+                    
+                    if status == 200, let responseString = String(data: data, encoding: .utf8) {
+                        debugInfo += "   Response: \(responseString.prefix(100))...\n"
+                    }
+                }
+            } catch {
+                debugInfo += "❌ \(endpoint): \(error.localizedDescription)\n"
+            }
+        }
+        
+        return debugInfo
+    }
+    
     // MARK: - Private Implementation
     
     /// Modern JAMF Pro authentication supporting SSO and modern auth flows
@@ -244,16 +288,32 @@ final class JAMFAuthenticationService: ObservableObject {
     }
     
     private func authenticateWithBasic(baseURL: URL, username: String, password: String) async throws -> String {
-        let endpoint = "api/v1/auth/token"
+        // Try multiple JAMF Pro authentication endpoints
+        let endpoints = [
+            "api/v1/auth/token",           // Modern JAMF Pro
+            "api/auth/token",              // Legacy JAMF Pro
+            "api/v1/oauth/token",          // Alternative OAuth
+            "api/oauth/token"              // Standard OAuth
+        ]
         
-        let token = try await performBasicAuthRequest(
-            baseURL: baseURL,
-            endpoint: endpoint,
-            username: username,
-            password: password
-        )
+        var lastError: Error?
         
-        return token
+        for endpoint in endpoints {
+            do {
+                let token = try await performBasicAuthRequest(
+                    baseURL: baseURL,
+                    endpoint: endpoint,
+                    username: username,
+                    password: password
+                )
+                return token
+            } catch {
+                lastError = error
+                continue
+            }
+        }
+        
+        throw AuthenticationError.authenticationFailed("All basic authentication endpoints failed: \(lastError?.localizedDescription ?? "Unknown error")")
     }
     
     private func performOAuthRequest(baseURL: URL, endpoint: String, clientID: String, clientSecret: String) async throws -> String {
@@ -287,9 +347,9 @@ final class JAMFAuthenticationService: ObservableObject {
         request.httpMethod = "POST"
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
         
-        let credentials = "\(username):\(password)"
-        let encodedCredentials = Data(credentials.utf8).base64EncodedString()
-        request.setValue("Basic \(encodedCredentials)", forHTTPHeaderField: "Authorization")
+        // For JAMF Pro, we need to send the credentials in the request body
+        let body = "username=\(username)&password=\(password)"
+        request.httpBody = body.data(using: .utf8)
         
         let (data, response) = try await session.data(for: request)
         
@@ -297,12 +357,49 @@ final class JAMFAuthenticationService: ObservableObject {
             throw AuthenticationError.networkError("Invalid response")
         }
         
-        guard httpResponse.statusCode == 200 else {
-            throw AuthenticationError.authenticationFailed("HTTP \(httpResponse.statusCode)")
+        // Log the response for debugging
+        print("🔐 Auth Response - Status: \(httpResponse.statusCode), Endpoint: \(endpoint)")
+        if let responseString = String(data: data, encoding: .utf8) {
+            print("🔐 Response Body: \(responseString)")
         }
         
-        let tokenResponse = try JSONDecoder().decode(OAuthTokenResponse.self, from: data)
-        return tokenResponse.access_token
+        guard httpResponse.statusCode == 200 else {
+            if let errorString = String(data: data, encoding: .utf8) {
+                throw AuthenticationError.authenticationFailed("HTTP \(httpResponse.statusCode): \(errorString)")
+            } else {
+                throw AuthenticationError.authenticationFailed("HTTP \(httpResponse.statusCode)")
+            }
+        }
+        
+        // Try multiple response formats
+        do {
+            // First try standard OAuth response
+            let tokenResponse = try JSONDecoder().decode(OAuthTokenResponse.self, from: data)
+            return tokenResponse.access_token
+        } catch {
+            // Try alternative response formats
+            if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                // Look for token in various possible fields
+                if let token = json["access_token"] as? String {
+                    return token
+                }
+                if let token = json["token"] as? String {
+                    return token
+                }
+                if let token = json["auth_token"] as? String {
+                    return token
+                }
+                if let token = json["jamf_token"] as? String {
+                    return token
+                }
+                
+                // Log the JSON structure for debugging
+                print("🔐 JSON Response Structure: \(json)")
+            }
+            
+            // If we can't parse the response, throw a detailed error
+            throw AuthenticationError.authenticationFailed("Could not parse authentication response. Response data: \(String(data: data, encoding: .utf8) ?? "Unable to decode")")
+        }
     }
     
     /// Test multiple endpoints to determine server reachability

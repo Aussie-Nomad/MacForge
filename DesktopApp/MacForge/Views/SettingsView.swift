@@ -414,11 +414,17 @@ struct AddMDMAccountView: View {
                 }
                 .buttonStyle(.bordered)
                 
+                Button("Debug Endpoints") {
+                    debugEndpoints()
+                }
+                .buttonStyle(.bordered)
+                .disabled(serverURL.isEmpty || isAuthenticating)
+                
                 Button("Add Account") {
                     addAccount()
                 }
                 .buttonStyle(.borderedProminent)
-                .disabled(vendor.isEmpty || serverURL.isEmpty || username.isEmpty || displayName.isEmpty || password.isEmpty)
+                .disabled(vendor.isEmpty || serverURL.isEmpty || username.isEmpty || displayName.isEmpty || password.isEmpty || isAuthenticating)
             }
             
             if !authStatus.isEmpty {
@@ -519,6 +525,15 @@ struct AddMDMAccountView: View {
                     authStatus = "Authentication failed: \(error.localizedDescription)"
                     isAuthenticating = false
                 }
+            }
+        }
+    }
+    
+    private func debugEndpoints() {
+        Task {
+            let debugInfo = await authService.debugJAMFEndpoints(serverURL: serverURL)
+            await MainActor.run {
+                authStatus = "Debug Info:\n\(debugInfo)"
             }
         }
     }
