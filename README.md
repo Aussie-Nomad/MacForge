@@ -18,6 +18,8 @@ MacForge simplifies the creation of macOS configuration profiles, particularly f
 - **🛠️ Developer Tools**: Package analysis, device management, and automation
 - **📱 Drag & Drop**: Simply drop any .app file for automatic configuration
 
+<img width="3360" height="2226" alt="Screenshot 2025-08-28 at 21 37 20" src="https://github.com/user-attachments/assets/656e66a7-2f47-41ab-9527-a8bb3c36381f" />
+
 ## 🚀 **Quick Start**
 
 ### **For End Users**
