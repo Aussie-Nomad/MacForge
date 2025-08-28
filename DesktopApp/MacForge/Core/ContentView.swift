@@ -11,12 +11,10 @@ struct ContentView: View {
     @State private var selectedTool: ToolModule? = nil
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
     @State private var selectedMDM: MDMVendor? = nil
-    @State private var showingSettings = false
     @StateObject private var model = BuilderModel()
-    @StateObject private var userSettings = UserSettings()
 
     // MARK: - Layout
-    private let sidebarWidth: CGFloat = 320
+    private let sidebarWidth: CGFloat = LcarsTheme.Sidebar.width
 
     // MARK: - Detail content
     @ViewBuilder
@@ -52,34 +50,40 @@ struct ContentView: View {
     }
 
     var body: some View {
-        HStack(spacing: 0) {
-            // LEFT: Global sidebar
+        NavigationSplitView(columnVisibility: $columnVisibility) {
+            // LEFT: Global sidebar – stays open after MDM selection.
             GlobalSidebar(
                 selectedMDM: $selectedMDM,
                 onChangeMDM: {
                     selectedMDM  = nil
                     selectedTool = nil
+                    columnVisibility = .all
                 },
                 onSelectTool: { tool in
                     selectedTool = tool
+                    // Sidebar collapses only when a tool is chosen
+                    columnVisibility = .detailOnly
                 }
             )
-            .frame(width: 320)
-            .background(LCARSTheme.background)
+            .frame(width: sidebarWidth)
+            .themeAwareBackground()
 
-            // RIGHT: Main content area
+        } detail: {
+            // RIGHT: Main canvas with responsive layout
             VStack(spacing: 0) {
                 // Top Utility Bar
                 HStack(spacing: 12) {
                     Button("Change MDM") {
                         selectedMDM  = nil
                         selectedTool = nil
+                        columnVisibility = .all
                     }
                     .buttonStyle(.borderedProminent)
                     .contentShape(Rectangle())
 
                     Button("Change Tool") {
                         selectedTool = nil
+                        columnVisibility = .all
                     }
                     .buttonStyle(.bordered)
                     .disabled(selectedTool == nil)
@@ -92,12 +96,6 @@ struct ContentView: View {
                     }
                     .buttonStyle(.bordered)
                     .contentShape(Rectangle())
-
-                    Button("Settings") {
-                        showingSettings = true
-                    }
-                    .buttonStyle(.bordered)
-                    .contentShape(Rectangle())
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 10)
@@ -105,13 +103,30 @@ struct ContentView: View {
                 .background(.ultraThinMaterial)
                 .overlay(Divider(), alignment: .bottom)
 
-                // Main Content
-                detailContent
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                // Main Content with proper scaling
+                ScalableContainer(base: ResponsiveLayout.kDesignBase) {
+                    detailContent
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
-        .sheet(isPresented: $showingSettings) {
-            SettingsView(userSettings: userSettings)
+        .navigationSplitViewStyle(.balanced)
+
+        // Modern onChange (macOS 14+ signature). We’re not using the deprecated one.
+        .onChange(of: selectedTool) { _, newValue in
+            if newValue != nil { columnVisibility = .detailOnly }
+        }
+
+        // Global event listeners for app-wide functionality
+        .onReceive(NotificationCenter.default.publisher(for: .jfHomeRequested)) { _ in
+            resetTool()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .jfChangeMDMRequested)) { _ in
+            resetMDM()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .jfReportBugRequested)) { _ in
+            // Handle bug reporting - could open email or GitHub issue
+            print("Bug report requested")
         }
     }
 

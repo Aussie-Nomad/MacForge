@@ -74,25 +74,25 @@ struct LandingPage: View {
             // Subtitle with glow effect
             Text("ADVANCED MDM PAYLOAD MANAGEMENT SYSTEM")
                 .font(.system(size: 14, weight: .heavy, design: .monospaced))
-                .foregroundStyle(LcarsTheme.amber)
+                .foregroundStyle(LCARSTheme.accent)
                 .padding(.horizontal, 20)
                 .padding(.vertical, 8)
                 .background(
                     RoundedRectangle(cornerRadius: 20)
-                        .fill(LcarsTheme.amber.opacity(0.1))
+                        .fill(LCARSTheme.accent.opacity(0.1))
                         .overlay(
                             RoundedRectangle(cornerRadius: 20)
-                                .stroke(LcarsTheme.amber, lineWidth: 2)
+                                .stroke(LCARSTheme.accent, lineWidth: 2)
                         )
                 )
-                .shadow(color: LcarsTheme.amber.opacity(0.3), radius: 8)
+                .shadow(color: LCARSTheme.accent.opacity(0.3), radius: 8)
             
             Text("Choose an MDM from the left to begin.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
             
             // Theme Switcher
-                            // LCARS Theme Active - No theme switching needed
+            ThemeSwitcher()
                 .frame(maxWidth: 400)
         }
     }
@@ -124,6 +124,9 @@ struct LandingPage: View {
                     workItem("Application Drop Zone", status: "COMPLETED")
                     workItem("Working Download Button", status: "COMPLETED")
                     workItem("Template System", status: "COMPLETED")
+                    workItem("Build System Fixes", status: "COMPLETED")
+                    workItem("Theme Component Architecture", status: "COMPLETED")
+                    workItem("CI/CD Pipeline", status: "COMPLETED")
                     workItem("MDM Authentication Flow", status: "IN PROGRESS")
                     workItem("JAMF Pro Integration", status: "NEXT")
                     workItem("UI Layout Improvements", status: "COMPLETED")
@@ -185,9 +188,10 @@ struct LandingPage: View {
                 
                 VStack(spacing: 8) {
                     infoRow("VERSION", "1.1.0 (Beta)")
-                    infoRow("BUILD DATE", "August 26, 2025")
+                    infoRow("BUILD DATE", "August 28, 2025")
                     infoRow("PLATFORMS", "macOS 12+")
-                    infoRow("STATUS", "PARTIALLY OPERATIONAL")
+                    infoRow("STATUS", "BUILD SUCCESSFUL")
+                    infoRow("CI/CD", "FUNCTIONAL")
                 }
             }
         }
@@ -198,7 +202,7 @@ struct LandingPage: View {
         HStack {
             Text(title)
                 .font(.system(size: 16, weight: .black, design: .monospaced))
-                .foregroundStyle(LCARSTheme.textPrimary)
+                .foregroundStyle(themeManager.isLCARSActive ? LCARSTheme.textPrimary : color)
             Spacer()
             Circle()
                 .fill(color)
@@ -277,7 +281,7 @@ struct LandingPage: View {
             .padding(20)
             .background(
                 RoundedRectangle(cornerRadius: 16)
-                    .fill(LCARSTheme.panel)
+                    .fill(themeManager.isLCARSActive ? LCARSTheme.panel : LcarsTheme.panel)
                     .shadow(color: color.opacity(0.3), radius: 8)
             )
             .overlay(
@@ -297,8 +301,8 @@ struct AnimatedHeader: View {
     var body: some View {
         Text(title)
             .font(.system(size: 32, weight: .black, design: .monospaced))
-            .foregroundStyle(LCARSTheme.primary)
-            .shadow(color: LCARSTheme.primary.opacity(0.8), radius: isAnimating ? 12 : 4)
+            .foregroundStyle(themeManager.isLCARSActive ? LCARSTheme.primary : LcarsTheme.amber)
+            .shadow(color: (themeManager.isLCARSActive ? LCARSTheme.primary : LcarsTheme.amber).opacity(0.8), radius: isAnimating ? 12 : 4)
             .scaleEffect(isAnimating ? 1.02 : 1.0)
             .animation(.easeInOut(duration: 2.0).repeatForever(autoreverses: true), value: isAnimating)
             .onAppear {
@@ -327,7 +331,7 @@ struct AnimatedBackground: View {
                             path.addLine(to: CGPoint(x: size.width, y: y))
                         }
                     },
-                    with: .color(LCARSTheme.primary.opacity(0.05)),
+                    with: .color((themeManager.isLCARSActive ? LCARSTheme.primary : LcarsTheme.amber).opacity(0.05)),
                     lineWidth: 1
                 )
             }
@@ -339,7 +343,7 @@ struct AnimatedBackground: View {
                         LinearGradient(
                             colors: [
                                 .clear,
-                                LCARSTheme.primary.opacity(0.1),
+                                (themeManager.isLCARSActive ? LCARSTheme.primary : LcarsTheme.amber).opacity(0.1),
                                 .clear
                             ],
                             startPoint: .leading,

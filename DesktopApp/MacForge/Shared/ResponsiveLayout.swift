@@ -10,6 +10,9 @@ import SwiftUI
 
 // MARK: - Responsive Layout Constants
 struct ResponsiveLayout {
+    // Design base size for ScalableContainer
+    static let kDesignBase = CGSize(width: 1200, height: 800)
+    
     // Spacing values that adapt to window size
     static let smallSpacing: CGFloat = 8
     static let mediumSpacing: CGFloat = 16

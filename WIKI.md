@@ -96,8 +96,11 @@ MacForge/
 ├── Features/                       # Feature-specific modules
 │   ├── ProfileBuilder/            # Profile building interface
 │   │   ├── ProfileBuilderHostView.swift
-│   │   ├── ProfileBuilderWizard.swift
-│   │   └── ProfileTopToolbar.swift
+│   │   ├── ProfileCenterPane.swift
+│   │   ├── ProfileDetailPane.swift
+│   │   ├── ProfileSidebar.swift
+│   │   ├── ProfileTopToolbar.swift
+│   │   └── StepContent.swift
 │   ├── PPPC/                      # PPPC editor functionality
 │   │   └── PPPCEditor.swift
 │   └── Tools/                     # Development and debugging tools
@@ -178,8 +181,6 @@ The codebase follows a clear, feature-based organization that makes it easy for 
   - Automatic code requirement extraction using Security framework
   - Support for Bundle ID, Path, and Code Requirement identifier types
   - Visual drop zone with clear feedback
-  - Multiple app upload support with duplicate prevention
-  - Comprehensive app information display
 
 #### Privacy Permissions Management
 - **Supported Services**:
@@ -252,140 +253,35 @@ The codebase follows a clear, feature-based organization that makes it easy for 
 
 ### User Interface Features
 
-#### **LCARS Theme System** 🎨
+#### **Dual Theme System** 🎨
+- **Default Theme**: Clean, modern macOS interface with LCARS-inspired elements
+  - Dark background with amber/orange accents
+  - Rounded panels with subtle shadows
+  - Professional, enterprise-ready appearance
 - **LCARS Theme**: Full Star Trek-inspired futuristic interface
   - Deep blue-black backgrounds with vibrant orange, purple, and blue accents
   - Monospaced fonts and geometric panel designs
   - Interactive elements with hover effects and animations
-  - Professional, enterprise-ready appearance with sci-fi aesthetics
-- **Theme Consistency**: Unified LCARS design throughout the application
-  - Consistent color palette and typography
-  - Smooth transitions and animations
-  - Optimized for macOS desktop use
+- **Theme Switcher**: Easy switching between themes from the landing page
+  - Persistent theme selection across app launches
+  - Smooth transitions between themes
+  - Visual preview of each theme option
 
-#### 4-Step Profile Builder Wizard
-1. **Setup**
-   - Profile metadata entry with comprehensive help system
-   - App target selection via drag & drop with bundle ID extraction
-   - Template management and creation
-   - Organization and scope configuration
+#### 3-Step Wizard
+1. **Select App & Configure Profile**
+   - Profile metadata entry
+   - App target selection via drag & drop
+   - Identifier type configuration
 
-2. **Choose Payloads**
-   - Visual payload library with categories
-   - Search and filtering capabilities
-   - Detailed payload descriptions and info bubbles
-   - Platform support indicators
+2. **Configure Permissions**
+   - Visual permission grid
+   - Real-time validation
+   - Progress indicators
 
-3. **Configure Settings**
-   - Detailed configuration for each selected payload
-   - Real-time validation and error checking
-   - Advanced settings and options
-
-4. **Export & Deploy**
-   - Profile summary and review
-   - Export to .mobileconfig files
+3. **Review & Submit**
+   - Profile summary
+   - Export options
    - Direct MDM submission
-   - Deployment tracking
-
-## 📊 **Current Development Status**
-
-### **🎯 Current Implementation Status (August 28, 2025)**
-
-#### **Core Application Features** ✅ **COMPLETE**
-- **Profile Builder Wizard**: 4-step workflow (Setup → Choose Payload → Configure → Export & Deploy)
-- **Application Management**: Drag & drop app upload with bundle ID extraction
-- **Info System**: Comprehensive help bubbles and guidance throughout
-- **Theme System**: Unified LCARS Star Trek-inspired design
-- **Export System**: Crash-free .mobileconfig file generation
-
-#### **JAMF Integration** ✅ **COMPLETE**
-- **Authentication Service**: Basic authentication with token storage
-- **MDM Account Management**: Full CRUD operations in Settings
-- **Token Persistence**: Secure storage of authentication tokens
-- **Profile Deployment**: End-to-end profile submission to JAMF Pro
-- **Connection Monitoring**: Real-time connection status and health
-
-#### **User Settings System** ✅ **COMPLETE**
-- **General Settings**: Startup behavior, profile management preferences
-- **Profile Defaults**: Save and reuse common profile configurations
-- **Theme Preferences**: Customize accent colors and visual elements
-- **MDM Accounts**: Manage multiple MDM connections with authentication
-
-#### **Payload Configuration** 🔄 **PARTIALLY IMPLEMENTED**
-- **PPPC Configuration**: Full implementation with privacy service toggles
-- **FileVault Configuration**: Basic implementation with recovery key support
-- **Gatekeeper Configuration**: Application source selection
-- **WiFi Configuration**: SSID, security, and password management
-- **VPN Configuration**: VPN type, server, and credential management
-- **Generic Configuration**: Fallback for unimplemented payload types
-
-### **🔄 What's Working End-to-End**
-
-#### **Complete User Workflow** ✅
-1. **User opens MacForge** → Lands on landing page with tool selection
-2. **User selects Profile Builder** → Opens 4-step wizard interface
-3. **User uploads apps** → Drag & drop apps, automatic bundle ID extraction
-4. **User configures profile** → Set name, description, identifier, organization
-5. **User selects payloads** → Choose from comprehensive payload library
-6. **User configures settings** → Detailed configuration for each payload type
-7. **User exports profile** → Generate .mobileconfig file locally
-8. **User deploys to MDM** → Submit directly to JAMF Pro with authentication
-
-#### **MDM Integration Workflow** ✅
-1. **User adds MDM account** → Enter server URL, username, password
-2. **Authentication happens** → Token retrieved and stored securely
-3. **User creates profile** → Build profile using wizard
-4. **User deploys profile** → Profile submitted to JAMF Pro via API
-5. **Profile appears in JAMF** → Available for device assignment
-
-#### **Settings Management Workflow** ✅
-1. **User opens Settings** → Access preferences and MDM accounts
-2. **User manages accounts** → Add, edit, delete MDM connections
-3. **User sets defaults** → Configure common profile settings
-4. **User customizes theme** → Adjust visual appearance
-5. **Settings persist** → All preferences saved and restored
-
-### **✅ Recently Completed (August 2025)**
-- **Profile Builder Wizard**: Complete 4-step workflow implementation
-- **App Upload System**: Full drag & drop with bundle ID extraction
-- **Info Bubble System**: Comprehensive help and guidance throughout
-- **Crash Fixes**: Resolved .mobileconfig export crashes
-- **User Settings**: Comprehensive preferences and MDM account management
-- **Theme Consolidation**: Unified LCARS theme system
-- **JAMF Connection Integration**: Complete MDM authentication and profile deployment
-- **Authentication Service**: Enhanced with token storage and callback system
-- **MDM Account Management**: Full CRUD operations with authentication status
-- **Profile Deployment**: End-to-end profile submission to JAMF Pro
-
-### **🚧 Next Phase Development Priorities**
-1. **Payload Configuration Interfaces** ⭐ **HIGH PRIORITY**
-   - Build detailed configuration UI for each payload type
-   - Implement real-time validation and error checking
-   - Add advanced settings and options
-   - Enhance existing PPPC, FileVault, Gatekeeper, WiFi, VPN views
-
-2. **Profile Validation System** ⭐ **HIGH PRIORITY**
-   - Add Apple MDM compliance checking
-   - Implement profile preview and testing
-   - Add validation error reporting
-   - Profile syntax and policy validation
-
-3. **Enhanced Template Management** ⭐ **MEDIUM PRIORITY**
-   - Save and reuse common configurations
-   - Template sharing and import/export
-   - Version control for templates
-   - Template marketplace/community features
-
-4. **Advanced MDM Features** ⭐ **MEDIUM PRIORITY**
-   - Support for additional MDM vendors (Intune, Kandji, Mosyle)
-   - OAuth authentication flows
-   - Bulk profile deployment
-   - MDM health monitoring and reporting
-
-4. **Enhanced Template Management**
-   - Save and reuse common configurations
-   - Template sharing and import/export
-   - Version control for templates
 
 ## 🎯 **Development Guidelines**
 

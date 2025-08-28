@@ -11,7 +11,6 @@ import UniformTypeIdentifiers
 struct ProfileTopToolbar: View {
     var onHome: () -> Void
     var onExport: () -> Void
-    @State private var showingExportPanel = false
 
     var body: some View {
         HStack(spacing: 12) {
@@ -22,13 +21,10 @@ struct ProfileTopToolbar: View {
             Spacer()
 
             Button("Download .mobileconfig") { 
-                // Direct export - no need for file picker since we're saving to Downloads
                 onExport()
             }
-            .buttonStyle(.borderedProminent)
-            .tint(LCARSTheme.accent)
+            .buttonStyle(.bordered)
             .contentShape(Rectangle())
-            .help("Download the configuration profile to your Downloads folder")
         }
         .contentShape(Rectangle())
         .padding(.horizontal, 16)

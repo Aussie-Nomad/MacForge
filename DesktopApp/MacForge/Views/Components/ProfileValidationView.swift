@@ -291,18 +291,8 @@ struct ValidationErrorCard: View {
                 .fontWeight(.medium)
                 .foregroundStyle(LCARSTheme.textPrimary)
             
-            if let suggestion = error.suggestion {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Suggestion:")
-                        .font(.caption)
-                        .fontWeight(.medium)
-                        .foregroundStyle(LCARSTheme.textSecondary)
-                    
-                    Text(suggestion)
-                        .font(.caption)
-                        .foregroundStyle(LCARSTheme.textSecondary)
-                }
-            }
+            // ProfileValidationError doesn't have suggestion property
+            // Using errorDescription instead
         }
         .padding()
         .background(LCARSTheme.surface)
@@ -333,19 +323,19 @@ struct ValidationWarningCard: View {
                 Spacer()
             }
             
-            Text(warning.localizedDescription)
+            Text(warning.message)
                 .font(.subheadline)
                 .fontWeight(.medium)
                 .foregroundStyle(LCARSTheme.textPrimary)
             
-            if let suggestion = warning.suggestion {
+            if let recommendation = warning.recommendation {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Suggestion:")
+                    Text("Recommendation:")
                         .font(.caption)
                         .fontWeight(.medium)
                         .foregroundStyle(LCARSTheme.textSecondary)
                     
-                    Text(suggestion)
+                    Text(recommendation)
                         .font(.caption)
                         .foregroundStyle(LCARSTheme.textSecondary)
                 }
@@ -380,19 +370,19 @@ struct ComplianceIssueCard: View {
                 Spacer()
             }
             
-            Text(issue.localizedDescription)
+            Text(issue.message)
                 .font(.subheadline)
                 .fontWeight(.medium)
                 .foregroundStyle(LCARSTheme.textPrimary)
             
-            if let suggestion = issue.suggestion {
+            if let remediation = issue.remediation {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Suggestion:")
+                    Text("Remediation:")
                         .font(.caption)
                         .fontWeight(.medium)
                         .foregroundStyle(LCARSTheme.textSecondary)
                     
-                    Text(suggestion)
+                    Text(remediation)
                         .font(.caption)
                         .foregroundStyle(LCARSTheme.textSecondary)
                 }
@@ -436,24 +426,31 @@ struct ValidationSuggestionCard: View {
                 }
             }
             
-            Text(suggestion.title)
+            Text(suggestion.message)
                 .font(.subheadline)
                 .fontWeight(.medium)
                 .foregroundStyle(LCARSTheme.textPrimary)
             
-            Text(suggestion.description)
+            Text(suggestion.impact)
                 .font(.caption)
                 .foregroundStyle(LCARSTheme.textSecondary)
             
             VStack(alignment: .leading, spacing: 4) {
-                Text("Action:")
+                Text("Implementation:")
                     .font(.caption)
                     .fontWeight(.medium)
                     .foregroundStyle(LCARSTheme.textSecondary)
                 
-                Text(suggestion.action)
-                    .font(.caption)
-                    .foregroundStyle(LCARSTheme.textSecondary)
+                if let implementation = suggestion.implementation {
+                    Text(implementation)
+                        .font(.caption)
+                        .foregroundStyle(LCARSTheme.textSecondary)
+                } else {
+                    Text("No specific implementation details")
+                        .font(.caption)
+                        .foregroundStyle(LCARSTheme.textMuted)
+                        .italic()
+                }
             }
         }
         .padding()
@@ -603,5 +600,5 @@ struct ValidationReportSheet: View {
         suggestions: sampleSuggestions
     )
     
-    return ProfileValidationView(validationResult: sampleResult)
+    ProfileValidationView(validationResult: sampleResult)
 }

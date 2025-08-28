@@ -1,55 +1,38 @@
 # MacForge UX Improvement TODO List
 
-## 🎉 **Recently Completed: JAMF Integration (August 2025)**
-
-### **✅ JAMF Connection & MDM Integration**
-- [x] **Complete JAMF Pro Integration**: Full authentication and profile deployment
-- [x] **MDM Account Management**: Add, edit, delete MDM accounts with authentication
-- [x] **Token Storage System**: Secure storage of authentication tokens
-- [x] **Profile Deployment**: End-to-end profile submission to JAMF Pro
-- [x] **Authentication Status**: Visual indicators for connection health
-- [x] **Settings Integration**: Seamless MDM account management in Settings
-- [x] **Error Handling**: Comprehensive error handling and user feedback
-
-### **✅ User Settings & Preferences**
-- [x] **Comprehensive Settings**: General, Profile Defaults, Theme, MDM Accounts
-- [x] **Profile Defaults**: Save common profile settings for reuse
-- [x] **Theme Preferences**: Customize accent colors and visual elements
-- [x] **MDM Account CRUD**: Full create, read, update, delete operations
-
 ## 🎯 **Priority 1: Immediate User Experience Fixes (High Impact)**
 
 ### **1.1 Mode Toggle Clarity**
-- [x] **Simplify mode names**: Change "Wizard/Expert" to "Simple/Advanced" or "Guided/Manual"
-- [x] **Add visual mode indicators**: Show current mode prominently in the UI
-- [x] **Mode-specific help text**: Display contextual help based on selected mode
+- [ ] **Simplify mode names**: Change "Wizard/Expert" to "Simple/Advanced" or "Guided/Manual"
+- [ ] **Add visual mode indicators**: Show current mode prominently in the UI
+- [ ] **Mode-specific help text**: Display contextual help based on selected mode
 - [ ] **Mode switching confirmation**: Warn users when switching modes to prevent data loss
 
 ### **1.2 Onboarding & Tutorial System**
 - [ ] **Create welcome tutorial**: Step-by-step guide for first-time users
-- [x] **Interactive tooltips**: Hover/click explanations for complex UI elements
+- [ ] **Interactive tooltips**: Hover/click explanations for complex UI elements
 - [ ] **Contextual help panels**: Expandable help sections for each major feature
-- [x] **Progress indicators**: Show users where they are in the workflow
+- [ ] **Progress indicators**: Show users where they are in the workflow
 
 ### **1.3 Navigation Consistency**
 - [ ] **Unify button layouts**: Consistent placement across all modes
 - [ ] **Standardize terminology**: Use same button names throughout the app
-- [x] **Clear workflow progression**: Visual breadcrumbs showing current step
+- [ ] **Clear workflow progression**: Visual breadcrumbs showing current step
 - [ ] **Consistent home button**: Single, clearly visible home navigation
 
 ## 🔧 **Priority 2: Feature Clarity & Workflow (Medium Impact)**
 
 ### **2.1 PPPC Configuration Simplification**
-- [x] **Plain language explanations**: Replace technical terms with user-friendly descriptions
-- [x] **Permission categories**: Group related permissions logically
+- [ ] **Plain language explanations**: Replace technical terms with user-friendly descriptions
+- [ ] **Permission categories**: Group related permissions logically
 - [ ] **Visual permission matrix**: Grid showing what each permission allows
-- [x] **Common use case presets**: "Security Tool", "Development App", "Media App"
+- [ ] **Common use case presets**: "Security Tool", "Development App", "Media App"
 
 ### **2.2 Payload Selection Flow**
-- [x] **Clear selection process**: Visual feedback when payloads are selected
-- [x] **Selection validation**: Prevent invalid payload combinations
-- [x] **Dependency indicators**: Show which payloads work together
-- [x] **Selection summary**: Clear overview of what's been configured
+- [ ] **Clear selection process**: Visual feedback when payloads are selected
+- [ ] **Selection validation**: Prevent invalid payload combinations
+- [ ] **Dependency indicators**: Show which payloads work together
+- [ ] **Selection summary**: Clear overview of what's been configured
 
 ### **2.3 Template System Enhancement**
 - [ ] **Template descriptions**: Better explanations of what each template provides
@@ -60,10 +43,10 @@
 ## 🎨 **Priority 3: Visual & Interactive Improvements (Medium Impact)**
 
 ### **3.1 UI Feedback & Validation**
-- [x] **Real-time validation**: Show errors as users type/select
-- [x] **Success indicators**: Clear feedback when actions complete
-- [x] **Loading states**: Show progress for long-running operations
-- [x] **Error recovery**: Suggest solutions for common problems
+- [ ] **Real-time validation**: Show errors as users type/select
+- [ ] **Success indicators**: Clear feedback when actions complete
+- [ ] **Loading states**: Show progress for long-running operations
+- [ ] **Error recovery**: Suggest solutions for common problems
 
 ### **3.2 Information Architecture**
 - [ ] **Progressive disclosure**: Show advanced options only when needed
@@ -100,13 +83,10 @@
 ## 📱 **Priority 5: Platform & Integration (Future Enhancements)**
 
 ### **5.1 MDM Integration Improvements**
-- [x] **Connection status indicators**: Show MDM connection health
-- [x] **Authentication flow simplification**: Streamline login process
-- [x] **Profile submission feedback**: Clear indication of submission status
-- [x] **JAMF Pro Integration**: Complete authentication and profile deployment
+- [ ] **Connection status indicators**: Show MDM connection health
+- [ ] **Authentication flow simplification**: Streamline login process
+- [ ] **Profile submission feedback**: Clear indication of submission status
 - [ ] **Multi-MDM support**: Better support for different MDM platforms
-- [ ] **OAuth authentication flows**: Support for modern authentication methods
-- [ ] **Bulk profile deployment**: Deploy multiple profiles simultaneously
 
 ### **5.2 Export & Sharing**
 - [ ] **Profile preview**: Show what the exported profile contains
