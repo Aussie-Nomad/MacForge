@@ -7,8 +7,8 @@ on:
     branches: [main]
 
 jobs:
-  sync-dev-branch:
-    name: Sync Dev Branch
+  sync-development-branch:
+    name: Sync Development Branch
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     
@@ -19,27 +19,11 @@ jobs:
         token: ${{ secrets.GITHUB_TOKEN }}
         fetch-depth: 0
     
-    - name: Sync dev branch with main
-      run: |
-        echo "Syncing dev branch with main..."
-        git config --global user.name 'github-actions[bot]'
-        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-        
-        # Check if dev branch exists
-        if git show-ref --verify --quiet refs/remotes/origin/dev; then
-          echo "Dev branch exists, syncing..."
-          git checkout dev
-          git pull origin dev
-          git merge origin/main --no-edit || echo "Merge conflicts detected"
-          git push origin dev
-          echo "Dev branch synced successfully"
-        else
-          echo "Dev branch does not exist, skipping sync"
-        fi
-    
     - name: Sync development branch with main
       run: |
         echo "Syncing development branch with main..."
+        git config --global user.name 'github-actions[bot]'
+        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
         
         # Check if development branch exists
         if git show-ref --verify --quiet refs/remotes/origin/development; then
@@ -76,7 +60,7 @@ jobs:
     - name: Check branch status
       run: |
         echo "Checking branch status..."
-        for branch in dev development; do
+        for branch in development; do
           if git show-ref --verify --quiet refs/remotes/origin/$branch; then
             echo "Branch $branch exists"
             git log --oneline origin/main..origin/$branch | head -5
