@@ -759,9 +759,12 @@ struct PrivacyServiceToggle: View {
             
             Spacer()
             
-            Toggle("", isOn: .constant(isEnabled))
-                .onChange(of: isEnabled) { _, _ in onToggle() }
-                .labelsHidden()
+            Button(action: onToggle) {
+                Image(systemName: isEnabled ? "checkmark.square.fill" : "square")
+                    .foregroundStyle(isEnabled ? LCARSTheme.accent : LCARSTheme.textSecondary)
+                    .font(.title2)
+            }
+            .buttonStyle(.plain)
         }
         .padding(8)
         .background(LCARSTheme.surface)
