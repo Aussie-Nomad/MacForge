@@ -50,7 +50,7 @@ final class JAMFAuthenticationService: ObservableObject {
         return token
     }
     
-    /// Authenticate using Basic authentication
+    /// Authenticate using Basic authentication with SSO support
     func authenticateBasic(username: String, password: String, serverURL: String) async throws -> String {
         guard let baseURL = normalizeServerURL(serverURL) else {
             throw AuthenticationError.invalidServerURL
@@ -59,22 +59,77 @@ final class JAMFAuthenticationService: ObservableObject {
         // Test connection first
         try await validateConnection(to: serverURL)
         
-        // Attempt Basic authentication
-        let token = try await authenticateWithBasic(
-            baseURL: baseURL,
-            username: username,
-            password: password
-        )
-        
-        await MainActor.run {
-            self.currentToken = token
-            self.isAuthenticated = true
+        // Try multiple authentication methods for JAMF Pro
+        do {
+            // First try modern JAMF Pro authentication
+            let token = try await authenticateWithJAMFPro(
+                baseURL: baseURL,
+                username: username,
+                password: password
+            )
+            
+            await MainActor.run {
+                self.currentToken = token
+                self.isAuthenticated = true
+            }
+            
+            onTokenReceived?(token, nil)
+            return token
+            
+        } catch {
+            // Fall back to basic authentication
+            let token = try await authenticateWithBasic(
+                baseURL: baseURL,
+                username: username,
+                password: password
+            )
+            
+            await MainActor.run {
+                self.currentToken = token
+                self.isAuthenticated = true
+            }
+            
+            onTokenReceived?(token, nil)
+            return token
+        }
+    }
+    
+    /// Authenticate using SSO (Single Sign-On) for enterprise environments
+    func authenticateSSO(serverURL: String) async throws -> String {
+        guard let baseURL = normalizeServerURL(serverURL) else {
+            throw AuthenticationError.invalidServerURL
         }
         
-        // Notify callback about the new token
-        onTokenReceived?(token, nil) // Basic auth tokens typically don't have expiry
+        // Test connection first
+        try await validateConnection(to: serverURL)
         
-        return token
+        // For SSO, we need to handle different authentication flows
+        // This is a placeholder for future SSO implementation
+        // For now, we'll try to detect SSO endpoints and provide guidance
+        
+        let ssoEndpoints = [
+            "api/v1/sso/auth",
+            "api/sso/auth",
+            "api/v1/oauth/authorize",
+            "api/oauth/authorize"
+        ]
+        
+        for endpoint in ssoEndpoints {
+            do {
+                let url = baseURL.appendingPathComponent(endpoint)
+                let (_, response) = try await session.data(from: url)
+                
+                if let httpResponse = response as? HTTPURLResponse,
+                   httpResponse.statusCode == 200 || httpResponse.statusCode == 302 {
+                    // SSO endpoint found, but we need user interaction
+                    throw AuthenticationError.ssoAuthenticationRequired("SSO authentication detected. Please authenticate through your browser and return to MacForge.")
+                }
+            } catch {
+                continue
+            }
+        }
+        
+        throw AuthenticationError.authenticationFailed("SSO authentication not available. Please use username/password authentication.")
     }
     
     /// Validate server connection
@@ -84,13 +139,10 @@ final class JAMFAuthenticationService: ObservableObject {
         }
         
         do {
-            // Test basic connectivity
-            try await pingServer(baseURL)
+            // Test basic connectivity with multiple endpoints
+            let isReachable = try await testMultipleEndpoints(baseURL)
             
-            // Test auth endpoint accessibility
-            let authEndpointReachable = try await testAuthEndpoint(baseURL)
-            
-            guard authEndpointReachable else {
+            guard isReachable else {
                 throw AuthenticationError.serverUnreachable
             }
             
@@ -106,6 +158,69 @@ final class JAMFAuthenticationService: ObservableObject {
     }
     
     // MARK: - Private Implementation
+    
+    /// Modern JAMF Pro authentication supporting SSO and modern auth flows
+    private func authenticateWithJAMFPro(baseURL: URL, username: String, password: String) async throws -> String {
+        // Try multiple JAMF Pro authentication endpoints
+        let endpoints = [
+            "api/v1/auth/token",           // Modern JAMF Pro
+            "api/oauth/token",             // OAuth endpoint
+            "api/v1/oauth/token",          // Alternative OAuth
+            "api/auth/token"               // Legacy endpoint
+        ]
+        
+        var lastError: Error?
+        
+        for endpoint in endpoints {
+            do {
+                let url = baseURL.appendingPathComponent(endpoint)
+                var request = URLRequest(url: url)
+                request.httpMethod = "POST"
+                request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+                
+                // Try different authentication methods
+                let authMethods = [
+                    ("grant_type", "password", "username", username, "password", password),
+                    ("grant_type", "client_credentials", "client_id", username, "client_secret", password),
+                    ("grant_type", "password", "username", username, "password", password)
+                ]
+                
+                for (grantType, grantValue, userField, userValue, passField, passValue) in authMethods {
+                    do {
+                        let body = "\(grantType)=\(grantValue)&\(userField)=\(userValue)&\(passField)=\(passValue)"
+                        request.httpBody = body.data(using: .utf8)
+                        
+                        let (data, response) = try await session.data(for: request)
+                        
+                        guard let httpResponse = response as? HTTPURLResponse else {
+                            continue
+                        }
+                        
+                        if httpResponse.statusCode == 200 {
+                            // Try to decode the response
+                            if let tokenResponse = try? JSONDecoder().decode(OAuthTokenResponse.self, from: data) {
+                                return tokenResponse.access_token
+                            }
+                            
+                            // Try alternative response format
+                            if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                               let token = json["access_token"] as? String {
+                                return token
+                            }
+                        }
+                    } catch {
+                        lastError = error
+                        continue
+                    }
+                }
+            } catch {
+                lastError = error
+                continue
+            }
+        }
+        
+        throw AuthenticationError.authenticationFailed("All JAMF Pro authentication methods failed: \(lastError?.localizedDescription ?? "Unknown error")")
+    }
     
     private func authenticateWithOAuth(baseURL: URL, clientID: String, clientSecret: String) async throws -> String {
         let endpoints = ["api/oauth/token", "api/v1/oauth/token"]
@@ -190,6 +305,48 @@ final class JAMFAuthenticationService: ObservableObject {
         return tokenResponse.access_token
     }
     
+    /// Test multiple endpoints to determine server reachability
+    private func testMultipleEndpoints(_ baseURL: URL) async throws -> Bool {
+        let endpoints = [
+            "api/v1/ping",           // Modern JAMF Pro
+            "api/ping",              // Legacy JAMF Pro
+            "api/v1/health",         // Health check
+            "api/health",            // Alternative health check
+            "api/v1/version",        // Version info
+            "api/version"            // Legacy version
+        ]
+        
+        for endpoint in endpoints {
+            do {
+                let url = baseURL.appendingPathComponent(endpoint)
+                let (_, response) = try await session.data(from: url)
+                
+                if let httpResponse = response as? HTTPURLResponse,
+                   httpResponse.statusCode == 200 {
+                    return true
+                }
+            } catch {
+                continue
+            }
+        }
+        
+        // If no standard endpoints work, try a simple HEAD request to the base URL
+        do {
+            var request = URLRequest(url: baseURL)
+            request.httpMethod = "HEAD"
+            let (_, response) = try await session.data(for: request)
+            
+            if let httpResponse = response as? HTTPURLResponse,
+               httpResponse.statusCode < 500 { // Any response < 500 means server is reachable
+                return true
+            }
+        } catch {
+            // Continue to next test
+        }
+        
+        return false
+    }
+    
     private func pingServer(_ baseURL: URL) async throws {
         let pingURL = baseURL.appendingPathComponent("api/v1/ping")
         let (_, response) = try await session.data(from: pingURL)
@@ -236,6 +393,7 @@ enum AuthenticationError: LocalizedError, Equatable {
     case networkError(String)
     case authenticationFailed(String)
     case serverUnreachable
+    case ssoAuthenticationRequired(String)
     
     var errorDescription: String? {
         switch self {
@@ -247,6 +405,8 @@ enum AuthenticationError: LocalizedError, Equatable {
             return "Authentication failed: \(message)"
         case .serverUnreachable:
             return "Server is unreachable"
+        case .ssoAuthenticationRequired(let message):
+            return message
         }
     }
 }
