@@ -17,6 +17,10 @@ All notable changes to MacForge will be documented in this file.
   - Updated JamfAuthResult usage with correct labels (baseURL:, clientID:, clientSecret:)
 - **Fixed ComplianceError structure**
   - Added missing `missingRequiredFields` property and updated initializer
+- **Fixed JAMF Pro server connection issues**
+  - Implemented multi-endpoint ping testing for better connectivity detection
+  - Added support for both Classic and v1 API endpoints
+  - Fixed server ping failures by accepting HTTP 401/403 as valid responses
 
 ### 🔧 **System Improvements**
 - **Type system consolidation**
