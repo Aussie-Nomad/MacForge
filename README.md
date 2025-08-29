@@ -94,7 +94,7 @@ xcodebuild test -scheme MacForge -destination 'platform=macOS' -only-testing:Mac
 
 ### **✅ Working Features**
 - Application launch and navigation
-- Profile Builder with PPPC support
+- PPPC Profile Creator with comprehensive PPPC support
 - Application drop zone and bundle ID extraction
 - Template system (Security Baseline, Network, Antivirus)
 - Theme switching (Default + LCARS)

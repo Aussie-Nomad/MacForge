@@ -24,37 +24,63 @@ struct AppTargetDropView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("APP TARGET").font(.caption).fontWeight(.heavy).foregroundStyle(LcarsTheme.amber)
+            Text("APP TARGET").font(.caption).fontWeight(.heavy).foregroundStyle(LCARSTheme.accent)
 
-            ThemedField(title: "Bundle Identifier", text: $bundleID, placeholder: "com.company.app")
-            ThemedField(title: "Code Requirement", text: $codeRequirement, placeholder: "designated => ...", monospaced: true)
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Bundle Identifier")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                TextField("com.company.app", text: $bundleID)
+                    .textFieldStyle(.roundedBorder)
+            }
+            
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Code Requirement")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                TextField("designated => ...", text: $codeRequirement)
+                    .textFieldStyle(.roundedBorder)
+                    .font(.system(.body, design: .monospaced))
+            }
 
             HStack(spacing: 8) {
-                ThemedField(title: "App Path", text: Binding.constant(appPath))
-                    .opacity(0.8)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("App Path")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                    Text(appPath.isEmpty ? "No app selected" : appPath)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                
+                Spacer()
+                
                 Button("Choose App…") { chooseApp() }
                     .buttonStyle(.bordered)
                     .contentShape(Rectangle())
             }
 
-            DropTarget(acceptedTypes: [.fileURL], onDrop: handleDrop) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(LcarsTheme.panel)
-                        .frame(height: 110)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .stroke(LcarsTheme.orange, lineWidth: 2)
-                        )
-                    VStack(spacing: 6) {
-                        Text("Drop .app here")
-                            .font(.subheadline).fontWeight(.semibold)
-                            .foregroundStyle(LcarsTheme.amber)
-                        if !appPath.isEmpty {
-                            Text(appPath).font(.footnote).foregroundStyle(.secondary)
-                        }
+            // Drop Zone
+            ZStack {
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(LCARSTheme.panel)
+                    .frame(height: 110)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .stroke(LCARSTheme.primary, lineWidth: 2)
+                    )
+                VStack(spacing: 6) {
+                    Text("Drop .app here")
+                        .font(.subheadline).fontWeight(.semibold)
+                        .foregroundStyle(LCARSTheme.accent)
+                    if !appPath.isEmpty {
+                        Text(appPath).font(.footnote).foregroundStyle(.secondary)
                     }
                 }
+            }
+            .onDrop(of: [.fileURL], isTargeted: nil) { providers in
+                handleDrop(providers)
+                return true
             }
         }
         .onAppear(perform: restore)
@@ -135,12 +161,33 @@ struct PPPCServicesEditor: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("PERMISSIONS").font(.headline).foregroundStyle(LcarsTheme.amber)
+            Text("PERMISSIONS").font(.headline).foregroundStyle(LCARSTheme.accent)
             
             if model.pppcConfigurations.isEmpty {
-                Text("No PPPC permissions configured. Use the Profile Builder to configure permissions.")
-                    .foregroundStyle(.secondary)
-                    .italic()
+                VStack(spacing: 16) {
+                    Image(systemName: "hand.raised")
+                        .font(.system(size: 48))
+                        .foregroundStyle(LCARSTheme.textMuted)
+                    
+                    Text("No PPPC permissions configured")
+                        .font(.headline)
+                        .foregroundStyle(LCARSTheme.textPrimary)
+                    
+                    Text("Configure privacy permissions for the selected application. Use the PPPC Profile Creator to configure permissions.")
+                        .font(.body)
+                        .foregroundStyle(LCARSTheme.textSecondary)
+                        .multilineTextAlignment(.center)
+                }
+                .padding(40)
+                .frame(maxWidth: .infinity)
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(LCARSTheme.surface.opacity(0.3))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(LCARSTheme.primary.opacity(0.3), style: StrokeStyle(lineWidth: 1, dash: [4]))
+                        )
+                )
             } else {
                 ForEach(model.pppcConfigurations) { config in
                     VStack(alignment: .leading, spacing: 8) {
@@ -169,12 +216,10 @@ struct PPPCServicesEditor: View {
                     .padding(8)
                     .background(
                         RoundedRectangle(cornerRadius: 6)
-                            .fill(LcarsTheme.panel.opacity(0.3))
+                            .fill(LCARSTheme.panel.opacity(0.3))
                     )
                 }
             }
         }
     }
 }
-
-

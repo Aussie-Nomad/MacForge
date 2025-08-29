@@ -20,7 +20,7 @@ MacForge is a macOS application for creating and managing configuration profiles
 - ✅ Theme switching and persistence working
 - ✅ Basic UI layout and responsiveness
 
-### **Profile Builder Tool**
+### **PPPC Profile Creator Tool**
 - ✅ Tool selection and navigation
 - ✅ Step-by-step wizard interface (3 steps)
 - ✅ Payload selection and management
@@ -157,7 +157,7 @@ MacForgeApp (Entry Point)
 ### **Data Flow**
 1. **User selects MDM** → Authentication service initialized
 2. **User chooses tool** → Tool-specific interface loads
-3. **Profile Builder workflow**:
+3. **PPPC Profile Creator workflow**:
    - Step 1: Select payloads and target application
    - Step 2: Configure PPPC permissions
    - Step 3: Review and export profile
@@ -222,7 +222,7 @@ xcodebuild test -scheme MacForge -destination 'platform=macOS' -only-testing:Mac
 
 ### **Performance Requirements**
 - App launch time: <2 seconds
-- Profile Builder load: <1 second
+- PPPC Profile Creator load: <1 second
 - Theme switching: <100ms
 - PPPC configuration: <500ms
 - Large profile handling: <5 seconds
@@ -231,7 +231,7 @@ xcodebuild test -scheme MacForge -destination 'platform=macOS' -only-testing:Mac
 
 ### **Must Work for Basic Functionality**
 1. **Application Launch**: Basic app startup and navigation
-2. **Profile Builder**: Core profile creation workflow
+2. **PPPC Profile Creator**: Core profile creation workflow
 3. **PPPC Configuration**: Basic permission setting
 4. **Profile Export**: .mobileconfig file generation
 5. **MDM Authentication**: Basic connection and auth
@@ -331,7 +331,7 @@ xcodebuild test -scheme MacForge -destination 'platform=macOS' -only-testing:Mac
 
 ### **Version 1.0.0 (Alpha) - August 14, 2025**
 - ✅ Basic application structure
-- ✅ Profile Builder tool framework
+- ✅ PPPC Profile Creator tool framework
 - ✅ Basic PPPC payload support
 - ✅ Theme system foundation
 - ❌ Limited functionality

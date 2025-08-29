@@ -133,28 +133,7 @@ struct ThemePreferences: Codable {
 }
 
 // MARK: - MDM Account
-struct MDMAccount: Codable, Identifiable, Hashable {
-    var id = UUID()
-    var vendor: String
-    var serverURL: String
-    var username: String
-    var displayName: String
-    var lastUsed: Date
-    var isDefault: Bool
-    var authToken: String?
-    var tokenExpiry: Date?
-    
-    init(vendor: String, serverURL: String, username: String, displayName: String) {
-        self.vendor = vendor
-        self.serverURL = serverURL
-        self.username = username
-        self.displayName = displayName
-        self.lastUsed = Date()
-        self.isDefault = false
-        self.authToken = nil
-        self.tokenExpiry = nil
-    }
-}
+// Note: MDMAccount is now defined in Types.swift for consistency
 
 // MARK: - General Settings
 struct GeneralSettings: Codable {

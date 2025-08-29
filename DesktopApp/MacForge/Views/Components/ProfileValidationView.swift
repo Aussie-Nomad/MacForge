@@ -570,7 +570,7 @@ struct ValidationReportSheet: View {
 
 #Preview {
     let sampleErrors = [
-        ProfileValidationError.emptyName,
+        ProfileValidationError.invalidName,
         ProfileValidationError.invalidIdentifier
     ]
     
@@ -595,7 +595,8 @@ struct ValidationReportSheet: View {
             message: "WiFi payload is missing required fields: SSID, SecurityType",
             severity: .critical,
             requirement: "All required fields must be present for WiFi payloads",
-            remediation: "Add the missing required fields: SSID, SecurityType"
+            remediation: "Add the missing required fields: SSID, SecurityType",
+            missingRequiredFields: ["SSID", "SecurityType"]
         )
     ]
     

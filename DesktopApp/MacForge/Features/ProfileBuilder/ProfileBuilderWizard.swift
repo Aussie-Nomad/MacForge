@@ -54,7 +54,7 @@ struct ProfileBuilderWizard: View {
             VStack(spacing: 16) {
                 HStack {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Profile Builder Wizard")
+                        Text("PPPC Profile Creator Wizard")
                             .font(.system(size: 32, weight: .black, design: .rounded))
                             .foregroundStyle(LCARSTheme.accent)
                         

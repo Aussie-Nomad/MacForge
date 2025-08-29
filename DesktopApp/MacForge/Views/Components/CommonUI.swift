@@ -22,7 +22,7 @@ struct SidebarBrandHeader: View {
                     .foregroundStyle(LcarsTheme.amber)
             }
             
-            Text("Profile Builder")
+            Text("PPPC Profile Creator")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }

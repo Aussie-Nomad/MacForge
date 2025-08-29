@@ -60,7 +60,7 @@ This document outlines the comprehensive testing strategy for MacForge, followin
 - [x] Theme switching functionality
 - [x] Navigation to tools
 
-#### Profile Builder
+#### PPPC Profile Creator
 - [x] Navigation and step progression
 - [x] Payload selection and management
 - [x] Application drop zone functionality
@@ -75,7 +75,7 @@ This document outlines the comprehensive testing strategy for MacForge, followin
 
 #### Performance
 - [x] Application launch time
-- [x] Profile Builder load time
+- [x] PPPC Profile Creator load time
 - [x] Theme switching responsiveness
 
 ### 4. Security Tests
@@ -157,7 +157,7 @@ xcodebuild test -scheme MacForge -destination 'platform=macOS' -only-testing:Mac
 
 ### Performance Benchmarks
 - **App Launch**: <2 seconds
-- **Profile Builder Load**: <1 second
+- **PPPC Profile Creator Load**: <1 second
 - **Theme Switch**: <100ms
 - **PPPC Configuration**: <500ms
 

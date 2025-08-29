@@ -34,8 +34,8 @@ final class MacForgeUITests: XCTestCase {
         let macforgeTitle = app.staticTexts["MacForge"]
         XCTAssertTrue(macforgeTitle.exists, "MacForge title should be visible")
         
-        let profileBuilderButton = app.buttons["Profile Builder"]
-        XCTAssertTrue(profileBuilderButton.exists, "Profile Builder button should be accessible")
+        let profileBuilderButton = app.buttons["PPPC Profile Creator"]
+        XCTAssertTrue(profileBuilderButton.exists, "PPPC Profile Creator button should be accessible")
         
         let themeSwitcher = app.buttons["Theme Switcher"]
         XCTAssertTrue(themeSwitcher.exists, "Theme switcher should be accessible")
@@ -58,17 +58,17 @@ final class MacForgeUITests: XCTestCase {
         XCTAssertTrue(defaultThemeButton.exists, "Default theme option should be available")
     }
     
-    // MARK: - Profile Builder Workflow Tests
+    // MARK: - PPPC Profile Creator Workflow Tests
     
     @MainActor
     func testProfileBuilderNavigation() throws {
-        // Navigate to Profile Builder
-        let profileBuilderButton = app.buttons["Profile Builder"]
+        // Navigate to PPPC Profile Creator
+        let profileBuilderButton = app.buttons["PPPC Profile Creator"]
         profileBuilderButton.click()
         
-        // Verify we're in the Profile Builder
-        let profileBuilderTitle = app.staticTexts["Profile Builder"]
-        XCTAssertTrue(profileBuilderTitle.exists, "Should be in Profile Builder")
+        // Verify we're in the PPPC Profile Creator
+        let profileBuilderTitle = app.staticTexts["PPPC Profile Creator"]
+        XCTAssertTrue(profileBuilderTitle.exists, "Should be in PPPC Profile Creator")
         
         // Test sidebar navigation
         let modeButton = app.buttons["MODE"]
@@ -80,8 +80,8 @@ final class MacForgeUITests: XCTestCase {
     
     @MainActor
     func testProfileBuilderStepNavigation() throws {
-        // Navigate to Profile Builder
-        app.buttons["Profile Builder"].click()
+        // Navigate to PPPC Profile Creator
+        app.buttons["PPPC Profile Creator"].click()
         
         // Verify initial step
         let step1Indicator = app.staticTexts["STEP 1 OF 3"]
@@ -100,8 +100,8 @@ final class MacForgeUITests: XCTestCase {
     
     @MainActor
     func testPayloadSelection() throws {
-        // Navigate to Profile Builder
-        app.buttons["Profile Builder"].click()
+        // Navigate to PPPC Profile Creator
+        app.buttons["PPPC Profile Creator"].click()
         
         // Select PPPC payload
         let pppcPayload = app.buttons["Privacy Preferences"]
@@ -120,8 +120,8 @@ final class MacForgeUITests: XCTestCase {
     
     @MainActor
     func testApplicationDropZone() throws {
-        // Navigate to Profile Builder
-        app.buttons["Profile Builder"].click()
+        // Navigate to PPPC Profile Creator
+        app.buttons["PPPC Profile Creator"].click()
         
         // Verify drop zone exists
         let dropZone = app.staticTexts["Drag and drop an application (.app) to configure PPPC permissions"]
@@ -137,8 +137,8 @@ final class MacForgeUITests: XCTestCase {
     
     @MainActor
     func testTemplateApplication() throws {
-        // Navigate to Profile Builder
-        app.buttons["Profile Builder"].click()
+        // Navigate to PPPC Profile Creator
+        app.buttons["PPPC Profile Creator"].click()
         
         // Click on Templates section
         let templatesButton = app.buttons["TEMPLATES"]
@@ -159,8 +159,8 @@ final class MacForgeUITests: XCTestCase {
     
     @MainActor
     func testPPPCConfigurationWorkflow() throws {
-        // Navigate to Profile Builder and select PPPC payload
-        app.buttons["Profile Builder"].click()
+        // Navigate to PPPC Profile Creator and select PPPC payload
+        app.buttons["PPPC Profile Creator"].click()
         app.buttons["Privacy Preferences"].click()
         app.buttons["Next"].click()
         
@@ -182,11 +182,10 @@ final class MacForgeUITests: XCTestCase {
     @MainActor
     func testAccessibilityLabels() throws {
         // Test that all interactive elements have proper accessibility labels
-        let allButtons = app.buttons
         
         // Test a few key buttons for accessibility
-        let profileBuilderButton = app.buttons["Profile Builder"]
-        XCTAssertFalse(profileBuilderButton.label.isEmpty, "Profile Builder button should have accessibility label")
+        let profileBuilderButton = app.buttons["PPPC Profile Creator"]
+        XCTAssertFalse(profileBuilderButton.label.isEmpty, "PPPC Profile Creator button should have accessibility label")
         
         let nextButton = app.buttons["Next"]
         if nextButton.exists {
@@ -201,7 +200,7 @@ final class MacForgeUITests: XCTestCase {
     @MainActor
     func testKeyboardNavigation() throws {
         // Test keyboard navigation through the interface
-        app.buttons["Profile Builder"].click()
+        app.buttons["PPPC Profile Creator"].click()
         
         // Use Tab key to navigate through elements
         app.typeKey(.tab, modifierFlags: [])
@@ -224,10 +223,10 @@ final class MacForgeUITests: XCTestCase {
     @MainActor
     func testProfileBuilderLoadPerformance() throws {
         measure {
-            app.buttons["Profile Builder"].click()
+            app.buttons["PPPC Profile Creator"].click()
             
-            // Wait for Profile Builder to fully load
-            let profileBuilderTitle = app.staticTexts["Profile Builder"]
+                    // Wait for PPPC Profile Creator to fully load
+        let profileBuilderTitle = app.staticTexts["PPPC Profile Creator"]
             XCTAssertTrue(profileBuilderTitle.waitForExistence(timeout: 5.0))
         }
     }
@@ -236,8 +235,8 @@ final class MacForgeUITests: XCTestCase {
     
     @MainActor
     func testErrorHandling() throws {
-        // Navigate to Profile Builder
-        app.buttons["Profile Builder"].click()
+        // Navigate to PPPC Profile Creator
+        app.buttons["PPPC Profile Creator"].click()
         
         // Try to advance without selecting payloads
         let nextButton = app.buttons["Next"]

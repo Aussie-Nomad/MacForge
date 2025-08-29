@@ -37,7 +37,7 @@ struct FeatureRow: View {
     }
 }
 
-// MARK: - Package Smelting
+// MARK: - Package Casting
 struct PackageSmeltingHostView: View {
     var model: BuilderModel
     var selectedMDM: MDMVendor?
@@ -51,7 +51,7 @@ struct PackageSmeltingHostView: View {
         VStack(spacing: 20) {
             // Header
             HStack {
-                Text("📦 Package Smelting")
+                Text("📦 Package Casting")
                     .font(.largeTitle).bold()
                 Spacer()
                 if let mdm = selectedMDM {
@@ -67,7 +67,7 @@ struct PackageSmeltingHostView: View {
                     .font(.title2).bold()
                     .foregroundStyle(LCARSTheme.accent)
                 
-                Text("Package Smelting is a distribution package manager that allows you to analyze, modify, and deploy macOS packages (.pkg files) to your MDM system. This tool helps you understand package contents, validate compatibility, and streamline deployment workflows.")
+                Text("Package Casting is a distribution package manager that allows you to analyze, modify, and deploy macOS packages (.pkg files) to your MDM system. This tool helps you understand package contents, validate compatibility, and streamline deployment workflows.")
                     .font(.body)
                     .foregroundStyle(.secondary)
                 
@@ -421,7 +421,7 @@ struct PackageInfo {
     }
 }
 
-// MARK: - Device Foundry
+// MARK: - Drawing Room
 struct DeviceFoundryHostView: View {
     var model: BuilderModel
     var selectedMDM: MDMVendor?
@@ -435,7 +435,7 @@ struct DeviceFoundryHostView: View {
                     .foregroundStyle(LCARSTheme.accent)
                 
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Device Foundry")
+                    Text("Drawing Room")
                         .font(.system(size: 32, weight: .black, design: .rounded))
                         .foregroundStyle(LCARSTheme.accent)
                     Text("Smart & Static Group Creator for devices")
@@ -450,7 +450,7 @@ struct DeviceFoundryHostView: View {
                     .font(.title2).bold()
                     .foregroundStyle(LCARSTheme.accent)
                 
-                Text("Device Foundry enables you to create, organize, and manage device groups within your MDM system. Create both smart (dynamic) and static groups to efficiently categorize devices based on various criteria.")
+                Text("Drawing Room enables you to create, organize, and manage device groups within your MDM system. Create both smart (dynamic) and static groups to efficiently categorize devices based on various criteria.")
                     .font(.body)
                     .foregroundStyle(LCARSTheme.textSecondary)
             }
@@ -465,7 +465,7 @@ struct DeviceFoundryHostView: View {
     }
 }
 
-// MARK: - Blueprint Builder
+// MARK: - Apple DDM Builder
 struct BlueprintBuilderHostView: View {
     var model: BuilderModel
     var selectedMDM: MDMVendor?
@@ -479,7 +479,7 @@ struct BlueprintBuilderHostView: View {
                     .foregroundStyle(LCARSTheme.accent)
                 
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Blueprint Builder")
+                    Text("Apple DDM Builder")
                         .font(.system(size: 32, weight: .black, design: .rounded))
                         .foregroundStyle(LCARSTheme.accent)
                     Text("Design reusable configuration blueprints")
@@ -494,7 +494,7 @@ struct BlueprintBuilderHostView: View {
                     .font(.title2).bold()
                     .foregroundStyle(LCARSTheme.accent)
                 
-                Text("Blueprint Builder is a template system that allows you to create, save, and reuse configuration profiles across different environments. Streamline profile creation with pre-built templates and custom configurations.")
+                Text("Apple DDM Builder is a template system that allows you to create, save, and reuse configuration profiles across different environments. Streamline profile creation with pre-built templates and custom configurations.")
                     .font(.body)
                     .foregroundStyle(LCARSTheme.textSecondary)
             }

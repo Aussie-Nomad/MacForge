@@ -149,15 +149,15 @@ struct JamfAuthSheet: View {
                 let jamfResult: JamfAuthResult
                 if viewModel.authenticationMode == .oauth {
                     jamfResult = .success(
-                        URL(string: viewModel.serverURL) ?? URL(string: "https://example.com")!,
-                        viewModel.oauthClientID,
-                        viewModel.oauthClientSecret
+                        baseURL: URL(string: viewModel.serverURL) ?? URL(string: "https://example.com")!,
+                        clientID: viewModel.oauthClientID,
+                        clientSecret: viewModel.oauthClientSecret
                     )
                 } else {
                     jamfResult = .success(
-                        URL(string: viewModel.serverURL) ?? URL(string: "https://example.com")!,
-                        viewModel.basicUsername,
-                        viewModel.basicPassword
+                        baseURL: URL(string: viewModel.serverURL) ?? URL(string: "https://example.com")!,
+                        clientID: viewModel.basicUsername,
+                        clientSecret: viewModel.basicPassword
                     )
                 }
                 
@@ -231,11 +231,7 @@ struct BasicCredentialsView: View {
 }
 
 // MARK: - Jamf Auth Result (Backward Compatibility)
-enum JamfAuthResult {
-    case success(URL, String, String)
-    case failure(Error)
-    case cancelled
-}
+// Note: JamfAuthResult is now defined in Types.swift for consistency
 
 #Preview {
     JamfAuthSheet { _ in }

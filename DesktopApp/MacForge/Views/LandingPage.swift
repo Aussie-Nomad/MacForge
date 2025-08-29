@@ -163,7 +163,7 @@ struct LandingPage: View {
                 VStack(alignment: .leading, spacing: 6) {
                     issueItem("MDM Authentication not triggering", severity: "HIGH")
                     issueItem("Tools remain disabled after MDM selection", severity: "HIGH")
-                    issueItem("Profile Builder navigation flow broken", severity: "MEDIUM")
+                    issueItem("PPPC Profile Creator navigation flow broken", severity: "MEDIUM")
                     issueItem("Theme switching needs refinement", severity: "LOW")
                 }
                 

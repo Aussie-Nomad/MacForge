@@ -2,7 +2,7 @@
 //  ProfileTopToolbar.swift
 //  MacForge
 //
-//  Top toolbar component for the profile builder interface.
+//  Top toolbar component for the PPPC profile creator interface.
 //  Provides quick access to common actions and profile management tools.
 
 import SwiftUI
