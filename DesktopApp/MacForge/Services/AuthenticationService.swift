@@ -90,7 +90,7 @@ final class JAMFAuthenticationService: ObservableObject {
         }
         
         do {
-            // Test basic connectivity
+            // Test basic connectivity with multiple endpoints
             try await pingServer(baseURL)
             
             // Test auth endpoint accessibility
@@ -99,9 +99,8 @@ final class JAMFAuthenticationService: ObservableObject {
             guard authEndpointReachable else {
                 throw AuthenticationError.serverUnreachable
             }
-            
         } catch {
-            throw AuthenticationError.networkError(error.localizedDescription)
+            throw AuthenticationError.serverUnreachable
         }
     }
     
@@ -253,13 +252,43 @@ final class JAMFAuthenticationService: ObservableObject {
     }
     
     private func pingServer(_ baseURL: URL) async throws {
-        let pingURL = baseURL.appendingPathComponent("api/v1/ping")
-        let (_, response) = try await session.data(from: pingURL)
+        // Try multiple ping endpoints for JAMF Pro
+        let pingEndpoints = [
+            "api/v1/ping",           // Modern JAMF Pro v1 API
+            "JSSResource/accounts",  // Classic JAMF Pro
+            "api/ping"               // Alternative ping endpoint
+        ]
         
-        guard let httpResponse = response as? HTTPURLResponse,
-              httpResponse.statusCode == 200 else {
-            throw AuthenticationError.serverUnreachable
+        var lastError: Error?
+        
+        for endpoint in pingEndpoints {
+            do {
+                let pingURL = baseURL.appendingPathComponent(endpoint)
+                
+                var request = URLRequest(url: pingURL)
+                request.httpMethod = "GET"
+                request.setValue("application/json", forHTTPHeaderField: "Accept")
+                request.timeoutInterval = 10.0
+                
+                let (_, response) = try await session.data(for: request)
+                
+                guard let httpResponse = response as? HTTPURLResponse else {
+                    continue
+                }
+                
+                // Accept 200 (OK), 401 (Unauthorized), or 403 (Forbidden) as successful connections
+                // 401/403 mean the server is reachable but requires authentication
+                if [200, 401, 403].contains(httpResponse.statusCode) {
+                    return // Server is reachable
+                }
+            } catch {
+                lastError = error
+                continue
+            }
         }
+        
+        // If we get here, none of the ping endpoints worked
+        throw AuthenticationError.serverUnreachable
     }
     
     private func testAuthEndpoint(_ baseURL: URL) async throws -> Bool {
