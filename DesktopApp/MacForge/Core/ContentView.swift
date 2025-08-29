@@ -11,10 +11,11 @@ struct ContentView: View {
     @State private var selectedTool: ToolModule? = nil
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
     @State private var selectedMDM: MDMVendor? = nil
+    @State private var showingAccountSettings = false
     @StateObject private var model = BuilderModel()
 
     // MARK: - Layout
-    private let sidebarWidth: CGFloat = LcarsTheme.Sidebar.width
+    private let sidebarWidth: CGFloat = LCARSTheme.Sidebar.width
 
     // MARK: - Detail content
     @ViewBuilder
@@ -90,7 +91,7 @@ struct ContentView: View {
                     .contentShape(Rectangle())
 
                     Button("Account Settings") {
-                        NotificationCenter.default.post(name: .jfAccountSettingsRequested, object: nil)
+                        showingAccountSettings = true
                     }
                     .buttonStyle(.bordered)
                     .contentShape(Rectangle())
@@ -131,13 +132,14 @@ struct ContentView: View {
             resetMDM()
         }
         .onReceive(NotificationCenter.default.publisher(for: .jfAccountSettingsRequested)) { _ in
-            // Open account settings - could navigate to settings or show settings sheet
-            print("Account settings requested")
-            // TODO: Implement account settings navigation
+            showingAccountSettings = true
         }
         .onReceive(NotificationCenter.default.publisher(for: .jfReportBugRequested)) { _ in
             // Handle bug reporting - could open email or GitHub issue
             print("Bug report requested")
+        }
+        .sheet(isPresented: $showingAccountSettings) {
+            SettingsView(userSettings: UserSettings())
         }
     }
 
