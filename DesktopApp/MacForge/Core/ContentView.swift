@@ -89,6 +89,12 @@ struct ContentView: View {
                     .disabled(selectedTool == nil)
                     .contentShape(Rectangle())
 
+                    Button("Account Settings") {
+                        NotificationCenter.default.post(name: .jfAccountSettingsRequested, object: nil)
+                    }
+                    .buttonStyle(.bordered)
+                    .contentShape(Rectangle())
+
                     Spacer()
 
                     Button("Report Bug") {
@@ -123,6 +129,11 @@ struct ContentView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: .jfChangeMDMRequested)) { _ in
             resetMDM()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .jfAccountSettingsRequested)) { _ in
+            // Open account settings - could navigate to settings or show settings sheet
+            print("Account settings requested")
+            // TODO: Implement account settings navigation
         }
         .onReceive(NotificationCenter.default.publisher(for: .jfReportBugRequested)) { _ in
             // Handle bug reporting - could open email or GitHub issue

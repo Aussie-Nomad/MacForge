@@ -19,6 +19,8 @@ extension Notification.Name {
     static let jfHomeRequested = Notification.Name("jf.home.requested")
     /// User tapped "Change MDM" in the toolbar/menu.
     static let jfChangeMDMRequested = Notification.Name("jf.changeMDM.requested")
+    /// User tapped "Account Settings" in the toolbar/menu.
+    static let jfAccountSettingsRequested = Notification.Name("jf.accountSettings.requested")
     /// User tapped "Report Bug".
     static let jfReportBugRequested = Notification.Name("jf.reportBug.requested")
     /// Scene phase changes so models can react (e.g., refresh tokens).
@@ -80,6 +82,9 @@ struct MacForgeApp: App {
 
                 Button("Change MDM") { jfPost(.jfChangeMDMRequested) }
                     .keyboardShortcut("m", modifiers: [.command, .shift])
+
+                Button("Account Settings") { jfPost(.jfAccountSettingsRequested) }
+                    .keyboardShortcut("a", modifiers: [.command, .shift])
 
                 Button("Report Bug") { jfPost(.jfReportBugRequested) }
                     .keyboardShortcut("b", modifiers: [.command, .shift])
