@@ -76,7 +76,7 @@ enum AuthDecision: String, Codable, CaseIterable, Hashable {
 @MainActor
 final class BuilderModel: ObservableObject {
     // MARK: - Dependencies
-    private let authenticationService: JAMFAuthenticationService
+    private let authenticationService: any JAMFAuthenticationServiceProtocol
     private let jamfService: JAMFServiceProtocol?
     private let profileExportService: ProfileExportServiceProtocol
     
@@ -111,7 +111,7 @@ final class BuilderModel: ObservableObject {
     
     // MARK: - Initialization
     init(
-        authenticationService: JAMFAuthenticationService = JAMFAuthenticationService(),
+        authenticationService: any JAMFAuthenticationServiceProtocol = JAMFAuthenticationService(),
         jamfService: JAMFServiceProtocol? = nil,
         profileExportService: ProfileExportServiceProtocol = ProfileExportService()
     ) {
@@ -289,7 +289,7 @@ final class BuilderModel: ObservableObject {
         )
     }
     
-    private func buildPPPCServices() -> [[String: Any]] {
+    func buildPPPCServices() -> [[String: Any]] {
         return pppcConfigurations.compactMap { config in
             var item: [String: Any] = [
                 "Service": config.service.id,

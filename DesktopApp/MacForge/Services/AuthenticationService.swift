@@ -8,8 +8,20 @@
 import Foundation
 import SwiftUI
 
-// MARK: - JAMF Authentication Service
-final class JAMFAuthenticationService: ObservableObject {
+// MARK: - JAMF Authentication Service Protocol
+protocol JAMFAuthenticationServiceProtocol: ObservableObject {
+    var isAuthenticated: Bool { get }
+    var currentToken: String? { get }
+    
+    func authenticateOAuth(clientID: String, clientSecret: String, serverURL: String) async throws -> String
+    func authenticateBasic(username: String, password: String, serverURL: String) async throws -> String
+    func validateConnection(to serverURL: String) async throws
+    func logout()
+    func debugJAMFEndpoints(serverURL: String) async -> String
+}
+
+// MARK: - JAMF Authentication Service Implementation
+final class JAMFAuthenticationService: JAMFAuthenticationServiceProtocol {
     private let session: URLSession
     @Published var isAuthenticated = false
     @Published var currentToken: String?

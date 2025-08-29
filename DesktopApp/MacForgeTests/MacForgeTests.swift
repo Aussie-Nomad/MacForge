@@ -239,7 +239,7 @@ struct AuthenticationServiceTests {
 }
 
 // MARK: - Mock Services for Testing
-class MockJAMFAuthenticationService: ObservableObject {
+class MockJAMFAuthenticationService: JAMFAuthenticationServiceProtocol {
     @Published var isAuthenticated = false
     @Published var currentToken: String?
     
@@ -251,9 +251,17 @@ class MockJAMFAuthenticationService: ObservableObject {
         return "mock-token"
     }
     
+    func authenticateBasic(username: String, password: String, serverURL: String) async throws -> String {
+        return "mock-token"
+    }
+    
     func logout() {
         currentToken = nil
         isAuthenticated = false
+    }
+    
+    func debugJAMFEndpoints(serverURL: String) async -> String {
+        return "Mock JAMF Debug Info\n✅ Server ping: SUCCESS\n✅ Auth endpoint: REACHABLE\n✅ JSSResource/computers: HTTP 401\n✅ JSSResource/osxconfigurationprofiles: HTTP 401\n✅ JSSResource/accounts: HTTP 401\n\nDebug completed at: \(Date())"
     }
 }
 
@@ -277,3 +285,4 @@ struct TestConfiguration {
     static let testBundleID = "com.test.app"
     static let testAppPath = "/Applications/Test.app"
 }
+
