@@ -22,6 +22,14 @@ All notable changes to MacForge will be documented in this file.
   - Added support for both Classic and v1 API endpoints
   - Fixed server ping failures by accepting HTTP 401/403 as valid responses
 
+### ✨ **New Features**
+- **Account Settings Integration**
+  - Complete settings view with MDM account management
+  - Quick access navigation via toolbar button and keyboard shortcuts
+  - Settings sheet presentation with proper modal interface
+  - MDM account CRUD operations (Create, Read, Update, Delete)
+  - Authentication service integration for account validation
+
 ### 🔧 **System Improvements**
 - **Type system consolidation**
   - Centralized all type definitions in Types.swift
