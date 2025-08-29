@@ -115,6 +115,12 @@ xcodebuild test -scheme MacForge -destination 'platform=macOS' -only-testing:Mac
 - **NEW**: Fixed theme system and component architecture
 - **NEW**: Resolved all build-blocking issues
 
+### **✨ New Features (v1.2.0)**
+- **Account Settings Quick Access**: Added quick link to Account Settings from context menu
+- **Keyboard Shortcuts**: New ⇧⌘A shortcut for Account Settings
+- **Toolbar Integration**: Account Settings button added to main toolbar
+- **Navigation Improvements**: Better access to account management features
+
 ### **🚧 In Progress**
 - Enhanced PPPC configuration interface
 - Advanced template service configuration
