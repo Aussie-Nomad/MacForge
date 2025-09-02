@@ -1,0 +1,38 @@
+name: Build MacForge
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  build:
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Xcode
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: latest-stable
+        
+    - name: Build MacForge
+      run: |
+        echo "Building MacForge project..."
+        cd DesktopApp
+        xcodebuild -project MacForge.xcodeproj -scheme MacForge -destination 'platform=macOS' -configuration Debug CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO build
+        
+    - name: Test MacForge
+      run: |
+        echo "Running tests..."
+        cd DesktopApp
+        xcodebuild -project MacForge.xcodeproj -scheme MacForge -destination 'platform=macOS' -configuration Debug CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO test
+        
+    - name: Archive build artifacts
+      if: success()
+      run: |
+        echo "Build completed successfully!"
+        echo "Build artifacts are available in the DerivedData directory"

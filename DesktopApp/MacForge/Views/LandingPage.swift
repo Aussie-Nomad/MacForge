@@ -141,7 +141,8 @@ struct LandingPage: View {
                 HStack(spacing: 16) {
                     contactButton("GITHUB", destination: "https://github.com/Aussie-Nomad", color: .blue)
                     contactButton("EMAIL", destination: "mailto:", color: .orange)
-                    contactButton("WIKI", destination: "https://github.com/dannymcdermott/macforge/wiki", color: .green)
+                    contactButton("WIKI", destination: "https://github.com/Aussie-Nomad/MacForge/wiki/MacForge-Wiki-%F0%9F%93%9A", color: .green)
+                    contactButton("REPORT BUG", destination: "https://github.com/Aussie-Nomad/MacForge/issues", color: .red)
                 }
             }
         }
@@ -152,22 +153,22 @@ struct LandingPage: View {
             VStack(alignment: .leading, spacing: 12) {
                 sectionHeader("REPORTED BUGS & KNOWN ISSUES", color: Color.red)
                 
-                Text("CURRENT STATUS: MONITORING")
+                Text("CURRENT STATUS: RESOLVED")
                     .font(.caption)
-                    .foregroundStyle(Color.red)
+                    .foregroundStyle(Color.green)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
-                    .background(Color.red.opacity(0.2))
+                    .background(Color.green.opacity(0.2))
                     .cornerRadius(8)
                 
                 VStack(alignment: .leading, spacing: 6) {
-                    issueItem("MDM Authentication not triggering", severity: "HIGH")
-                    issueItem("Tools remain disabled after MDM selection", severity: "HIGH")
-                    issueItem("PPPC Profile Creator navigation flow broken", severity: "MEDIUM")
-                    issueItem("Theme switching needs refinement", severity: "LOW")
+                    issueItem("All critical security vulnerabilities", severity: "RESOLVED", color: .green)
+                    issueItem("GDPR compliance implementation", severity: "RESOLVED", color: .green)
+                    issueItem("Build system and compilation errors", severity: "RESOLVED", color: .green)
+                    issueItem("Accessibility improvements", severity: "RESOLVED", color: .green)
                 }
                 
-                Text("Report bugs using the 'Report Bug' button when connected to an MDM.")
+                Text("Report bugs using the 'REPORT BUG' button above.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .italic()
@@ -223,20 +224,20 @@ struct LandingPage: View {
         }
     }
     
-    private func issueItem(_ text: String, severity: String) -> some View {
+    private func issueItem(_ text: String, severity: String, color: Color = .red) -> some View {
         HStack {
             Circle()
-                .fill(Color.red)
+                .fill(color)
                 .frame(width: 6, height: 6)
             Text(text)
                 .font(.body)
             Spacer()
             Text(severity)
                 .font(.caption)
-                .foregroundStyle(Color.red)
+                .foregroundStyle(color)
                 .padding(.horizontal, 6)
                 .padding(.vertical, 2)
-                .background(Color.red.opacity(0.2))
+                .background(color.opacity(0.2))
                 .cornerRadius(4)
         }
     }
