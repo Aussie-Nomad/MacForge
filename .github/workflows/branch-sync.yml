@@ -2,7 +2,7 @@ name: Branch Synchronization
 
 on:
   workflow_run:
-    workflows: ["Build and Test MacForge", "Swift CI"]
+    workflows: ["MacForge CI/CD", "Swift CI"]
     types: [completed]
     branches: [main]
 
