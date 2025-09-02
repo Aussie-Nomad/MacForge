@@ -15,6 +15,9 @@ class UserSettings: ObservableObject {
     @Published var mdmAccounts: [MDMAccount]
     @Published var generalSettings: GeneralSettings
     
+    private let keychainService = KeychainService.shared
+    private let secureLogger = SecureLogger.shared
+    
     init() {
         self.profileDefaults = ProfileDefaults()
         self.themePreferences = ThemePreferences()
@@ -25,21 +28,48 @@ class UserSettings: ObservableObject {
     
     // MARK: - Save/Load
     private func saveSettings() {
+        // Save non-sensitive data to UserDefaults
         if let encoded = try? JSONEncoder().encode(profileDefaults) {
             UserDefaults.standard.set(encoded, forKey: "profileDefaults")
         }
         if let encoded = try? JSONEncoder().encode(themePreferences) {
             UserDefaults.standard.set(encoded, forKey: "themePreferences")
         }
-        if let encoded = try? JSONEncoder().encode(mdmAccounts) {
-            UserDefaults.standard.set(encoded, forKey: "mdmAccounts")
-        }
         if let encoded = try? JSONEncoder().encode(generalSettings) {
             UserDefaults.standard.set(encoded, forKey: "generalSettings")
+        }
+        
+        // Save sensitive MDM accounts to Keychain
+        saveMDMAccountsToKeychain()
+    }
+    
+    private func saveMDMAccountsToKeychain() {
+        do {
+            // Store each MDM account securely in keychain
+            for account in mdmAccounts {
+                try keychainService.storeMDMAccount(account)
+                
+                // Store auth token separately if it exists
+                if let token = account.authToken {
+                    try keychainService.storeAuthToken(
+                        accountId: account.id,
+                        token: token,
+                        expiry: account.tokenExpiry
+                    )
+                }
+            }
+            
+            // Store account IDs list in UserDefaults (non-sensitive)
+            let accountIds = mdmAccounts.map { $0.id.uuidString }
+            UserDefaults.standard.set(accountIds, forKey: "mdmAccountIds")
+            
+        } catch {
+            secureLogger.logError(error, context: "Failed to save MDM accounts to keychain")
         }
     }
     
     private func loadSettings() {
+        // Load non-sensitive data from UserDefaults
         if let data = UserDefaults.standard.data(forKey: "profileDefaults"),
            let decoded = try? JSONDecoder().decode(ProfileDefaults.self, from: data) {
             profileDefaults = decoded
@@ -48,13 +78,53 @@ class UserSettings: ObservableObject {
            let decoded = try? JSONDecoder().decode(ThemePreferences.self, from: data) {
             themePreferences = decoded
         }
-        if let data = UserDefaults.standard.data(forKey: "mdmAccounts"),
-           let decoded = try? JSONDecoder().decode([MDMAccount].self, from: data) {
-            mdmAccounts = decoded
-        }
         if let data = UserDefaults.standard.data(forKey: "generalSettings"),
            let decoded = try? JSONDecoder().decode(GeneralSettings.self, from: data) {
             generalSettings = decoded
+        }
+        
+        // Load sensitive MDM accounts from Keychain
+        loadMDMAccountsFromKeychain()
+    }
+    
+    private func loadMDMAccountsFromKeychain() {
+        do {
+            // Get account IDs from UserDefaults
+            guard let accountIds = UserDefaults.standard.array(forKey: "mdmAccountIds") as? [String] else {
+                return
+            }
+            
+            var loadedAccounts: [MDMAccount] = []
+            
+            for accountIdString in accountIds {
+                guard let accountId = UUID(uuidString: accountIdString) else { continue }
+                
+                do {
+                    // Load account from keychain
+                    let account = try keychainService.retrieveMDMAccount(id: accountId)
+                    
+                    // Load auth token if it exists
+                    do {
+                        let tokenData = try keychainService.retrieveAuthToken(accountId: accountId)
+                        var updatedAccount = account
+                        updatedAccount.authToken = tokenData.isExpired ? nil : tokenData.token
+                        updatedAccount.tokenExpiry = tokenData.expiry
+                        loadedAccounts.append(updatedAccount)
+                    } catch {
+                        // No auth token stored, use account as-is
+                        loadedAccounts.append(account)
+                    }
+                    
+                } catch {
+                    secureLogger.logError(error, context: "Failed to load MDM account \(accountIdString)")
+                    continue
+                }
+            }
+            
+            mdmAccounts = loadedAccounts
+            
+        } catch {
+            secureLogger.logError(error, context: "Failed to load MDM accounts from keychain")
         }
     }
     
@@ -65,6 +135,14 @@ class UserSettings: ObservableObject {
             mdmAccounts[index].authToken = token
             mdmAccounts[index].tokenExpiry = expiry
             mdmAccounts[index].lastUsed = Date()
+            
+            // Store auth token securely in keychain
+            do {
+                try keychainService.storeAuthToken(accountId: accountId, token: token, expiry: expiry)
+            } catch {
+                secureLogger.logError(error, context: "Failed to store auth token in keychain")
+            }
+            
             saveSettings()
         }
     }
@@ -79,6 +157,66 @@ class UserSettings: ObservableObject {
             }
             
             return true
+        }
+    }
+    
+    // MARK: - GDPR Compliance Methods
+    
+    /// Export all user data for GDPR compliance
+    func exportUserData() -> UserDataExport {
+        return UserDataExport(
+            profileDefaults: profileDefaults,
+            themePreferences: themePreferences,
+            generalSettings: generalSettings,
+            mdmAccountsCount: mdmAccounts.count,
+            exportDate: Date()
+        )
+    }
+    
+    /// Delete all user data for GDPR compliance
+    func deleteAllUserData() {
+        do {
+            // Clear all keychain data
+            try keychainService.clearAllData()
+            
+            // Clear UserDefaults
+            let defaults = UserDefaults.standard
+            defaults.removeObject(forKey: "profileDefaults")
+            defaults.removeObject(forKey: "themePreferences")
+            defaults.removeObject(forKey: "generalSettings")
+            defaults.removeObject(forKey: "mdmAccountIds")
+            
+            // Reset to defaults
+            profileDefaults = ProfileDefaults()
+            themePreferences = ThemePreferences()
+            generalSettings = GeneralSettings()
+            mdmAccounts = []
+            
+            secureLogger.log("All user data deleted for GDPR compliance")
+            
+        } catch {
+            secureLogger.logError(error, context: "Failed to delete all user data")
+        }
+    }
+    
+    /// Delete specific MDM account data
+    func deleteMDMAccount(id: UUID) {
+        do {
+            // Remove from keychain
+            try keychainService.delete(key: "mdm_account_\(id.uuidString)", service: "MacForge.MDM")
+            try keychainService.deleteAuthToken(accountId: id)
+            
+            // Remove from local array
+            mdmAccounts.removeAll { $0.id == id }
+            
+            // Update stored account IDs
+            let accountIds = mdmAccounts.map { $0.id.uuidString }
+            UserDefaults.standard.set(accountIds, forKey: "mdmAccountIds")
+            
+            secureLogger.log("MDM account \(id) deleted")
+            
+        } catch {
+            secureLogger.logError(error, context: "Failed to delete MDM account \(id)")
         }
     }
 }
@@ -146,5 +284,24 @@ struct GeneralSettings: Codable {
         case showLandingPage = "Show Landing Page"
         case openLastProfile = "Open Last Profile"
         case promptForMDM = "Prompt for MDM Selection"
+    }
+}
+
+// MARK: - GDPR Compliance Types
+
+struct UserDataExport: Codable {
+    let profileDefaults: ProfileDefaults
+    let themePreferences: ThemePreferences
+    let generalSettings: GeneralSettings
+    let mdmAccountsCount: Int
+    let exportDate: Date
+    
+    var jsonData: Data? {
+        return try? JSONEncoder().encode(self)
+    }
+    
+    var formattedJSON: String? {
+        guard let data = jsonData else { return nil }
+        return String(data: data, encoding: .utf8)
     }
 }

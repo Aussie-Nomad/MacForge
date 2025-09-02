@@ -37,7 +37,16 @@ final class JAMFAuthenticationService: JAMFAuthenticationServiceProtocol {
     
     /// Authenticate using OAuth client credentials
     func authenticateOAuth(clientID: String, clientSecret: String, serverURL: String) async throws -> String {
-        guard let baseURL = normalizeServerURL(serverURL) else {
+        // Validate inputs
+        let validationService = ValidationService.shared
+        let validatedClientID = try validationService.validateClientID(clientID)
+        let validatedClientSecret = try validationService.validateClientSecret(clientSecret)
+        let validatedURL = try validationService.validateServerURL(serverURL)
+        
+        // Check rate limiting
+        try validationService.checkRateLimit(for: "oauth_auth_\(validatedURL.host ?? "unknown")")
+        
+        guard let baseURL = normalizeServerURL(validatedURL.absoluteString) else {
             throw AuthenticationError.invalidServerURL
         }
         
@@ -47,8 +56,8 @@ final class JAMFAuthenticationService: JAMFAuthenticationServiceProtocol {
         // Attempt OAuth authentication
         let token = try await authenticateWithOAuth(
             baseURL: baseURL,
-            clientID: clientID,
-            clientSecret: clientSecret
+            clientID: validatedClientID,
+            clientSecret: validatedClientSecret
         )
         
         await MainActor.run {
@@ -67,18 +76,26 @@ final class JAMFAuthenticationService: JAMFAuthenticationServiceProtocol {
     
     /// Authenticate using Basic authentication
     func authenticateBasic(username: String, password: String, serverURL: String) async throws -> String {
-        guard let baseURL = normalizeServerURL(serverURL) else {
+        // Validate inputs
+        let validationService = ValidationService.shared
+        let validatedUsername = try validationService.validateUsername(username)
+        let validatedPassword = try validationService.validatePassword(password)
+        let validatedURL = try validationService.validateServerURL(serverURL)
+        
+        // Check rate limiting
+        try validationService.checkRateLimit(for: "basic_auth_\(validatedURL.host ?? "unknown")")
+        guard let baseURL = normalizeServerURL(validatedURL.absoluteString) else {
             throw AuthenticationError.invalidServerURL
         }
         
         // Test connection first
-        try await validateConnection(to: serverURL)
+        try await validateConnection(to: validatedURL.absoluteString)
         
         // Attempt Basic authentication
         let token = try await authenticateWithBasic(
             baseURL: baseURL,
-            username: username,
-            password: password
+            username: validatedUsername,
+            password: validatedPassword
         )
         
         await MainActor.run {
@@ -230,7 +247,7 @@ final class JAMFAuthenticationService: JAMFAuthenticationServiceProtocol {
                 )
                 return token
             } catch {
-                print("Authentication failed for endpoint \(endpoint): \(error)")
+                SecureLogger.shared.logError(error, context: "Authentication failed for endpoint \(endpoint)")
                 lastError = error
                 continue
             }
@@ -285,13 +302,12 @@ final class JAMFAuthenticationService: JAMFAuthenticationServiceProtocol {
             throw AuthenticationError.networkError("Invalid response")
         }
         
-        // For debugging, let's see what the actual response looks like
-        if let responseString = String(data: data, encoding: .utf8) {
-            print("JAMF Pro Response: \(responseString)")
-            print("HTTP Status: \(httpResponse.statusCode)")
-            // Store response for potential use in error handling
-            _ = responseString
-        }
+        // Log response securely (no sensitive data)
+        SecureLogger.shared.logNetworkRequest(
+            url: url.absoluteString,
+            method: "POST",
+            statusCode: httpResponse.statusCode
+        )
         
         guard httpResponse.statusCode == 200 else {
             // Try to get more detailed error information
