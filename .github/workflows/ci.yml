@@ -61,10 +61,10 @@ jobs:
       run: |
         echo "Building MacForge project..."
         if [ -f "MacForge.xcodeproj/project.pbxproj" ]; then
-          xcodebuild -project MacForge.xcodeproj -scheme MacForge -destination 'platform=macOS' build
+          xcodebuild -project MacForge.xcodeproj -scheme MacForge -destination 'platform=macOS' -configuration Debug CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO build
           echo "Build completed successfully!"
         elif [ -f "MacForge.xcworkspace/contents.xcworkspacedata" ]; then
-          xcodebuild -workspace MacForge.xcworkspace -scheme MacForge -destination 'platform=macOS' build
+          xcodebuild -workspace MacForge.xcworkspace -scheme MacForge -destination 'platform=macOS' -configuration Debug CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO build
           echo "Build completed successfully!"
         else
           echo "No Xcode project or workspace found in DesktopApp directory"
@@ -77,10 +77,10 @@ jobs:
       run: |
         echo "Building MacForge project (Release)..."
         if [ -f "MacForge.xcodeproj/project.pbxproj" ]; then
-          xcodebuild -project MacForge.xcodeproj -scheme MacForge -destination 'platform=macOS' -configuration Release build
+          xcodebuild -project MacForge.xcodeproj -scheme MacForge -destination 'platform=macOS' -configuration Release CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO build
           echo "Release build completed successfully!"
         elif [ -f "MacForge.xcworkspace/contents.xcworkspacedata" ]; then
-          xcodebuild -workspace MacForge.xcworkspace -scheme MacForge -destination 'platform=macOS' -configuration Release build
+          xcodebuild -workspace MacForge.xcworkspace -scheme MacForge -destination 'platform=macOS' -configuration Release CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO build
           echo "Release build completed successfully!"
         else
           echo "No Xcode project or workspace found in DesktopApp directory"
@@ -92,10 +92,10 @@ jobs:
       run: |
         echo "Running tests..."
         if [ -f "MacForge.xcodeproj/project.pbxproj" ]; then
-          xcodebuild -project MacForge.xcodeproj -scheme MacForge -destination 'platform=macOS' test
+          xcodebuild -project MacForge.xcodeproj -scheme MacForge -destination 'platform=macOS' -configuration Debug CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO test
           echo "Tests completed successfully!"
         elif [ -f "MacForge.xcworkspace/contents.xcworkspacedata" ]; then
-          xcodebuild -workspace MacForge.xcworkspace -scheme MacForge -destination 'platform=macOS' test
+          xcodebuild -workspace MacForge.xcworkspace -scheme MacForge -destination 'platform=macOS' -configuration Debug CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO test
           echo "Tests completed successfully!"
         else
           echo "No tests to run"
