@@ -22,33 +22,60 @@ jobs:
         sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
         xcodebuild -version
         
+    - name: Auto-detect project structure
+      id: detect_project
+      run: |
+        cd DesktopApp
+        echo "Detecting project structure..."
+        
+        # Check for workspace vs project
+        if [ -f "MacForge.xcworkspace" ]; then
+          echo "WORKSPACE=MacForge.xcworkspace" >> $GITHUB_OUTPUT
+          echo "BUILD_TYPE=workspace" >> $GITHUB_OUTPUT
+          echo "BUILD_FILE=MacForge.xcworkspace" >> $GITHUB_OUTPUT
+        elif [ -f "MacForge.xcodeproj" ]; then
+          echo "PROJECT=MacForge.xcodeproj" >> $GITHUB_OUTPUT
+          echo "BUILD_TYPE=project" >> $GITHUB_OUTPUT
+          echo "BUILD_FILE=MacForge.xcodeproj" >> $GITHUB_OUTPUT
+        else
+          echo "❌ No Xcode project or workspace found"
+          exit 1
+        fi
+        
+        # Auto-detect scheme
+        SCHEME=$(xcodebuild -list -json | ruby -e "require 'json'; data = JSON.parse(STDIN.read); puts data['project']['targets'][0]")
+        echo "SCHEME=$SCHEME" >> $GITHUB_OUTPUT
+        echo "Using scheme: $SCHEME"
+        
     - name: Build MacForge
       run: |
         echo "Building MacForge project..."
         cd DesktopApp
         
-        xcodebuild build \
-          -project MacForge.xcodeproj \
-          -scheme MacForge \
+        xcodebuild clean build \
+          -${{ steps.detect_project.outputs.BUILD_TYPE }} ${{ steps.detect_project.outputs.BUILD_FILE }} \
+          -scheme ${{ steps.detect_project.outputs.SCHEME }} \
           -destination 'platform=macOS' \
           -configuration Debug \
           CODE_SIGN_IDENTITY="" \
           CODE_SIGNING_REQUIRED=NO \
-          CODE_SIGNING_ALLOWED=NO
+          CODE_SIGNING_ALLOWED=NO \
+          | xcpretty || exit ${PIPESTATUS[0]}
         
     - name: Test MacForge
       run: |
         echo "Running tests..."
         cd DesktopApp
         xcodebuild test \
-          -project MacForge.xcodeproj \
-          -scheme MacForge \
+          -${{ steps.detect_project.outputs.BUILD_TYPE }} ${{ steps.detect_project.outputs.BUILD_FILE }} \
+          -scheme ${{ steps.detect_project.outputs.SCHEME }} \
           -destination 'platform=macOS' \
           -configuration Debug \
           CODE_SIGN_IDENTITY="" \
           CODE_SIGNING_REQUIRED=NO \
           CODE_SIGNING_ALLOWED=NO \
-          -only-testing:MacForgeTests || echo "Tests completed with some failures"
+          -only-testing:MacForgeTests \
+          | xcpretty || echo "Tests completed with some failures"
       continue-on-error: true
         
     - name: Build completed
@@ -83,16 +110,39 @@ jobs:
         sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
         xcodebuild -version
 
+    - name: Auto-detect project structure
+      id: detect_project_release
+      run: |
+        cd DesktopApp
+        echo "Detecting project structure for release..."
+        
+        # Check for workspace vs project
+        if [ -f "MacForge.xcworkspace" ]; then
+          echo "WORKSPACE=MacForge.xcworkspace" >> $GITHUB_OUTPUT
+          echo "BUILD_TYPE=workspace" >> $GITHUB_OUTPUT
+          echo "BUILD_FILE=MacForge.xcworkspace" >> $GITHUB_OUTPUT
+        elif [ -f "MacForge.xcodeproj" ]; then
+          echo "PROJECT=MacForge.xcodeproj" >> $GITHUB_OUTPUT
+          echo "BUILD_TYPE=project" >> $GITHUB_OUTPUT
+          echo "BUILD_FILE=MacForge.xcodeproj" >> $GITHUB_OUTPUT
+        else
+          echo "❌ No Xcode project or workspace found"
+          exit 1
+        fi
+        
+        # Auto-detect scheme
+        SCHEME=$(xcodebuild -list -json | ruby -e "require 'json'; data = JSON.parse(STDIN.read); puts data['project']['targets'][0]")
+        echo "SCHEME=$SCHEME" >> $GITHUB_OUTPUT
+        echo "Using scheme: $SCHEME"
+
     - name: Build Release App
       run: |
         cd DesktopApp
         echo "Building MacForge Release v${{ steps.get_tag.outputs.VERSION }}..."
         
-        xcodebuild clean -project MacForge.xcodeproj -scheme MacForge -configuration Release
-        
-        xcodebuild build \
-          -project MacForge.xcodeproj \
-          -scheme MacForge \
+        xcodebuild clean build \
+          -${{ steps.detect_project_release.outputs.BUILD_TYPE }} ${{ steps.detect_project_release.outputs.BUILD_FILE }} \
+          -scheme ${{ steps.detect_project_release.outputs.SCHEME }} \
           -configuration Release \
           -destination 'platform=macOS' \
           -derivedDataPath ./build \
@@ -100,7 +150,8 @@ jobs:
           CODE_SIGNING_REQUIRED=NO \
           CODE_SIGNING_ALLOWED=NO \
           MARKETING_VERSION="${{ steps.get_tag.outputs.VERSION }}" \
-          CURRENT_PROJECT_VERSION=1
+          CURRENT_PROJECT_VERSION=1 \
+          | xcpretty || exit ${PIPESTATUS[0]}
               
     - name: Create Release Archive
       run: |
