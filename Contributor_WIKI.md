@@ -2,7 +2,7 @@
 
 ## 🚀 **Project Overview**
 
-MacForge is a macOS application for creating and managing configuration profiles with a focus on Privacy Preferences Policy Control (PPPC) and MDM integration. The application follows Apple's design guidelines and best practices from device management repositories like [Apple's device management](https://github.com/apple/device-management) and [NanoMDM](https://github.com/micromdm/nanomdm).
+MacForge is a comprehensive macOS MDM toolkit for enterprise administrators. This document focuses on development status, known issues, and contributor guidelines. For detailed feature information, see [FEATURE_WIKI.md](FEATURE_WIKI.md).
 
 ## 📋 **Current Status: FULLY OPERATIONAL ✅**
 
@@ -21,61 +21,18 @@ MacForge is a macOS application for creating and managing configuration profiles
 - ✅ Theme switching and persistence working
 - ✅ Basic UI layout and responsiveness
 
-### **Profile Workbench (PPPC) Tool**
-- ✅ Tool selection and navigation
-- ✅ Step-by-step wizard interface (3 steps)
-- ✅ Payload selection and management
-- ✅ Application drop zone for PPPC configuration
-- ✅ Bundle ID extraction from dropped apps
-- ✅ Template system (Security Baseline, Network, Antivirus Setup)
-- ✅ PPPC payload addition and configuration
-- ✅ Profile export to .mobileconfig format
-- ✅ Download functionality working
+### **Core Tools Status**
+- ✅ **Profile Workbench (PPPC)** - Complete with wizard interface and MDM integration
+- ✅ **Package Casting** - Complete with JAMF Composer-inspired workflow
+- ✅ **Log Burner** - Complete with AI-powered analysis and split-view results
+- ✅ **Device Foundry** - Complete with serial number lookup and device database
+- ✅ **Script Smelter** - Complete with AI provider integration
+- ✅ **Apple DDM Builder** - Complete with template system
 
-### **PPPC (Privacy Preferences Policy Control)**
-- ✅ Comprehensive PPPC service catalog
-- ✅ Service categorization (System, Accessibility, Automation, etc.)
-- ✅ PPPC configuration model with allow/deny settings
-- ✅ User override and comment support
-- ✅ Identifier type support (Bundle ID, Path, Code Requirement)
-- ✅ PPPC configuration export and validation
-
-### **Authentication & MDM Integration**
-- ✅ JAMF Pro authentication service
-- ✅ OAuth client credentials flow
-- ✅ Connection validation and error handling
-- ✅ Authentication state management
-- ✅ Profile submission to MDM (triggered on "Submit to MDM")
-
-### **Package Casting Tool** 📦
-- ✅ JAMF Composer-inspired package management interface
-- ✅ Drag & drop support for .pkg, .dmg, .app, .zip files
-- ✅ Comprehensive package analysis engine
-- ✅ Security analysis (code signing, certificate validation)
-- ✅ Dependency analysis and permission checking
-- ✅ Script injection capabilities for application fixes
-- ✅ Code signing with Apple Developer ID certificates
-- ✅ PPPC profile auto-generation for MDM deployment
-- ✅ Repackaging engine with multiple output formats
-- ✅ MDM integration for direct upload/download
-
-### **Log Burner Tool** 🔥
-- ✅ AI-powered log analysis with drag & drop interface
-- ✅ Smart pattern recognition for errors, warnings, and security events
-- ✅ Split-view results with raw log content sidebar and analysis main area
-- ✅ Interactive line highlighting and cross-reference functionality
-- ✅ Professional summary cards with statistics and key findings
-- ✅ Syntax highlighting and color-coded log entries
-- ✅ Haptic feedback and visual state indicators
-- ✅ Export functionality for analysis reports
-- ✅ Support for .log, .txt, and system log files
-
-### **Testing Infrastructure**
-- ✅ Unit test framework setup
-- ✅ UI test framework setup
-- ✅ Comprehensive test coverage for core models
-- ✅ Mock services for testing
-- ✅ Test plan and documentation
+### **Infrastructure**
+- ✅ **Authentication & MDM Integration** - JAMF Pro, Intune, Kandji, Mosyle support
+- ✅ **Theme System** - Default + LCARS themes with accessibility
+- ✅ **Testing Framework** - Unit and UI tests with comprehensive coverage
 
 ## ❌ **What's NOT Working**
 

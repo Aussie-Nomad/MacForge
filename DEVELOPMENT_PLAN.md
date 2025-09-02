@@ -1,7 +1,7 @@
 # MacForge Development Plan
 
 ## Overview
-MacForge is a macOS-native MDM payload builder and management tool. This document outlines the development phases and current status.
+MacForge is a macOS-native MDM payload builder and management tool. This document outlines the development phases and current status. For detailed feature information, see [FEATURE_WIKI.md](FEATURE_WIKI.md).
 
 ## Current Status
 - **Version**: 1.4.0
