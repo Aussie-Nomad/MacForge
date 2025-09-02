@@ -269,46 +269,12 @@ struct LogBurnerHostView: View {
     }
 }
 
-// MARK: - Apple DDM Builder
-struct BlueprintBuilderHostView: View {
+// MARK: - DDM Blueprints
+struct DDMBlueprintsHostView: View {
     var model: BuilderModel
     var selectedMDM: MDMVendor?
 
     var body: some View {
-        VStack(spacing: 24) {
-            // Header
-            HStack(spacing: 16) {
-                Image(systemName: "doc.text.image")
-                    .font(.system(size: 48))
-                    .foregroundStyle(LCARSTheme.accent)
-                
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Apple DDM Builder")
-                        .font(.system(size: 32, weight: .black, design: .rounded))
-                        .foregroundStyle(LCARSTheme.accent)
-                    Text("Design reusable configuration blueprints")
-                        .font(.title2)
-                        .foregroundStyle(LCARSTheme.textSecondary)
-                }
-            }
-            
-            // Simple Description
-            VStack(alignment: .leading, spacing: 16) {
-                Text("Tool Purpose")
-                    .font(.title2).bold()
-                    .foregroundStyle(LCARSTheme.accent)
-                
-                Text("Apple DDM Builder is a template system that allows you to create, save, and reuse configuration profiles across different environments. Streamline profile creation with pre-built templates and custom configurations.")
-                    .font(.body)
-                    .foregroundStyle(LCARSTheme.textSecondary)
-            }
-            .padding(24)
-            .background(LCARSTheme.panel)
-            .cornerRadius(16)
-            
-            Spacer()
-        }
-        .padding(24)
-        .background(LCARSTheme.background)
+        DDMBlueprints()
     }
 }

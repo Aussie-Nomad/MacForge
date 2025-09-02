@@ -41,6 +41,7 @@ enum ToolModule: String, CaseIterable, Identifiable {
     case packageCasting
     case deviceFoundry
     case blueprintBuilder
+    case ddmBlueprints
     case hammeringScripts
     case logBurner
 
@@ -52,6 +53,7 @@ enum ToolModule: String, CaseIterable, Identifiable {
         case .packageCasting: return "Package Casting"
         case .deviceFoundry: return "Device Foundry Lookup"
         case .blueprintBuilder: return "Apple DDM Builder"
+        case .ddmBlueprints: return "DDM Blueprints"
         case .hammeringScripts: return "Script Smelter"
         case .logBurner: return "Log Burner"
         }
@@ -63,6 +65,7 @@ enum ToolModule: String, CaseIterable, Identifiable {
         case .packageCasting: return "shippingbox"
         case .deviceFoundry: return "magnifyingglass.circle.fill"
         case .blueprintBuilder: return "network.badge.shield.half.filled"
+        case .ddmBlueprints: return "doc.text.magnifyingglass"
         case .hammeringScripts: return "hammer"
         case .logBurner: return "flame.circle.fill"
         }

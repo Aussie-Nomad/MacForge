@@ -34,6 +34,9 @@ struct ContentView: View {
             case .blueprintBuilder:
                 BlueprintBuilderHostView(model: model, selectedMDM: selectedMDM)
 
+            case .ddmBlueprints:
+                DDMBlueprintsHostView(model: model, selectedMDM: selectedMDM)
+
             case .hammeringScripts:
                 HammeringScriptsHostView(model: model, selectedMDM: selectedMDM)
 
