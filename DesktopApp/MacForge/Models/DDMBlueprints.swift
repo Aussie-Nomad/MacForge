@@ -3,8 +3,8 @@ import Foundation
 // MARK: - DDM Blueprint Models
 
 /// Represents a DDM Blueprint template for device configuration
-struct DDMBlueprint: Codable, Identifiable, Equatable {
-    let id: UUID
+struct DDMBlueprint: Codable, Identifiable, Equatable, Hashable {
+    var id: UUID
     var name: String
     var description: String
     var category: BlueprintCategory
@@ -46,7 +46,7 @@ struct DDMBlueprint: Codable, Identifiable, Equatable {
 }
 
 /// Categories for organizing blueprints
-enum BlueprintCategory: String, CaseIterable, Codable {
+enum BlueprintCategory: String, CaseIterable, Codable, Hashable {
     case deviceManagement = "Device Management"
     case security = "Security"
     case network = "Network"
@@ -81,7 +81,7 @@ enum BlueprintCategory: String, CaseIterable, Codable {
 }
 
 /// Core configuration structure for a blueprint
-struct BlueprintConfiguration: Codable, Equatable {
+struct BlueprintConfiguration: Codable, Equatable, Hashable {
     var deviceSettings: DeviceSettings
     var securityPolicies: SecurityPolicies
     var networkConfigurations: NetworkConfigurations
@@ -101,7 +101,7 @@ struct BlueprintConfiguration: Codable, Equatable {
 
 // MARK: - Device Settings
 
-struct DeviceSettings: Codable, Equatable {
+struct DeviceSettings: Codable, Equatable, Hashable {
     var deviceName: String?
     var deviceModel: String?
     var serialNumber: String?
@@ -120,7 +120,7 @@ struct DeviceSettings: Codable, Equatable {
 
 // MARK: - Security Policies
 
-struct SecurityPolicies: Codable, Equatable {
+struct SecurityPolicies: Codable, Equatable, Hashable {
     var passcodePolicy: PasscodePolicy
     var encryptionSettings: EncryptionSettings
     var firewallRules: FirewallRules
@@ -138,7 +138,7 @@ struct SecurityPolicies: Codable, Equatable {
     }
 }
 
-struct PasscodePolicy: Codable, Equatable {
+struct PasscodePolicy: Codable, Equatable, Hashable {
     var requirePasscode: Bool
     var minimumLength: Int
     var requireComplexity: Bool
@@ -158,7 +158,7 @@ struct PasscodePolicy: Codable, Equatable {
     }
 }
 
-struct EncryptionSettings: Codable, Equatable {
+struct EncryptionSettings: Codable, Equatable, Hashable {
     var requireFileVault: Bool
     var requireDataProtection: Bool
     var encryptionLevel: EncryptionLevel
@@ -172,13 +172,13 @@ struct EncryptionSettings: Codable, Equatable {
     }
 }
 
-enum EncryptionLevel: String, CaseIterable, Codable {
+enum EncryptionLevel: String, CaseIterable, Codable, Hashable {
     case aes128 = "AES-128"
     case aes256 = "AES-256"
     case aes512 = "AES-512"
 }
 
-struct FirewallRules: Codable, Equatable {
+struct FirewallRules: Codable, Equatable, Hashable {
     var enableFirewall: Bool
     var blockIncomingConnections: Bool
     var allowSignedApplications: Bool
@@ -194,7 +194,7 @@ struct FirewallRules: Codable, Equatable {
     }
 }
 
-struct FirewallRule: Codable, Equatable, Identifiable {
+struct FirewallRule: Codable, Equatable, Identifiable, Hashable {
     let id: UUID
     var name: String
     var action: FirewallAction
@@ -221,26 +221,26 @@ struct FirewallRule: Codable, Equatable, Identifiable {
     }
 }
 
-enum FirewallAction: String, CaseIterable, Codable {
+enum FirewallAction: String, CaseIterable, Codable, Hashable {
     case allow = "Allow"
     case deny = "Deny"
     case reject = "Reject"
 }
 
-enum FirewallDirection: String, CaseIterable, Codable {
+enum FirewallDirection: String, CaseIterable, Codable, Hashable {
     case inbound = "Inbound"
     case outbound = "Outbound"
     case both = "Both"
 }
 
-enum FirewallProtocol: String, CaseIterable, Codable {
+enum FirewallProtocol: String, CaseIterable, Codable, Hashable {
     case tcp = "TCP"
     case udp = "UDP"
     case icmp = "ICMP"
     case any = "Any"
 }
 
-struct VPNConfiguration: Codable, Equatable {
+struct VPNConfiguration: Codable, Equatable, Hashable {
     var enabled: Bool
     var connectionName: String?
     var serverAddress: String?
@@ -259,16 +259,16 @@ struct VPNConfiguration: Codable, Equatable {
     }
 }
 
-enum VPNAuthenticationMethod: String, CaseIterable, Codable {
+enum VPNAuthenticationMethod: String, CaseIterable, Codable, Hashable {
     case password = "Password"
     case certificate = "Certificate"
     case sharedSecret = "Shared Secret"
     case both = "Certificate + Password"
 }
 
-struct CertificateSettings: Codable, Equatable {
+struct CertificateSettings: Codable, Equatable, Hashable {
     var installCertificates: Bool
-    var certificates: [CertificateInfo]
+    var certificates: [DDMCertificateInfo]
     var trustSettings: TrustSettings
     
     init() {
@@ -278,7 +278,7 @@ struct CertificateSettings: Codable, Equatable {
     }
 }
 
-struct CertificateInfo: Codable, Equatable, Identifiable {
+struct DDMCertificateInfo: Codable, Equatable, Identifiable, Hashable {
     let id: UUID
     var name: String
     var issuer: String
@@ -300,7 +300,7 @@ struct CertificateInfo: Codable, Equatable, Identifiable {
     }
 }
 
-enum CertificatePurpose: String, CaseIterable, Codable {
+enum CertificatePurpose: String, CaseIterable, Codable, Hashable {
     case authentication = "Authentication"
     case encryption = "Encryption"
     case signing = "Code Signing"
@@ -308,7 +308,7 @@ enum CertificatePurpose: String, CaseIterable, Codable {
     case email = "Email"
 }
 
-struct TrustSettings: Codable, Equatable {
+struct TrustSettings: Codable, Equatable, Hashable {
     var trustSystemRoots: Bool
     var trustUserRoots: Bool
     var customTrustPolicies: [TrustPolicy]
@@ -320,7 +320,7 @@ struct TrustSettings: Codable, Equatable {
     }
 }
 
-struct TrustPolicy: Codable, Equatable, Identifiable {
+struct TrustPolicy: Codable, Equatable, Identifiable, Hashable {
     let id: UUID
     var name: String
     var certificateFingerprint: String
@@ -336,13 +336,13 @@ struct TrustPolicy: Codable, Equatable, Identifiable {
     }
 }
 
-enum TrustLevel: String, CaseIterable, Codable {
+enum TrustLevel: String, CaseIterable, Codable, Hashable {
     case trusted = "Trusted"
     case untrusted = "Untrusted"
     case unknown = "Unknown"
 }
 
-struct PrivacySettings: Codable, Equatable {
+struct PrivacySettings: Codable, Equatable, Hashable {
     var locationServices: Bool
     var cameraAccess: Bool
     var microphoneAccess: Bool
@@ -362,7 +362,7 @@ struct PrivacySettings: Codable, Equatable {
     }
 }
 
-struct PrivacyRule: Codable, Equatable, Identifiable {
+struct PrivacyRule: Codable, Equatable, Identifiable, Hashable {
     let id: UUID
     var application: String
     var permission: PrivacyPermission
@@ -378,7 +378,7 @@ struct PrivacyRule: Codable, Equatable, Identifiable {
     }
 }
 
-enum PrivacyPermission: String, CaseIterable, Codable {
+enum PrivacyPermission: String, CaseIterable, Codable, Hashable {
     case location = "Location"
     case camera = "Camera"
     case microphone = "Microphone"
@@ -389,7 +389,7 @@ enum PrivacyPermission: String, CaseIterable, Codable {
     case network = "Network"
 }
 
-enum PrivacyAccessLevel: String, CaseIterable, Codable {
+enum PrivacyAccessLevel: String, CaseIterable, Codable, Hashable {
     case allow = "Allow"
     case deny = "Deny"
     case ask = "Ask"
@@ -397,7 +397,7 @@ enum PrivacyAccessLevel: String, CaseIterable, Codable {
 
 // MARK: - Network Configurations
 
-struct NetworkConfigurations: Codable, Equatable {
+struct NetworkConfigurations: Codable, Equatable, Hashable {
     var wifiSettings: WiFiSettings
     var ethernetSettings: EthernetSettings
     var proxySettings: ProxySettings
@@ -411,7 +411,7 @@ struct NetworkConfigurations: Codable, Equatable {
     }
 }
 
-struct WiFiSettings: Codable, Equatable {
+struct WiFiSettings: Codable, Equatable, Hashable {
     var autoJoin: Bool
     var networks: [WiFiNetwork]
     var preferredNetworks: [String]
@@ -423,7 +423,7 @@ struct WiFiSettings: Codable, Equatable {
     }
 }
 
-struct WiFiNetwork: Codable, Equatable, Identifiable {
+struct WiFiNetwork: Codable, Equatable, Identifiable, Hashable {
     let id: UUID
     var ssid: String
     var securityType: WiFiSecurityType
@@ -442,7 +442,7 @@ struct WiFiNetwork: Codable, Equatable, Identifiable {
     }
 }
 
-enum WiFiSecurityType: String, CaseIterable, Codable {
+enum WiFiSecurityType: String, CaseIterable, Codable, Hashable {
     case none = "None"
     case wep = "WEP"
     case wpa = "WPA"
@@ -451,7 +451,7 @@ enum WiFiSecurityType: String, CaseIterable, Codable {
     case enterprise = "Enterprise"
 }
 
-struct EthernetSettings: Codable, Equatable {
+struct EthernetSettings: Codable, Equatable, Hashable {
     var autoConfigure: Bool
     var ipAddress: String?
     var subnetMask: String?
@@ -464,7 +464,7 @@ struct EthernetSettings: Codable, Equatable {
     }
 }
 
-struct ProxySettings: Codable, Equatable {
+struct ProxySettings: Codable, Equatable, Hashable {
     var enabled: Bool
     var type: ProxyType
     var server: String?
@@ -480,7 +480,7 @@ struct ProxySettings: Codable, Equatable {
     }
 }
 
-enum ProxyType: String, CaseIterable, Codable {
+enum ProxyType: String, CaseIterable, Codable, Hashable {
     case http = "HTTP"
     case https = "HTTPS"
     case socks4 = "SOCKS4"
@@ -488,7 +488,7 @@ enum ProxyType: String, CaseIterable, Codable {
     case auto = "Auto"
 }
 
-struct DNSSettings: Codable, Equatable {
+struct DNSSettings: Codable, Equatable, Hashable {
     var servers: [String]
     var searchDomains: [String]
     var order: [String]
@@ -502,7 +502,7 @@ struct DNSSettings: Codable, Equatable {
 
 // MARK: - Application Settings
 
-struct ApplicationSettings: Codable, Equatable {
+struct ApplicationSettings: Codable, Equatable, Hashable {
     var allowedApplications: [String]
     var blockedApplications: [String]
     var requiredApplications: [String]
@@ -518,7 +518,7 @@ struct ApplicationSettings: Codable, Equatable {
     }
 }
 
-struct ApplicationRestriction: Codable, Equatable, Identifiable {
+struct ApplicationRestriction: Codable, Equatable, Identifiable, Hashable {
     let id: UUID
     var application: String
     var restrictionType: ApplicationRestrictionType
@@ -532,7 +532,7 @@ struct ApplicationRestriction: Codable, Equatable, Identifiable {
     }
 }
 
-enum ApplicationRestrictionType: String, CaseIterable, Codable {
+enum ApplicationRestrictionType: String, CaseIterable, Codable, Hashable {
     case timeLimit = "Time Limit"
     case contentFilter = "Content Filter"
     case networkAccess = "Network Access"
@@ -542,7 +542,7 @@ enum ApplicationRestrictionType: String, CaseIterable, Codable {
     case microphone = "Microphone Access"
 }
 
-struct AppStoreSettings: Codable, Equatable {
+struct AppStoreSettings: Codable, Equatable, Hashable {
     var allowAppStore: Bool
     var allowInAppPurchases: Bool
     var requirePassword: Bool
@@ -558,7 +558,7 @@ struct AppStoreSettings: Codable, Equatable {
     }
 }
 
-enum AppStoreCategory: String, CaseIterable, Codable {
+enum AppStoreCategory: String, CaseIterable, Codable, Hashable {
     case business = "Business"
     case developer = "Developer Tools"
     case education = "Education"
@@ -581,7 +581,7 @@ enum AppStoreCategory: String, CaseIterable, Codable {
 
 // MARK: - User Preferences
 
-struct UserPreferences: Codable, Equatable {
+struct UserPreferences: Codable, Equatable, Hashable {
     var desktopSettings: DesktopSettings
     var dockSettings: DockSettings
     var menuBarSettings: MenuBarSettings
@@ -597,7 +597,7 @@ struct UserPreferences: Codable, Equatable {
     }
 }
 
-struct DesktopSettings: Codable, Equatable {
+struct DesktopSettings: Codable, Equatable, Hashable {
     var wallpaper: String?
     var screenSaver: String?
     var screenSaverTimeout: Int // minutes
@@ -611,7 +611,7 @@ struct DesktopSettings: Codable, Equatable {
     }
 }
 
-struct DockSettings: Codable, Equatable {
+struct DockSettings: Codable, Equatable, Hashable {
     var position: DockPosition
     var size: Int
     var magnification: Bool
@@ -629,19 +629,19 @@ struct DockSettings: Codable, Equatable {
     }
 }
 
-enum DockPosition: String, CaseIterable, Codable {
+enum DockPosition: String, CaseIterable, Codable, Hashable {
     case left = "Left"
     case bottom = "Bottom"
     case right = "Right"
 }
 
-enum MinimizeEffect: String, CaseIterable, Codable {
+enum MinimizeEffect: String, CaseIterable, Codable, Hashable {
     case genie = "Genie"
     case scale = "Scale"
     case suck = "Suck"
 }
 
-struct MenuBarSettings: Codable, Equatable {
+struct MenuBarSettings: Codable, Equatable, Hashable {
     var showBatteryPercentage: Bool
     var showBluetooth: Bool
     var showWiFi: Bool
@@ -661,12 +661,12 @@ struct MenuBarSettings: Codable, Equatable {
     }
 }
 
-enum ClockFormat: String, CaseIterable, Codable {
+enum ClockFormat: String, CaseIterable, Codable, Hashable {
     case twelveHour = "12 Hour"
     case twentyFourHour = "24 Hour"
 }
 
-struct SystemPreferences: Codable, Equatable {
+struct SystemPreferences: Codable, Equatable, Hashable {
     var allowSystemPreferences: Bool
     var allowedPanes: [String]
     var blockedPanes: [String]
@@ -680,7 +680,7 @@ struct SystemPreferences: Codable, Equatable {
     }
 }
 
-struct AccessibilitySettings: Codable, Equatable {
+struct AccessibilitySettings: Codable, Equatable, Hashable {
     var voiceOver: Bool
     var zoom: Bool
     var highContrast: Bool
@@ -702,7 +702,7 @@ struct AccessibilitySettings: Codable, Equatable {
 
 // MARK: - Compliance Rules
 
-struct ComplianceRules: Codable, Equatable {
+struct ComplianceRules: Codable, Equatable, Hashable {
     var deviceCompliance: [ComplianceRule]
     var applicationCompliance: [ComplianceRule]
     var networkCompliance: [ComplianceRule]
@@ -716,7 +716,7 @@ struct ComplianceRules: Codable, Equatable {
     }
 }
 
-struct ComplianceRule: Codable, Equatable, Identifiable {
+struct ComplianceRule: Codable, Equatable, Identifiable, Hashable {
     let id: UUID
     var name: String
     var description: String
@@ -745,7 +745,7 @@ struct ComplianceRule: Codable, Equatable, Identifiable {
     }
 }
 
-enum ComplianceCategory: String, CaseIterable, Codable {
+enum ComplianceCategory: String, CaseIterable, Codable, Hashable {
     case device = "Device"
     case application = "Application"
     case network = "Network"
@@ -754,14 +754,14 @@ enum ComplianceCategory: String, CaseIterable, Codable {
     case data = "Data"
 }
 
-enum ComplianceSeverity: String, CaseIterable, Codable {
+enum ComplianceSeverity: String, CaseIterable, Codable, Hashable {
     case low = "Low"
     case medium = "Medium"
     case high = "High"
     case critical = "Critical"
 }
 
-struct ComplianceCondition: Codable, Equatable {
+struct ComplianceCondition: Codable, Equatable, Hashable {
     var type: ComplianceConditionType
     var parameter: String
     var operatorType: ComplianceOperator
@@ -775,7 +775,7 @@ struct ComplianceCondition: Codable, Equatable {
     }
 }
 
-enum ComplianceConditionType: String, CaseIterable, Codable {
+enum ComplianceConditionType: String, CaseIterable, Codable, Hashable {
     case deviceProperty = "Device Property"
     case applicationInstalled = "Application Installed"
     case networkConnection = "Network Connection"
@@ -784,7 +784,7 @@ enum ComplianceConditionType: String, CaseIterable, Codable {
     case timeBased = "Time Based"
 }
 
-enum ComplianceOperator: String, CaseIterable, Codable {
+enum ComplianceOperator: String, CaseIterable, Codable, Hashable {
     case equals = "Equals"
     case notEquals = "Not Equals"
     case contains = "Contains"
@@ -795,7 +795,7 @@ enum ComplianceOperator: String, CaseIterable, Codable {
     case isFalse = "Is False"
 }
 
-struct ComplianceAction: Codable, Equatable {
+struct ComplianceAction: Codable, Equatable, Hashable {
     var type: ComplianceActionType
     var parameters: [String: String]
     var delay: Int // seconds
@@ -807,7 +807,7 @@ struct ComplianceAction: Codable, Equatable {
     }
 }
 
-enum ComplianceActionType: String, CaseIterable, Codable {
+enum ComplianceActionType: String, CaseIterable, Codable, Hashable {
     case notify = "Notify"
     case lock = "Lock Device"
     case wipe = "Wipe Device"
@@ -820,7 +820,7 @@ enum ComplianceActionType: String, CaseIterable, Codable {
 
 // MARK: - Blueprint Metadata
 
-struct BlueprintMetadata: Codable, Equatable {
+struct BlueprintMetadata: Codable, Equatable, Hashable {
     var complexity: BlueprintComplexity
     var estimatedDeploymentTime: Int // minutes
     var requiredPermissions: [String]
@@ -840,14 +840,14 @@ struct BlueprintMetadata: Codable, Equatable {
     }
 }
 
-enum BlueprintComplexity: String, CaseIterable, Codable {
+enum BlueprintComplexity: String, CaseIterable, Codable, Hashable {
     case simple = "Simple"
     case medium = "Medium"
     case complex = "Complex"
     case expert = "Expert"
 }
 
-struct CompatibilityInfo: Codable, Equatable {
+struct CompatibilityInfo: Codable, Equatable, Hashable {
     var minimumOSVersion: String
     var maximumOSVersion: String?
     var supportedArchitectures: [String]
@@ -862,7 +862,7 @@ struct CompatibilityInfo: Codable, Equatable {
     }
 }
 
-struct UsageStatistics: Codable, Equatable {
+struct UsageStatistics: Codable, Equatable, Hashable {
     var downloadCount: Int
     var deploymentCount: Int
     var successRate: Double
@@ -877,7 +877,7 @@ struct UsageStatistics: Codable, Equatable {
     }
 }
 
-struct RatingInfo: Codable, Equatable {
+struct RatingInfo: Codable, Equatable, Hashable {
     var averageRating: Double
     var totalRatings: Int
     var ratingDistribution: [Int] // [1-star, 2-star, 3-star, 4-star, 5-star]
@@ -891,7 +891,7 @@ struct RatingInfo: Codable, Equatable {
 
 // MARK: - Blueprint Library
 
-struct BlueprintLibrary: Codable, Equatable {
+struct BlueprintLibrary: Codable, Equatable, Hashable {
     var templates: [DDMBlueprint]
     var userBlueprints: [DDMBlueprint]
     var categories: [BlueprintCategory]
@@ -909,7 +909,7 @@ struct BlueprintLibrary: Codable, Equatable {
 
 // MARK: - Blueprint Search and Filter
 
-struct BlueprintSearchCriteria: Codable, Equatable {
+struct BlueprintSearchCriteria: Codable, Equatable, Hashable {
     var query: String
     var categories: [BlueprintCategory]
     var tags: [String]
@@ -931,7 +931,7 @@ struct BlueprintSearchCriteria: Codable, Equatable {
     }
 }
 
-enum BlueprintSortOption: String, CaseIterable, Codable {
+enum BlueprintSortOption: String, CaseIterable, Codable, Hashable {
     case name = "Name"
     case dateCreated = "Date Created"
     case dateUpdated = "Date Updated"
@@ -940,7 +940,7 @@ enum BlueprintSortOption: String, CaseIterable, Codable {
     case complexity = "Complexity"
 }
 
-enum SortOrder: String, CaseIterable, Codable {
+enum SortOrder: String, CaseIterable, Codable, Hashable {
     case ascending = "Ascending"
     case descending = "Descending"
 }

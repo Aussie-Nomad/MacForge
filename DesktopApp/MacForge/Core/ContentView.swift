@@ -32,7 +32,7 @@ struct ContentView: View {
                 DeviceFoundryHostView(model: model, selectedMDM: selectedMDM)
 
             case .blueprintBuilder:
-                BlueprintBuilderHostView(model: model, selectedMDM: selectedMDM)
+                DDMBlueprintsHostView(model: model, selectedMDM: selectedMDM)
 
             case .ddmBlueprints:
                 DDMBlueprintsHostView(model: model, selectedMDM: selectedMDM)

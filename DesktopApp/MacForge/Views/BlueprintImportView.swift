@@ -40,7 +40,7 @@ struct BlueprintImportView: View {
             }
             .padding()
             .navigationTitle("Import Blueprints")
-            .navigationBarTitleDisplayMode(.inline)
+
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {

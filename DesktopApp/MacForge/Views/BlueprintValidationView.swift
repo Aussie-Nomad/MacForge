@@ -39,7 +39,7 @@ struct BlueprintValidationView: View {
                 .padding()
             }
             .navigationTitle("Blueprint Validation")
-            .navigationBarTitleDisplayMode(.inline)
+
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button("Done") {

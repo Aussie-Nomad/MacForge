@@ -65,7 +65,7 @@ struct TemplateLibraryView: View {
                 }
             }
             .navigationTitle("Template Library")
-            .navigationBarTitleDisplayMode(.large)
+
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Close") {
@@ -456,7 +456,7 @@ struct TemplateFiltersView: View {
                 }
             }
             .navigationTitle("Filters")
-            .navigationBarTitleDisplayMode(.inline)
+
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
@@ -544,7 +544,7 @@ struct TemplateDetailView: View {
                 .padding()
             }
             .navigationTitle(template.name)
-            .navigationBarTitleDisplayMode(.large)
+
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Close") {

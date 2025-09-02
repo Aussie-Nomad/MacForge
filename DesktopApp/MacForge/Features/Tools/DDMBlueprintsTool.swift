@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// DDM Blueprints Tool - Device Data Management Blueprint Editor
-struct DDMBlueprints: View {
+struct DDMBlueprintsView: View {
     
     // MARK: - State Properties
     
@@ -80,10 +80,18 @@ struct DDMBlueprints: View {
         List(selection: $selectedBlueprint) {
             // Quick Access Section
             Section("Quick Access") {
-                NavigationLink("All Blueprints", value: nil)
-                NavigationLink("My Blueprints", value: nil)
-                NavigationLink("Templates", value: nil)
-                NavigationLink("Recent", value: nil)
+                Button("All Blueprints") {
+                    selectedBlueprint = nil
+                }
+                Button("My Blueprints") {
+                    selectedBlueprint = nil
+                }
+                Button("Templates") {
+                    selectedBlueprint = nil
+                }
+                Button("Recent") {
+                    selectedBlueprint = nil
+                }
             }
             
             // Categories Section
@@ -219,7 +227,7 @@ struct DDMBlueprints: View {
             .padding()
         }
         .navigationTitle(blueprint.name)
-        .navigationBarTitleDisplayMode(.large)
+
         .toolbar {
             ToolbarItemGroup(placement: .primaryAction) {
                 Button("Edit") {
@@ -441,19 +449,19 @@ struct DeviceSettingsView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             if let deviceName = settings.deviceName {
-                InfoRow(label: "Device Name", value: deviceName)
+                BlueprintInfoRow(label: "Device Name", value: deviceName)
             }
             
             if let location = settings.location {
-                InfoRow(label: "Location", value: location)
+                BlueprintInfoRow(label: "Location", value: location)
             }
             
             if let department = settings.department {
-                InfoRow(label: "Department", value: department)
+                BlueprintInfoRow(label: "Department", value: department)
             }
             
             if let user = settings.user {
-                InfoRow(label: "User", value: user)
+                BlueprintInfoRow(label: "User", value: user)
             }
             
             if !settings.customFields.isEmpty {
@@ -462,7 +470,7 @@ struct DeviceSettingsView: View {
                     .fontWeight(.medium)
                 
                 ForEach(Array(settings.customFields.keys.sorted()), id: \.self) { key in
-                    InfoRow(label: key, value: settings.customFields[key] ?? "")
+                    BlueprintInfoRow(label: key, value: settings.customFields[key] ?? "")
                 }
             }
         }
@@ -476,12 +484,12 @@ struct SecurityPoliciesView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            InfoRow(label: "Passcode Required", value: policies.passcodePolicy.requirePasscode ? "Yes" : "No")
-            InfoRow(label: "Minimum Length", value: "\(policies.passcodePolicy.minimumLength) characters")
-            InfoRow(label: "Complexity Required", value: policies.passcodePolicy.requireComplexity ? "Yes" : "No")
-            InfoRow(label: "FileVault Required", value: policies.encryptionSettings.requireFileVault ? "Yes" : "No")
-            InfoRow(label: "Firewall Enabled", value: policies.firewallRules.enableFirewall ? "Yes" : "No")
-            InfoRow(label: "VPN Enabled", value: policies.vpnConfiguration.enabled ? "Yes" : "No")
+            BlueprintInfoRow(label: "Passcode Required", value: policies.passcodePolicy.requirePasscode ? "Yes" : "No")
+            BlueprintInfoRow(label: "Minimum Length", value: "\(policies.passcodePolicy.minimumLength) characters")
+            BlueprintInfoRow(label: "Complexity Required", value: policies.passcodePolicy.requireComplexity ? "Yes" : "No")
+            BlueprintInfoRow(label: "FileVault Required", value: policies.encryptionSettings.requireFileVault ? "Yes" : "No")
+            BlueprintInfoRow(label: "Firewall Enabled", value: policies.firewallRules.enableFirewall ? "Yes" : "No")
+            BlueprintInfoRow(label: "VPN Enabled", value: policies.vpnConfiguration.enabled ? "Yes" : "No")
         }
     }
 }
@@ -493,10 +501,10 @@ struct NetworkConfigurationView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            InfoRow(label: "Auto Join WiFi", value: config.wifiSettings.autoJoin ? "Yes" : "No")
-            InfoRow(label: "WiFi Networks", value: "\(config.wifiSettings.networks.count) configured")
-            InfoRow(label: "Proxy Enabled", value: config.proxySettings.enabled ? "Yes" : "No")
-            InfoRow(label: "DNS Servers", value: "\(config.dnsSettings.servers.count) configured")
+            BlueprintInfoRow(label: "Auto Join WiFi", value: config.wifiSettings.autoJoin ? "Yes" : "No")
+            BlueprintInfoRow(label: "WiFi Networks", value: "\(config.wifiSettings.networks.count) configured")
+            BlueprintInfoRow(label: "Proxy Enabled", value: config.proxySettings.enabled ? "Yes" : "No")
+            BlueprintInfoRow(label: "DNS Servers", value: "\(config.dnsSettings.servers.count) configured")
         }
     }
 }
@@ -508,10 +516,10 @@ struct ApplicationSettingsView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            InfoRow(label: "Allowed Apps", value: "\(settings.allowedApplications.count)")
-            InfoRow(label: "Blocked Apps", value: "\(settings.blockedApplications.count)")
-            InfoRow(label: "Required Apps", value: "\(settings.requiredApplications.count)")
-            InfoRow(label: "App Store Allowed", value: settings.appStoreSettings.allowAppStore ? "Yes" : "No")
+            BlueprintInfoRow(label: "Allowed Apps", value: "\(settings.allowedApplications.count)")
+            BlueprintInfoRow(label: "Blocked Apps", value: "\(settings.blockedApplications.count)")
+            BlueprintInfoRow(label: "Required Apps", value: "\(settings.requiredApplications.count)")
+            BlueprintInfoRow(label: "App Store Allowed", value: settings.appStoreSettings.allowAppStore ? "Yes" : "No")
         }
     }
 }
@@ -523,10 +531,10 @@ struct UserPreferencesView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            InfoRow(label: "Dock Position", value: preferences.dockSettings.position.rawValue)
-            InfoRow(label: "Dock Size", value: "\(preferences.dockSettings.size)")
-            InfoRow(label: "System Preferences", value: preferences.systemPreferences.allowSystemPreferences ? "Allowed" : "Blocked")
-            InfoRow(label: "Accessibility", value: preferences.accessibilitySettings.voiceOver ? "Enabled" : "Disabled")
+            BlueprintInfoRow(label: "Dock Position", value: preferences.dockSettings.position.rawValue)
+            BlueprintInfoRow(label: "Dock Size", value: "\(preferences.dockSettings.size)")
+            BlueprintInfoRow(label: "System Preferences", value: preferences.systemPreferences.allowSystemPreferences ? "Allowed" : "Blocked")
+            BlueprintInfoRow(label: "Accessibility", value: preferences.accessibilitySettings.voiceOver ? "Enabled" : "Disabled")
         }
     }
 }
@@ -538,17 +546,17 @@ struct ComplianceRulesView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            InfoRow(label: "Device Rules", value: "\(rules.deviceCompliance.count)")
-            InfoRow(label: "Application Rules", value: "\(rules.applicationCompliance.count)")
-            InfoRow(label: "Network Rules", value: "\(rules.networkCompliance.count)")
-            InfoRow(label: "Security Rules", value: "\(rules.securityCompliance.count)")
+            BlueprintInfoRow(label: "Device Rules", value: "\(rules.deviceCompliance.count)")
+            BlueprintInfoRow(label: "Application Rules", value: "\(rules.applicationCompliance.count)")
+            BlueprintInfoRow(label: "Network Rules", value: "\(rules.networkCompliance.count)")
+            BlueprintInfoRow(label: "Security Rules", value: "\(rules.securityCompliance.count)")
         }
     }
 }
 
 // MARK: - Info Row View
 
-struct InfoRow: View {
+struct BlueprintInfoRow: View {
     let label: String
     let value: String
     
@@ -570,5 +578,5 @@ struct InfoRow: View {
 // MARK: - Preview
 
 #Preview {
-    DDMBlueprints()
+    DDMBlueprintsView()
 }

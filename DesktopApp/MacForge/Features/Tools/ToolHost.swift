@@ -275,6 +275,6 @@ struct DDMBlueprintsHostView: View {
     var selectedMDM: MDMVendor?
 
     var body: some View {
-        DDMBlueprints()
+        DDMBlueprintsView()
     }
 }

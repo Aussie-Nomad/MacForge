@@ -32,7 +32,7 @@ class DDMBlueprintsService: ObservableObject {
         
         setupDirectories()
         loadBlueprints()
-        createDefaultTemplates()
+        loadDefaultTemplates()
     }
     
     // MARK: - Directory Setup
@@ -343,7 +343,7 @@ class DDMBlueprintsService: ObservableObject {
         let testResult = BlueprintTestResult(
             success: true,
             deploymentTime: blueprint.metadata.estimatedDeploymentTime,
-            issues: validationResult.warnings.map { .warning($0.description) },
+            issues: validationResult.warnings.map { .warning("Warning") },
             recommendations: generateRecommendations(for: blueprint)
         )
         
@@ -560,7 +560,7 @@ class DDMBlueprintsService: ObservableObject {
         return order == .ascending ? sorted : sorted.reversed()
     }
     
-    private func createDefaultTemplates() {
+    private func loadDefaultTemplates() {
         if templates.isEmpty {
             let defaultTemplates = createDefaultTemplates()
             templates = defaultTemplates
@@ -664,7 +664,7 @@ class DDMBlueprintsService: ObservableObject {
                 condition: ComplianceCondition(
                     type: .securitySetting,
                     parameter: "filevault_enabled",
-                    operator: .isTrue,
+                    operatorType: .isTrue,
                     value: "true"
                 ),
                 action: ComplianceAction(type: .notify)

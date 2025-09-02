@@ -32,7 +32,7 @@ struct BlueprintTestResultView: View {
                 .padding()
             }
             .navigationTitle("Test Results")
-            .navigationBarTitleDisplayMode(.inline)
+
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button("Done") {

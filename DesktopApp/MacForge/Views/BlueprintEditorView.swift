@@ -96,7 +96,7 @@ struct BlueprintEditorView: View {
                 .frame(maxHeight: .infinity)
             }
             .navigationTitle(blueprint == nil ? "New Blueprint" : "Edit Blueprint")
-            .navigationBarTitleDisplayMode(.inline)
+
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
