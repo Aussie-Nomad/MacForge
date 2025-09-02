@@ -1,0 +1,158 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-and-release:
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Setup Xcode
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: 'latest-stable'
+    
+    - name: Show Xcode version
+      run: |
+        echo "Xcode version:"
+        xcodebuild -version
+    
+    - name: Extract version from tag
+      id: version
+      run: |
+        VERSION=${GITHUB_REF#refs/tags/}
+        VERSION=${VERSION#v}
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "Extracted version: $VERSION"
+    
+    - name: Build Release
+      working-directory: DesktopApp
+      run: |
+        echo "Building MacForge Release v${{ steps.version.outputs.version }}..."
+        xcodebuild build \
+          -project MacForge.xcodeproj \
+          -scheme MacForge \
+          -configuration Release \
+          -destination 'platform=macOS' \
+          -derivedDataPath ./build \
+          CODE_SIGN_IDENTITY="" \
+          CODE_SIGNING_REQUIRED=NO \
+          CODE_SIGNING_ALLOWED=NO
+    
+    - name: Create Archive
+      working-directory: DesktopApp
+      run: |
+        echo "Creating archive..."
+        xcodebuild archive \
+          -project MacForge.xcodeproj \
+          -scheme MacForge \
+          -configuration Release \
+          -destination 'platform=macOS' \
+          -archivePath ./build/MacForge.xcarchive \
+          CODE_SIGN_IDENTITY="" \
+          CODE_SIGNING_REQUIRED=NO \
+          CODE_SIGNING_ALLOWED=NO
+    
+    - name: Export App
+      working-directory: DesktopApp
+      run: |
+        echo "Exporting application..."
+        # Create export options plist
+        cat > ./build/ExportOptions.plist << EOF
+        <?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+        <plist version="1.0">
+        <dict>
+            <key>method</key>
+            <string>mac-application</string>
+            <key>destination</key>
+            <string>export</string>
+            <key>signingStyle</key>
+            <string>automatic</string>
+            <key>stripSwiftSymbols</key>
+            <true/>
+            <key>thinning</key>
+            <string>&lt;none&gt;</string>
+        </dict>
+        </plist>
+        EOF
+        
+        xcodebuild -exportArchive \
+          -archivePath ./build/MacForge.xcarchive \
+          -exportPath ./build/export \
+          -exportOptionsPlist ./build/ExportOptions.plist \
+          CODE_SIGN_IDENTITY="" \
+          CODE_SIGNING_REQUIRED=NO \
+          CODE_SIGNING_ALLOWED=NO
+    
+    - name: Create ZIP
+      run: |
+        echo "Creating ZIP archive..."
+        cd DesktopApp/build/export
+        zip -r "../../../MacForge-v${{ steps.version.outputs.version }}.zip" MacForge.app
+        cd ../../../
+    
+    - name: Create DMG (if create-dmg is available)
+      run: |
+        if command -v create-dmg &> /dev/null; then
+          echo "Creating DMG installer..."
+          create-dmg \
+            --volname "MacForge v${{ steps.version.outputs.version }}" \
+            --volicon "DesktopApp/build/export/MacForge.app/Contents/Resources/AppIcon.icns" \
+            --window-pos 200 120 \
+            --window-size 600 300 \
+            --icon-size 100 \
+            --icon "MacForge.app" 175 120 \
+            --hide-extension "MacForge.app" \
+            --app-drop-link 425 120 \
+            "MacForge-v${{ steps.version.outputs.version }}.dmg" \
+            "DesktopApp/build/export/"
+        else
+          echo "create-dmg not available, skipping DMG creation"
+        fi
+      continue-on-error: true
+    
+    - name: Generate Checksums
+      run: |
+        echo "Generating checksums..."
+        if [ -f "MacForge-v${{ steps.version.outputs.version }}.zip" ]; then
+          shasum -a 256 "MacForge-v${{ steps.version.outputs.version }}.zip" > "MacForge-v${{ steps.version.outputs.version }}.zip.sha256"
+        fi
+        if [ -f "MacForge-v${{ steps.version.outputs.version }}.dmg" ]; then
+          shasum -a 256 "MacForge-v${{ steps.version.outputs.version }}.dmg" > "MacForge-v${{ steps.version.outputs.version }}.dmg.sha256"
+        fi
+    
+    - name: Upload Release Assets
+      uses: actions/upload-artifact@v4
+      with:
+        name: release-assets
+        path: |
+          MacForge-v${{ steps.version.outputs.version }}.zip
+          MacForge-v${{ steps.version.outputs.version }}.dmg
+          MacForge-v${{ steps.version.outputs.version }}.zip.sha256
+          MacForge-v${{ steps.version.outputs.version }}.dmg.sha256
+        retention-days: 30
+    
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ github.ref }}
+        name: MacForge v${{ steps.version.outputs.version }}
+        body_path: RELEASE_NOTES.md
+        files: |
+          MacForge-v${{ steps.version.outputs.version }}.zip
+          MacForge-v${{ steps.version.outputs.version }}.dmg
+          MacForge-v${{ steps.version.outputs.version }}.zip.sha256
+          MacForge-v${{ steps.version.outputs.version }}.dmg.sha256
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
