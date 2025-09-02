@@ -13,6 +13,10 @@ import UniformTypeIdentifiers
 // MARK: - Package Analysis Models
 struct PackageAnalysis: Identifiable, Codable {
     let id = UUID()
+    
+    enum CodingKeys: String, CodingKey {
+        case fileName, filePath, fileSize, analysisDate, packageType, metadata, contents, permissions, scripts, dependencies, securityInfo, recommendations
+    }
     let fileName: String
     let filePath: String
     let fileSize: Int64
@@ -50,6 +54,10 @@ struct PackageContents: Codable {
 
 struct PackageFile: Identifiable, Codable {
     let id = UUID()
+    
+    enum CodingKeys: String, CodingKey {
+        case path, size, permissions, modificationDate, isExecutable, fileType
+    }
     let path: String
     let size: Int64
     let permissions: String
@@ -60,6 +68,10 @@ struct PackageFile: Identifiable, Codable {
 
 struct PackageDirectory: Identifiable, Codable {
     let id = UUID()
+    
+    enum CodingKeys: String, CodingKey {
+        case path, permissions, modificationDate
+    }
     let path: String
     let permissions: String
     let modificationDate: Date?
@@ -75,6 +87,10 @@ struct FilePermission: Codable {
 
 struct PackageScript: Identifiable, Codable {
     let id = UUID()
+    
+    enum CodingKeys: String, CodingKey {
+        case name, type, content, isExecutable, needsModification
+    }
     let name: String
     let type: PackageScriptType
     let content: String
@@ -84,6 +100,10 @@ struct PackageScript: Identifiable, Codable {
 
 struct PackageDependency: Identifiable, Codable {
     let id = UUID()
+    
+    enum CodingKeys: String, CodingKey {
+        case name, version, type, isInstalled, installPath
+    }
     let name: String
     let version: String?
     let type: DependencyType

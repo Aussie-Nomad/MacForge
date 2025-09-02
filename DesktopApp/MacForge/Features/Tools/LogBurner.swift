@@ -13,6 +13,10 @@ import UniformTypeIdentifiers
 // MARK: - Log Analysis Models
 struct LogAnalysisResult: Identifiable, Codable {
     let id = UUID()
+    
+    enum CodingKeys: String, CodingKey {
+        case fileName, fileSize, analysisDate, rawContent, summary, errors, warnings, securityEvents, timeline, statistics
+    }
     let fileName: String
     let fileSize: Int64
     let analysisDate: Date
@@ -36,6 +40,10 @@ struct LogSummary: Codable {
 
 struct LogError: Identifiable, Codable {
     let id = UUID()
+    
+    enum CodingKeys: String, CodingKey {
+        case timestamp, message, severity, context, lineNumber
+    }
     let timestamp: String?
     let message: String
     let severity: ErrorSeverity
@@ -45,6 +53,10 @@ struct LogError: Identifiable, Codable {
 
 struct LogWarning: Identifiable, Codable {
     let id = UUID()
+    
+    enum CodingKeys: String, CodingKey {
+        case timestamp, message, context, lineNumber
+    }
     let timestamp: String?
     let message: String
     let context: String?
@@ -53,6 +65,10 @@ struct LogWarning: Identifiable, Codable {
 
 struct SecurityEvent: Identifiable, Codable {
     let id = UUID()
+    
+    enum CodingKeys: String, CodingKey {
+        case timestamp, eventType, description, severity, context
+    }
     let timestamp: String?
     let eventType: SecurityEventType
     let description: String
@@ -62,6 +78,10 @@ struct SecurityEvent: Identifiable, Codable {
 
 struct TimelineEvent: Identifiable, Codable {
     let id = UUID()
+    
+    enum CodingKeys: String, CodingKey {
+        case timestamp, event, type
+    }
     let timestamp: Date
     let event: String
     let type: EventType
@@ -266,7 +286,7 @@ class LogAnalysisService: ObservableObject {
     private func extractSecurityEvents(from lines: [String]) -> [SecurityEvent] {
         var events: [SecurityEvent] = []
         
-        for (index, line) in lines.enumerated() {
+        for (_, line) in lines.enumerated() {
             let lowercased = line.lowercased()
             
             // Security-related patterns
@@ -340,7 +360,10 @@ class LogAnalysisService: ObservableObject {
             warningRate: warningRate,
             averageLineLength: averageLineLength,
             timeSpan: timeSpan,
-            mostCommonErrors: mostCommonErrors
+            mostCommonErrors: mostCommonErrors,
+            timeRange: "24 hours",
+            peakActivityHour: "12:00",
+            uniqueErrorCount: mostCommonErrors.count
         )
     }
     
@@ -735,14 +758,10 @@ struct LogBurnerView: View {
     }
     
     private func handleFileSelection(url: URL) {
-        do {
-            uploadedFileName = url.lastPathComponent
-            
-            Task {
-                await logAnalysisService.analyzeLogFile(at: url)
-            }
-        } catch {
-            logAnalysisService.errorMessage = "Failed to read file: \(error.localizedDescription)"
+        uploadedFileName = url.lastPathComponent
+        
+        Task {
+            await logAnalysisService.analyzeLogFile(at: url)
         }
     }
 }
