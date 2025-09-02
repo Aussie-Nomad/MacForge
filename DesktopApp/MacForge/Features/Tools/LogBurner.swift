@@ -11,7 +11,7 @@ import Foundation
 import UniformTypeIdentifiers
 
 // MARK: - Log Analysis Models
-struct LogAnalysisResult: Identifiable {
+struct LogAnalysisResult: Identifiable, Codable {
     let id = UUID()
     let fileName: String
     let fileSize: Int64
@@ -25,7 +25,7 @@ struct LogAnalysisResult: Identifiable {
     let statistics: LogStatistics
 }
 
-struct LogSummary {
+struct LogSummary: Codable {
     let totalLines: Int
     let errorCount: Int
     let warningCount: Int
@@ -34,7 +34,7 @@ struct LogSummary {
     let keyFindings: [String]
 }
 
-struct LogError: Identifiable {
+struct LogError: Identifiable, Codable {
     let id = UUID()
     let timestamp: String?
     let message: String
@@ -43,7 +43,7 @@ struct LogError: Identifiable {
     let lineNumber: Int?
 }
 
-struct LogWarning: Identifiable {
+struct LogWarning: Identifiable, Codable {
     let id = UUID()
     let timestamp: String?
     let message: String
@@ -51,7 +51,7 @@ struct LogWarning: Identifiable {
     let lineNumber: Int?
 }
 
-struct SecurityEvent: Identifiable {
+struct SecurityEvent: Identifiable, Codable {
     let id = UUID()
     let timestamp: String?
     let eventType: SecurityEventType
@@ -60,23 +60,26 @@ struct SecurityEvent: Identifiable {
     let context: String?
 }
 
-struct TimelineEvent: Identifiable {
+struct TimelineEvent: Identifiable, Codable {
     let id = UUID()
     let timestamp: Date
     let event: String
     let type: EventType
 }
 
-struct LogStatistics {
+struct LogStatistics: Codable {
     let totalLines: Int
     let errorRate: Double
     let warningRate: Double
     let averageLineLength: Int
     let timeSpan: TimeInterval
     let mostCommonErrors: [String: Int]
+    let timeRange: String
+    let peakActivityHour: String
+    let uniqueErrorCount: Int
 }
 
-enum ErrorSeverity: String, CaseIterable {
+enum ErrorSeverity: String, CaseIterable, Codable {
     case critical = "Critical"
     case high = "High"
     case medium = "Medium"
@@ -92,7 +95,7 @@ enum ErrorSeverity: String, CaseIterable {
     }
 }
 
-enum SecurityEventType: String, CaseIterable {
+enum SecurityEventType: String, CaseIterable, Codable {
     case authentication = "Authentication"
     case authorization = "Authorization"
     case fileAccess = "File Access"
@@ -112,7 +115,7 @@ enum SecurityEventType: String, CaseIterable {
     }
 }
 
-enum SecuritySeverity: String, CaseIterable {
+enum SecuritySeverity: String, CaseIterable, Codable {
     case critical = "Critical"
     case high = "High"
     case medium = "Medium"
@@ -128,7 +131,7 @@ enum SecuritySeverity: String, CaseIterable {
     }
 }
 
-enum EventType: String, CaseIterable {
+enum EventType: String, CaseIterable, Codable {
     case error = "Error"
     case warning = "Warning"
     case info = "Info"
@@ -741,6 +744,7 @@ struct LogBurnerView: View {
 struct LogAnalysisResultsView: View {
     let result: LogAnalysisResult
     @Environment(\.dismiss) private var dismiss
+    @State private var showingReportExport = false
     @State private var rawLogContent: String = ""
     @State private var highlightedLine: Int? = nil
     
@@ -889,7 +893,7 @@ struct LogAnalysisResultsView: View {
                 
                 ToolbarItem(placement: .automatic) {
                     Button("Export Report") {
-                        // TODO: Implement export functionality
+                        showingReportExport = true
                     }
                     .buttonStyle(.bordered)
                 }
@@ -898,6 +902,9 @@ struct LogAnalysisResultsView: View {
         .frame(minWidth: 1000, minHeight: 700)
         .onAppear {
             loadRawLogContent()
+        }
+        .sheet(isPresented: $showingReportExport) {
+            ReportExportView(logAnalysisResult: result)
         }
     }
     

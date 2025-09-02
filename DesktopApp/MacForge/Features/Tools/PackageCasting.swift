@@ -11,7 +11,7 @@ import Foundation
 import UniformTypeIdentifiers
 
 // MARK: - Package Analysis Models
-struct PackageAnalysis: Identifiable {
+struct PackageAnalysis: Identifiable, Codable {
     let id = UUID()
     let fileName: String
     let filePath: String
@@ -27,7 +27,7 @@ struct PackageAnalysis: Identifiable {
     let recommendations: [PackageRecommendation]
 }
 
-struct PackageMetadata {
+struct PackageMetadata: Codable {
     let bundleIdentifier: String?
     let version: String?
     let displayName: String?
@@ -40,7 +40,7 @@ struct PackageMetadata {
     let modificationDate: Date?
 }
 
-struct PackageContents {
+struct PackageContents: Codable {
     let files: [PackageFile]
     let directories: [PackageDirectory]
     let totalFiles: Int
@@ -48,7 +48,7 @@ struct PackageContents {
     let installSize: Int64
 }
 
-struct PackageFile: Identifiable {
+struct PackageFile: Identifiable, Codable {
     let id = UUID()
     let path: String
     let size: Int64
@@ -58,14 +58,14 @@ struct PackageFile: Identifiable {
     let fileType: String?
 }
 
-struct PackageDirectory: Identifiable {
+struct PackageDirectory: Identifiable, Codable {
     let id = UUID()
     let path: String
     let permissions: String
     let modificationDate: Date?
 }
 
-struct FilePermission {
+struct FilePermission: Codable {
     let path: String
     let owner: String
     let group: String
@@ -73,7 +73,7 @@ struct FilePermission {
     let needsRepair: Bool
 }
 
-struct PackageScript: Identifiable {
+struct PackageScript: Identifiable, Codable {
     let id = UUID()
     let name: String
     let type: PackageScriptType
@@ -82,7 +82,7 @@ struct PackageScript: Identifiable {
     let needsModification: Bool
 }
 
-struct PackageDependency: Identifiable {
+struct PackageDependency: Identifiable, Codable {
     let id = UUID()
     let name: String
     let version: String?
@@ -91,7 +91,7 @@ struct PackageDependency: Identifiable {
     let installPath: String?
 }
 
-struct SecurityInfo {
+struct SecurityInfo: Codable {
     let isSigned: Bool
     let signatureValid: Bool
     let certificateInfo: CertificateInfo?
@@ -100,7 +100,7 @@ struct SecurityInfo {
     let securityIssues: [SecurityIssue]
 }
 
-struct CertificateInfo {
+struct CertificateInfo: Codable {
     let commonName: String
     let organization: String
     let validityStart: Date
@@ -108,13 +108,13 @@ struct CertificateInfo {
     let isDeveloperID: Bool
 }
 
-struct SecurityIssue {
+struct SecurityIssue: Codable {
     let severity: PackageSecuritySeverity
     let description: String
     let recommendation: String
 }
 
-struct PackageRecommendation {
+struct PackageRecommendation: Codable {
     let type: RecommendationType
     let priority: RecommendationPriority
     let title: String
@@ -123,7 +123,7 @@ struct PackageRecommendation {
 }
 
 // MARK: - Package Types and Enums
-enum PackageType: String, CaseIterable {
+enum PackageType: String, CaseIterable, Codable {
     case pkg = "PKG"
     case dmg = "DMG"
     case app = "APP"
@@ -151,7 +151,7 @@ enum PackageType: String, CaseIterable {
     }
 }
 
-enum PackageScriptType: String, CaseIterable {
+enum PackageScriptType: String, CaseIterable, Codable {
     case preinstall = "Preinstall"
     case postinstall = "Postinstall"
     case preuninstall = "Preuninstall"
@@ -171,7 +171,7 @@ enum PackageScriptType: String, CaseIterable {
     }
 }
 
-enum DependencyType: String, CaseIterable {
+enum DependencyType: String, CaseIterable, Codable {
     case framework = "Framework"
     case library = "Library"
     case application = "Application"
@@ -179,7 +179,7 @@ enum DependencyType: String, CaseIterable {
     case unknown = "Unknown"
 }
 
-enum PackageSecuritySeverity: String, CaseIterable {
+enum PackageSecuritySeverity: String, CaseIterable, Codable {
     case critical = "Critical"
     case high = "High"
     case medium = "Medium"
@@ -197,7 +197,7 @@ enum PackageSecuritySeverity: String, CaseIterable {
     }
 }
 
-enum RecommendationType: String, CaseIterable {
+enum RecommendationType: String, CaseIterable, Codable {
     case signing = "Code Signing"
     case permissions = "Permissions"
     case scripts = "Scripts"
@@ -207,7 +207,7 @@ enum RecommendationType: String, CaseIterable {
     case mdm = "MDM Compatibility"
 }
 
-enum RecommendationPriority: String, CaseIterable {
+enum RecommendationPriority: String, CaseIterable, Codable {
     case critical = "Critical"
     case high = "High"
     case medium = "Medium"
