@@ -88,44 +88,39 @@ class UserSettings: ObservableObject {
     }
     
     private func loadMDMAccountsFromKeychain() {
-        do {
-            // Get account IDs from UserDefaults
-            guard let accountIds = UserDefaults.standard.array(forKey: "mdmAccountIds") as? [String] else {
-                return
-            }
-            
-            var loadedAccounts: [MDMAccount] = []
-            
-            for accountIdString in accountIds {
-                guard let accountId = UUID(uuidString: accountIdString) else { continue }
-                
-                do {
-                    // Load account from keychain
-                    let account = try keychainService.retrieveMDMAccount(id: accountId)
-                    
-                    // Load auth token if it exists
-                    do {
-                        let tokenData = try keychainService.retrieveAuthToken(accountId: accountId)
-                        var updatedAccount = account
-                        updatedAccount.authToken = tokenData.isExpired ? nil : tokenData.token
-                        updatedAccount.tokenExpiry = tokenData.expiry
-                        loadedAccounts.append(updatedAccount)
-                    } catch {
-                        // No auth token stored, use account as-is
-                        loadedAccounts.append(account)
-                    }
-                    
-                } catch {
-                    secureLogger.logError(error, context: "Failed to load MDM account \(accountIdString)")
-                    continue
-                }
-            }
-            
-            mdmAccounts = loadedAccounts
-            
-        } catch {
-            secureLogger.logError(error, context: "Failed to load MDM accounts from keychain")
+        // Get account IDs from UserDefaults
+        guard let accountIds = UserDefaults.standard.array(forKey: "mdmAccountIds") as? [String] else {
+            return
         }
+        
+        var loadedAccounts: [MDMAccount] = []
+        
+        for accountIdString in accountIds {
+            guard let accountId = UUID(uuidString: accountIdString) else { continue }
+            
+            do {
+                // Load account from keychain
+                let account = try keychainService.retrieveMDMAccount(id: accountId)
+                
+                // Load auth token if it exists
+                do {
+                    let tokenData = try keychainService.retrieveAuthToken(accountId: accountId)
+                    var updatedAccount = account
+                    updatedAccount.authToken = tokenData.isExpired ? nil : tokenData.token
+                    updatedAccount.tokenExpiry = tokenData.expiry
+                    loadedAccounts.append(updatedAccount)
+                } catch {
+                    // No auth token stored, use account as-is
+                    loadedAccounts.append(account)
+                }
+                
+            } catch {
+                secureLogger.logError(error, context: "Failed to load MDM account \(accountIdString)")
+                continue
+            }
+        }
+        
+        mdmAccounts = loadedAccounts
     }
     
     // MARK: - MDM Account Management

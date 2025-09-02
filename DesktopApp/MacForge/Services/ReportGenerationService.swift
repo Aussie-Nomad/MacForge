@@ -98,7 +98,8 @@ final class ReportGenerationService {
                 let webView = WKWebView()
                 webView.loadHTMLString(htmlContent, baseURL: nil)
                 
-                webView.evaluateJavaScript("document.readyState") { _, _ in
+                do {
+                    _ = try await webView.evaluateJavaScript("document.readyState")
                     let config = WKPDFConfiguration()
                     config.rect = CGRect(x: 0, y: 0, width: 595, height: 842) // A4 size
                     
@@ -106,7 +107,7 @@ final class ReportGenerationService {
                         switch result {
                         case .success(let data):
                             do {
-                                let url = try self.savePDFData(data, fileName: fileName)
+                                let url = try ReportGenerationService.savePDFData(data, fileName: fileName)
                                 continuation.resume(returning: url)
                             } catch {
                                 continuation.resume(throwing: error)
@@ -115,6 +116,8 @@ final class ReportGenerationService {
                             continuation.resume(throwing: error)
                         }
                     }
+                } catch {
+                    continuation.resume(throwing: error)
                 }
             }
         }
@@ -136,7 +139,7 @@ final class ReportGenerationService {
         return fileURL
     }
     
-    private func savePDFData(_ data: Data, fileName: String) throws -> URL {
+    private static func savePDFData(_ data: Data, fileName: String) throws -> URL {
         let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
         let fileURL = documentsPath.appendingPathComponent(fileName)
         

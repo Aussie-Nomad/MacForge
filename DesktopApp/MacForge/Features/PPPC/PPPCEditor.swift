@@ -79,7 +79,7 @@ struct AppTargetDropView: View {
                 }
             }
             .onDrop(of: [.fileURL], isTargeted: nil) { providers in
-                handleDrop(providers)
+                _ = handleDrop(providers)
                 return true
             }
         }
@@ -260,7 +260,7 @@ struct AddPPPCServiceSheet: View {
             VStack {
                 serviceSection
                 configurationSection
-                if let selectedService = selectedService {
+                if selectedService != nil {
                     previewSection
                 }
                 Spacer()
