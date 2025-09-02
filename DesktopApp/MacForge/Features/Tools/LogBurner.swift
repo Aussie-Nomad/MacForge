@@ -510,14 +510,17 @@ struct LogBurnerView: View {
                 Image(systemName: "flame.circle.fill")
                     .font(.system(size: 48))
                     .foregroundColor(.orange)
+                    .imageAccessibility(label: "Log Burner icon", hint: "AI-powered log analysis tool")
                 
                 Text("Log Burner")
                     .font(.largeTitle)
                     .fontWeight(.bold)
+                    .accessibilityLabel("Log Burner")
                 
                 Text("AI-Powered Log Analysis")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
+                    .accessibilityLabel("AI-Powered Log Analysis")
             }
             .padding(.top)
             
@@ -625,6 +628,10 @@ struct LogBurnerView: View {
                                 showingFilePicker = true
                             }
                             .buttonStyle(.borderedProminent)
+                            .buttonAccessibility(
+                                label: "Browse Files",
+                                hint: "Select a log file to analyze"
+                            )
                         }
                     }
                     .frame(maxWidth: .infinity, minHeight: 200)

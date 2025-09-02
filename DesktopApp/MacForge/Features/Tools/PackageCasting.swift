@@ -485,6 +485,7 @@ struct PackageCastingView: View {
                 Image(systemName: "shippingbox.circle.fill")
                     .font(.system(size: 48))
                     .foregroundColor(.blue)
+                    .imageAccessibility(label: "Package Casting icon", hint: "Package analysis and repackaging tool")
                 
                 Text("Package Casting")
                     .font(.largeTitle)
@@ -605,6 +606,10 @@ struct PackageCastingView: View {
                                 showingFilePicker = true
                             }
                             .buttonStyle(.borderedProminent)
+                            .buttonAccessibility(
+                                label: "Browse Files",
+                                hint: "Select a package file to analyze"
+                            )
                         }
                     }
                     .frame(maxWidth: .infinity, minHeight: 200)

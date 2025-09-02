@@ -38,6 +38,7 @@ struct ReportExportView: View {
                     Image(systemName: "doc.text.fill")
                         .font(.system(size: 48))
                         .foregroundColor(.blue)
+                        .imageAccessibility(label: "Report Export icon", hint: "Generate professional reports")
                     
                     Text("Export Report")
                         .font(.largeTitle)
@@ -125,6 +126,10 @@ struct ReportExportView: View {
                         dismiss()
                     }
                     .buttonStyle(.bordered)
+                    .buttonAccessibility(
+                        label: "Cancel",
+                        hint: "Close the export dialog"
+                    )
                     
                     Button(action: generateReport) {
                         HStack {
@@ -139,6 +144,11 @@ struct ReportExportView: View {
                     }
                     .buttonStyle(.borderedProminent)
                     .disabled(isGenerating)
+                    .buttonAccessibility(
+                        label: isGenerating ? "Generating Report" : "Generate Report",
+                        hint: isGenerating ? "Please wait while the report is being generated" : "Create a professional report of the analysis results",
+                        isEnabled: !isGenerating
+                    )
                 }
             }
             .padding()
