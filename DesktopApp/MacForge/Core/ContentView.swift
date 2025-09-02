@@ -25,8 +25,8 @@ struct ContentView: View {
             case .profileBuilder:
                 ProfileBuilderHostView(selectedMDM: selectedMDM, model: model, onHome: { resetTool() })
 
-            case .packageSmelting:
-                PackageSmeltingHostView(model: model, selectedMDM: selectedMDM)
+            case .packageCasting:
+                PackageCastingHostView(model: model, selectedMDM: selectedMDM)
 
             case .deviceFoundry:
                 DeviceFoundryHostView(model: model, selectedMDM: selectedMDM)
@@ -36,6 +36,9 @@ struct ContentView: View {
 
             case .hammeringScripts:
                 HammeringScriptsHostView(model: model, selectedMDM: selectedMDM)
+
+            case .logBurner:
+                LogBurnerHostView(model: model, selectedMDM: selectedMDM)
             }
         } else {
             // No tool chosen yet → landing / author notes

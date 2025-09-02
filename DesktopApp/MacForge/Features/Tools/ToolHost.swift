@@ -38,184 +38,12 @@ struct FeatureRow: View {
 }
 
 // MARK: - Package Casting
-struct PackageSmeltingHostView: View {
+struct PackageCastingHostView: View {
     var model: BuilderModel
     var selectedMDM: MDMVendor?
     
-    @State private var selectedPackage: URL?
-    @State private var packageInfo: PackageInfo?
-    @State private var isAnalyzing = false
-    @State private var errorMessage: String?
-
     var body: some View {
-        VStack(spacing: 20) {
-            // Header
-            HStack {
-                Text("📦 Package Casting")
-                    .font(.largeTitle).bold()
-                Spacer()
-                if let mdm = selectedMDM {
-                    Text("Connected to: \(mdm.rawValue)")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
-            
-            // Tool Purpose
-            VStack(alignment: .leading, spacing: 16) {
-                Text("Tool Purpose")
-                    .font(.title2).bold()
-                    .foregroundStyle(LCARSTheme.accent)
-                
-                Text("Package Casting is a distribution package manager that allows you to analyze, modify, and deploy macOS packages (.pkg files) to your MDM system. This tool helps you understand package contents, validate compatibility, and streamline deployment workflows.")
-                    .font(.body)
-                    .foregroundStyle(.secondary)
-                
-                // Feature Rows
-                VStack(spacing: 12) {
-                    FeatureRow(
-                        icon: "doc.text.magnifyingglass",
-                        title: "Package Analysis",
-                        description: "Deep inspection of package contents, dependencies, and metadata"
-                    )
-                    
-                    FeatureRow(
-                        icon: "arrow.up.doc",
-                        title: "MDM Integration",
-                        description: "Direct upload and deployment to connected MDM systems"
-                    )
-                    
-                    FeatureRow(
-                        icon: "gearshape.2",
-                        title: "Package Modification",
-                        description: "Edit package properties and customize installation behavior"
-                    )
-                }
-            }
-            .padding()
-            .background(LCARSTheme.panel)
-            .cornerRadius(12)
-            
-            // Main content with proper scrolling
-            ScrollView {
-                VStack(spacing: 16) {
-                    Text("Distribution Package Manager")
-                        .font(.headline)
-                    
-                    if let packageInfo = packageInfo {
-                        // Package Info Display
-                        VStack(alignment: .leading, spacing: 12) {
-                            HStack {
-                                Text("Package Name:")
-                                Spacer()
-                                Text(packageInfo.name)
-                                    .fontWeight(.semibold)
-                            }
-                            
-                            HStack {
-                                Text("Bundle ID:")
-                                Spacer()
-                                Text(packageInfo.bundleID)
-                                    .font(.system(.body, design: .monospaced))
-                            }
-                            
-                            HStack {
-                                Text("Version:")
-                                Spacer()
-                                Text(packageInfo.version)
-                            }
-                            
-                            HStack {
-                                Text("Size:")
-                                Spacer()
-                                Text(packageInfo.formattedSize)
-                            }
-                            
-                            Button("Upload to \(selectedMDM?.rawValue ?? "MDM")") {
-                                // TODO: Implement MDM upload
-                            }
-                            .buttonStyle(.borderedProminent)
-                            .disabled(selectedMDM == nil)
-                            .contentShape(Rectangle())
-                        }
-                        .padding()
-                        .background(LCARSTheme.panel)
-                        .cornerRadius(12)
-                        
-                    } else {
-                        // Drop Zone
-                        VStack(spacing: 12) {
-                            Image(systemName: "arrow.down.circle")
-                                .font(.system(size: 48))
-                                .foregroundStyle(LCARSTheme.accent)
-                            
-                            Text("Drop a .pkg file here")
-                                .font(.headline)
-                            
-                            Text("or click to browse")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                        .frame(maxWidth: .infinity, minHeight: 200)
-                        .background(
-                            RoundedRectangle(cornerRadius: 16)
-                                .stroke(LCARSTheme.accent, style: StrokeStyle(lineWidth: 2, dash: [5]))
-                                .fill(LCARSTheme.panel.opacity(0.3))
-                        )
-                        .onTapGesture {
-                            selectPackage()
-                        }
-                        .onDrop(of: [.fileURL], isTargeted: nil) { providers in
-                            let _ = handlePackageDrop(providers)
-                            return true
-                        }
-                    }
-                    
-                    if isAnalyzing {
-                        HStack {
-                            ProgressView()
-                                .scaleEffect(0.8)
-                            Text("Analyzing package...")
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                    
-                    if let errorMessage = errorMessage {
-                        Text(errorMessage)
-                            .foregroundStyle(.red)
-                            .font(.caption)
-                    }
-                }
-                .padding(.bottom, 20)
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            
-            Spacer()
-        }
-        .padding(24)
-        .background(LCARSTheme.background)
-    }
-    
-    private func selectPackage() {
-        let panel = NSOpenPanel()
-        panel.allowedContentTypes = [.fileURL]
-        panel.allowsMultipleSelection = false
-        
-        if panel.runModal() == .OK {
-            if let _ = panel.url {
-                let _ = handlePackageDrop([NSItemProvider()])
-                // TODO: Use the selected URL for package analysis
-            }
-        }
-    }
-    
-    private func handlePackageDrop(_ providers: [NSItemProvider]) -> Bool {
-        // TODO: Implement package analysis
-        return true
-    }
-    
-    private func uploadToMDM() {
-        // TODO: Implement MDM upload
+        PackageCastingView()
     }
 }
 
@@ -421,47 +249,23 @@ struct PackageInfo {
     }
 }
 
-// MARK: - Drawing Room
+// MARK: - Device Foundry Lookup
 struct DeviceFoundryHostView: View {
     var model: BuilderModel
     var selectedMDM: MDMVendor?
 
     var body: some View {
-        VStack(spacing: 24) {
-            // Header
-            HStack(spacing: 16) {
-                Image(systemName: "server.rack")
-                    .font(.system(size: 48))
-                    .foregroundStyle(LCARSTheme.accent)
-                
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Drawing Room")
-                        .font(.system(size: 32, weight: .black, design: .rounded))
-                        .foregroundStyle(LCARSTheme.accent)
-                    Text("Smart & Static Group Creator for devices")
-                        .font(.title2)
-                        .foregroundStyle(LCARSTheme.textSecondary)
-                }
-            }
-            
-            // Simple Description
-            VStack(alignment: .leading, spacing: 16) {
-                Text("Tool Purpose")
-                    .font(.title2).bold()
-                    .foregroundStyle(LCARSTheme.accent)
-                
-                Text("Drawing Room enables you to create, organize, and manage device groups within your MDM system. Create both smart (dynamic) and static groups to efficiently categorize devices based on various criteria.")
-                    .font(.body)
-                    .foregroundStyle(LCARSTheme.textSecondary)
-            }
-            .padding(24)
-            .background(LCARSTheme.panel)
-            .cornerRadius(16)
-            
-            Spacer()
-        }
-        .padding(24)
-        .background(LCARSTheme.background)
+        SerialNumberCheckerView()
+    }
+}
+
+// MARK: - Log Burner
+struct LogBurnerHostView: View {
+    var model: BuilderModel
+    var selectedMDM: MDMVendor?
+
+    var body: some View {
+        LogBurnerView()
     }
 }
 
@@ -508,7 +312,3 @@ struct BlueprintBuilderHostView: View {
         .background(LCARSTheme.background)
     }
 }
-
-
-
-

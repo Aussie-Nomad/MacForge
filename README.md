@@ -12,11 +12,13 @@ A macOS application for creating and managing configuration profiles, with suppo
 
 MacForge creates macOS configuration profiles, focusing on PPPC profiles that manage app permissions. It provides:
 
-- PPPC Management: 50+ privacy services across 7 categories
+- Profile Workbench (PPPC): 50+ privacy services across 7 categories
 - MDM Integration: Direct submission to JAMF Pro and other MDMs
 - Modern UI: Dual theme system (Default + LCARS)
 - Developer Tools: Package analysis, device management, and automation
 - Drag & Drop: Drop any .app file for automatic configuration
+- **NEW: Log Burner** 🔥 - AI-powered log analysis with smart pattern recognition
+- **NEW: Package Casting** 📦 - JAMF Composer-inspired package management and repackaging
 
 <img width="3360" height="2226" alt="Screenshot 2025-08-28 at 21 37 20" src="https://github.com/user-attachments/assets/656e66a7-2f47-41ab-9527-a8bb3c36381f" />
 
@@ -87,9 +89,9 @@ xcodebuild test -scheme MacForge -destination 'platform=macOS' -only-testing:Mac
 
 ## Current Status
 
-**Version**: 1.2.0 (Beta)  
+**Version**: 1.3.0 (Beta)  
 **Status**: BUILD SUCCESSFUL - All compilation errors resolved  
-**Last Updated**: August 29, 2025  
+**Last Updated**: January 15, 2025  
 **Build Status**: PASSING - CI/CD ready  
 
 ### Working Features
@@ -102,18 +104,21 @@ xcodebuild test -scheme MacForge -destination 'platform=macOS' -only-testing:Mac
 - PPPC configuration persistence and template application
 - Enhanced payload configuration (FileVault, Gatekeeper, WiFi, VPN)
 - MDM integration framework (JAMF Pro, Intune, Kandji, Mosyle)
+- **NEW: Log Burner Tool** - AI-powered log analysis with drag & drop interface
+- **NEW: Smart Pattern Recognition** - Automatic error, warning, and security event detection
+- **NEW: Split-view Results** - Raw log sidebar with interactive line highlighting
+- **NEW: Professional UI** - Color-coded statistics and visual feedback
 
-### Recent Fixes (v1.2.0)
+### Recent Fixes (v1.3.0)
+- **NEW: Log Burner Implementation** - Complete AI-powered log analysis tool
+- **NEW: Enhanced UI Feedback** - Visual state indicators and haptic feedback
+- **NEW: Interactive Analysis** - Click errors/warnings to highlight log lines
+- **NEW: Professional Design** - Split-view layout with syntax highlighting
 - Compilation Issues: All duplicate type declarations resolved
 - PPPC Services: Fixed property access patterns and persistence
 - Type System: Added missing protocol conformance and properties
 - Build System: Clean compilation with no errors or warnings
 - Documentation: Enhanced inline code documentation and test coverage
-- Profile export to .mobileconfig
-- JAMF Pro authentication
-- Comprehensive testing infrastructure
-- Theme system and component architecture fixed
-- All build-blocking issues resolved
 
 ### New Features (v1.2.0)
 - Account Settings Quick Access: Added quick link to Account Settings from context menu
@@ -123,6 +128,8 @@ xcodebuild test -scheme MacForge -destination 'platform=macOS' -only-testing:Mac
 - Complete Settings Integration: Full Account Settings view with MDM account management
 
 ### In Progress
+- **Log Burner Export Reports** - PDF/HTML report generation
+- **Log Burner File Picker** - Browse files functionality
 - Enhanced PPPC configuration interface
 - Advanced template service configuration
 - Profile validation and preview improvements

@@ -158,10 +158,18 @@ struct AppTargetDropView: View {
 // MARK: - PPPC Services Editor
 struct PPPCServicesEditor: View {
     @ObservedObject var model: BuilderModel
+    @State private var showingAddService = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("PERMISSIONS").font(.headline).foregroundStyle(LCARSTheme.accent)
+            HStack {
+                Text("PERMISSIONS").font(.headline).foregroundStyle(LCARSTheme.accent)
+                Spacer()
+                Button("Add Permission") {
+                    showingAddService = true
+                }
+                .buttonStyle(.borderedProminent)
+            }
             
             if model.pppcConfigurations.isEmpty {
                 VStack(spacing: 16) {
@@ -173,7 +181,7 @@ struct PPPCServicesEditor: View {
                         .font(.headline)
                         .foregroundStyle(LCARSTheme.textPrimary)
                     
-                    Text("Configure privacy permissions for the selected application. Use the PPPC Profile Creator to configure permissions.")
+                    Text("Configure privacy permissions for the selected application. Use the Add Permission button to configure permissions.")
                         .font(.body)
                         .foregroundStyle(LCARSTheme.textSecondary)
                         .multilineTextAlignment(.center)
@@ -201,6 +209,12 @@ struct PPPCServicesEditor: View {
                             Text(config.allowed ? "Allow" : "Deny")
                                 .font(.caption)
                                 .foregroundStyle(config.allowed ? .green : .red)
+                            
+                            Button("Remove") {
+                                model.removePPPCConfiguration(for: config.service.id)
+                            }
+                            .buttonStyle(.bordered)
+                            .controlSize(.small)
                         }
                         
                         Text("Identifier: \(config.identifier)")
@@ -221,5 +235,140 @@ struct PPPCServicesEditor: View {
                 }
             }
         }
+        .sheet(isPresented: $showingAddService) {
+            AddPPPCServiceSheet(
+                model: model,
+                isPresented: $showingAddService
+            )
+        }
+    }
+}
+
+// MARK: - Add PPPC Service Sheet
+struct AddPPPCServiceSheet: View {
+    @ObservedObject var model: BuilderModel
+    @Binding var isPresented: Bool
+    
+    @State private var selectedService: PPPCService?
+    @State private var identifier = ""
+    @State private var identifierType = PPPCIdentifierType.bundleID
+    @State private var isAllowed = true
+    @State private var comment = ""
+    
+    var body: some View {
+        NavigationView {
+            VStack {
+                serviceSection
+                configurationSection
+                if let selectedService = selectedService {
+                    previewSection
+                }
+                Spacer()
+            }
+            .navigationTitle("Add PPPC Permission")
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        isPresented = false
+                    }
+                }
+                
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Add") {
+                        addConfiguration()
+                    }
+                    .disabled(selectedService == nil || identifier.isEmpty)
+                }
+            }
+            .onAppear {
+                // Auto-populate identifier if we have a selected app
+                if let bundleID = model.selectedApp?.bundleID {
+                    identifier = bundleID
+                    identifierType = .bundleID
+                }
+            }
+        }
+    }
+    
+    private var serviceSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Service")
+                .font(.headline)
+                .foregroundStyle(.primary)
+            
+            Picker("Privacy Service", selection: $selectedService) {
+                Text("Select a service").tag(nil as PPPCService?)
+                ForEach(pppcServices) { service in
+                    Text(service.name).tag(service as PPPCService?)
+                }
+            }
+            .pickerStyle(.menu)
+        }
+        .padding()
+        .background(Color.gray.opacity(0.1))
+        .cornerRadius(8)
+    }
+    
+    private var configurationSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Configuration")
+                .font(.headline)
+                .foregroundStyle(.primary)
+            
+            TextField("Identifier (Bundle ID or Path)", text: $identifier)
+                .textFieldStyle(.roundedBorder)
+            
+            Picker("Identifier Type", selection: $identifierType) {
+                Text("Bundle ID").tag(PPPCIdentifierType.bundleID)
+                Text("Path").tag(PPPCIdentifierType.path)
+            }
+            .pickerStyle(.segmented)
+            
+            Toggle("Allow Access", isOn: $isAllowed)
+            
+            TextField("Comment (Optional)", text: $comment)
+                .textFieldStyle(.roundedBorder)
+        }
+        .padding()
+        .background(Color.gray.opacity(0.1))
+        .cornerRadius(8)
+    }
+    
+    private var previewSection: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("Preview")
+                .font(.headline)
+                .foregroundStyle(.primary)
+            
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Service: \(selectedService?.name ?? "")")
+                Text("Identifier: \(identifier)")
+                Text("Type: \(identifierType.rawValue)")
+                Text("Access: \(isAllowed ? "Allow" : "Deny")")
+                if !comment.isEmpty {
+                    Text("Comment: \(comment)")
+                }
+            }
+            .font(.caption)
+            .foregroundStyle(.secondary)
+        }
+        .padding()
+        .background(Color.gray.opacity(0.1))
+        .cornerRadius(8)
+    }
+    
+    private func addConfiguration() {
+        guard let service = selectedService, !identifier.isEmpty else { return }
+        
+        var config = PPPCConfiguration(
+            service: service,
+            identifier: identifier,
+            identifierType: identifierType
+        )
+        config.allowed = isAllowed
+        config.comment = comment.isEmpty ? nil : comment
+        
+        model.addPPPCConfiguration(config)
+        isPresented = false
     }
 }

@@ -38,30 +38,33 @@ struct ProfileSettings: Codable, Hashable {
 
 enum ToolModule: String, CaseIterable, Identifiable {
     case profileBuilder
-    case packageSmelting
+    case packageCasting
     case deviceFoundry
     case blueprintBuilder
     case hammeringScripts
+    case logBurner
 
     var id: String { self.rawValue }
 
     var displayName: String {
         switch self {
-        case .profileBuilder: return "PPPC Profile Creator"
-        case .packageSmelting: return "Package Casting"
-        case .deviceFoundry: return "Drawing Room"
+        case .profileBuilder: return "Profile Workbench (PPPC)"
+        case .packageCasting: return "Package Casting"
+        case .deviceFoundry: return "Device Foundry Lookup"
         case .blueprintBuilder: return "Apple DDM Builder"
         case .hammeringScripts: return "Script Smelter"
+        case .logBurner: return "Log Burner"
         }
     }
 
     var icon: String {
         switch self {
         case .profileBuilder: return "doc.badge.gearshape"
-        case .packageSmelting: return "shippingbox"
-        case .deviceFoundry: return "desktopcomputer"
+        case .packageCasting: return "shippingbox"
+        case .deviceFoundry: return "magnifyingglass.circle.fill"
         case .blueprintBuilder: return "network.badge.shield.half.filled"
         case .hammeringScripts: return "hammer"
+        case .logBurner: return "flame.circle.fill"
         }
     }
 }

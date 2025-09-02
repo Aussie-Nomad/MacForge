@@ -4,16 +4,18 @@
 MacForge is a macOS-native MDM payload builder and management tool. This document outlines the development phases and current status.
 
 ## Current Status
-- **Version**: 1.2.0
+- **Version**: 1.4.0
 - **Build**: ✅ Successful
 - **Core Features**: Working
 - **Authentication**: JAMF Pro integration complete
 - **Downloads System**: Core structure implemented
+- **Log Burner**: ✅ Complete - AI-powered log analysis tool
+- **Package Casting**: ✅ Complete - JAMF Composer-inspired package management
 
 ## Phase 1: Foundation & Core Features ✅ COMPLETE
 
 ### What's Working
-- PPPC Profile Creator with comprehensive PPPC support
+- Profile Workbench (PPPC) with comprehensive PPPC support
 - Application drop zone and bundle ID extraction
 - Template system (Security Baseline, Network, Antivirus, Development Tools)
 - Theme switching (Default + LCARS) with accessibility
@@ -23,6 +25,14 @@ MacForge is a macOS-native MDM payload builder and management tool. This documen
 - MDM integration framework (JAMF Pro, Intune, Kandji, Mosyle)
 - Account settings and MDM account management
 - Downloads folder system with organized structure
+- **NEW: Log Burner Tool** - AI-powered log analysis with drag & drop interface
+- **NEW: Smart Pattern Recognition** - Automatic error, warning, and security event detection
+- **NEW: Split-view Results** - Raw log sidebar with interactive line highlighting
+- **NEW: Professional UI** - Color-coded statistics and visual feedback
+- **NEW: Package Casting Tool** - JAMF Composer-inspired package management and repackaging
+- **NEW: Script Injection** - Add custom scripts to fix poorly built applications
+- **NEW: Code Signing** - Apple Developer ID certificate integration
+- **NEW: PPPC Auto-Generation** - Automatic privacy profile creation for MDM deployment
 
 ### What Was Fixed
 - All compilation errors resolved
@@ -35,6 +45,9 @@ MacForge is a macOS-native MDM payload builder and management tool. This documen
 ## Phase 2: Improvements & Security Hardening 🚧 IN PROGRESS
 
 ### Current Focus
+- **Log Burner Export Reports** - PDF/HTML report generation
+- **Log Burner File Picker** - Browse files functionality
+- **Package Casting Integration** - Complete workflow with Profile Workbench (PPPC)
 - Downloads system integration with existing services
 - Profile export to organized folder structure
 - Enhanced error handling and user feedback
@@ -171,5 +184,5 @@ For development questions or technical support:
 
 ---
 
-*Last updated: August 29, 2025*
-*Version: 1.2.0*
+*Last updated: January 15, 2025*
+*Version: 1.3.0*

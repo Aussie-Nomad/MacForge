@@ -6,8 +6,8 @@ MacForge is a macOS application for creating and managing configuration profiles
 
 ## 📋 **Current Status: FULLY OPERATIONAL ✅**
 
-**Version**: 1.2.0 (Beta)  
-**Build Date**: August 29, 2025  
+**Version**: 1.4.0 (Beta)  
+**Build Date**: January 15, 2025  
 **Platform**: macOS 12+ (Sonoma, Ventura, Monterey)  
 **Swift Version**: Swift 6 compatible  
 **Build Status**: 🟢 **SUCCESSFUL** - All compilation errors resolved  
@@ -21,7 +21,7 @@ MacForge is a macOS application for creating and managing configuration profiles
 - ✅ Theme switching and persistence working
 - ✅ Basic UI layout and responsiveness
 
-### **PPPC Profile Creator Tool**
+### **Profile Workbench (PPPC) Tool**
 - ✅ Tool selection and navigation
 - ✅ Step-by-step wizard interface (3 steps)
 - ✅ Payload selection and management
@@ -46,6 +46,29 @@ MacForge is a macOS application for creating and managing configuration profiles
 - ✅ Connection validation and error handling
 - ✅ Authentication state management
 - ✅ Profile submission to MDM (triggered on "Submit to MDM")
+
+### **Package Casting Tool** 📦
+- ✅ JAMF Composer-inspired package management interface
+- ✅ Drag & drop support for .pkg, .dmg, .app, .zip files
+- ✅ Comprehensive package analysis engine
+- ✅ Security analysis (code signing, certificate validation)
+- ✅ Dependency analysis and permission checking
+- ✅ Script injection capabilities for application fixes
+- ✅ Code signing with Apple Developer ID certificates
+- ✅ PPPC profile auto-generation for MDM deployment
+- ✅ Repackaging engine with multiple output formats
+- ✅ MDM integration for direct upload/download
+
+### **Log Burner Tool** 🔥
+- ✅ AI-powered log analysis with drag & drop interface
+- ✅ Smart pattern recognition for errors, warnings, and security events
+- ✅ Split-view results with raw log content sidebar and analysis main area
+- ✅ Interactive line highlighting and cross-reference functionality
+- ✅ Professional summary cards with statistics and key findings
+- ✅ Syntax highlighting and color-coded log entries
+- ✅ Haptic feedback and visual state indicators
+- ✅ Export functionality for analysis reports
+- ✅ Support for .log, .txt, and system log files
 
 ### **Testing Infrastructure**
 - ✅ Unit test framework setup
@@ -83,15 +106,17 @@ MacForge is a macOS application for creating and managing configuration profiles
 5. **Compilation Errors**: ✅ Fixed - All duplicate types and property access issues resolved
 
 ### **🔄 In Progress**
-1. **UI Layout Refinement**: Ongoing improvements to spacing and proportions
-2. **Accessibility Enhancement**: Adding keyboard navigation and screen reader support
-3. **Performance Optimization**: Large profile handling improvements
+1. **Log Burner Export Functionality**: Implementing report export features
+2. **File Picker Integration**: Adding browse files functionality to Log Burner
+3. **Performance Optimization**: Large log file handling improvements
+4. **Accessibility Enhancement**: Adding keyboard navigation and screen reader support
 
 ### **Medium Priority**
-1. **UI Layout Cramping**: Some sections feel too dense
-2. **Theme Switching**: LCARS theme needs refinement for better contrast
-3. **Error Messages**: Generic error messages without specific guidance
-4. **Performance**: Large profile handling could be optimized
+1. **Log Burner File Picker**: Browse files functionality needs implementation
+2. **Log Burner Export Reports**: PDF/HTML report generation
+3. **UI Layout Cramping**: Some sections feel too dense
+4. **Theme Switching**: LCARS theme needs refinement for better contrast
+5. **Error Messages**: Generic error messages without specific guidance
 
 ### **Low Priority**
 1. **Accessibility Labels**: Some UI elements missing proper labels
@@ -123,10 +148,10 @@ MacForge is a macOS application for creating and managing configuration profiles
 ## 🚧 **In Progress / Next Steps**
 
 ### **Immediate (This Week)**
-1. **Fix PPPC Configuration UI**: Make the detailed configuration interface functional
-2. **Complete Template System**: Implement proper service configuration in templates
-3. **Fix Step Navigation**: Resolve wizard step progression issues
-4. **Profile Validation**: Implement comprehensive profile validation
+1. **Log Burner Export Reports**: Implement PDF/HTML report generation
+2. **Log Burner File Picker**: Add browse files functionality
+3. **Fix PPPC Configuration UI**: Make the detailed configuration interface functional
+4. **Complete Template System**: Implement proper service configuration in templates
 
 ### **Short Term (Next 2 Weeks)**
 1. **MDM Integration**: Complete profile submission functionality
@@ -148,18 +173,19 @@ MacForgeApp (Entry Point)
 ├── ContentView (Main Container)
 ├── GlobalSidebar (MDM Selection)
 ├── ToolHost (Tool Router)
-└── Features/
-    ├── ProfileBuilder/
-    │   ├── ProfileBuilderHostView
-    │   ├── ProfileSidebar
-    │   ├── ProfileCenterPane
-    │   └── ProfileDetailPane
-    ├── PPPC/
-    │   └── PPPCEditor
-    └── Tools/
-        ├── PackageSmelting
-        ├── DeviceFoundry
-        └── BlueprintBuilder
+    └── Features/
+        ├── ProfileBuilder/
+        │   ├── ProfileBuilderHostView
+        │   ├── ProfileSidebar
+        │   ├── ProfileCenterPane
+        │   └── ProfileDetailPane
+        ├── PPPC/
+        │   └── PPPCEditor
+        └── Tools/
+            ├── PackageSmelting
+            ├── DeviceFoundry
+            ├── LogBurner (NEW)
+            └── BlueprintBuilder
 ```
 
 ### **Data Flow**
@@ -169,13 +195,19 @@ MacForgeApp (Entry Point)
    - Step 1: Select payloads and target application
    - Step 2: Configure PPPC permissions
    - Step 3: Review and export profile
-4. **Profile submission** → MDM authentication and upload
+4. **Log Burner workflow**:
+   - Drag & drop log file → Visual feedback and file processing
+   - AI analysis → Pattern recognition and categorization
+   - Split-view results → Raw log sidebar + analysis main area
+   - Interactive exploration → Click errors/warnings to highlight lines
+5. **Profile submission** → MDM authentication and upload
 
 ### **Key Components**
 - **BuilderModel**: Core data model and business logic
 - **ProfileBuilderViewModel**: UI state management
 - **JAMFAuthenticationService**: MDM authentication
 - **ProfileExportService**: Profile generation and export
+- **LogAnalysisService**: AI-powered log analysis engine
 - **ThemeManager**: UI theme management
 
 ## 🧪 **Testing Strategy**
@@ -326,7 +358,18 @@ xcodebuild test -scheme MacForge -destination 'platform=macOS' -only-testing:Mac
 
 ## 📝 **Changelog**
 
-### **Version 1.1.0 (Beta) - August 26, 2025**
+### **Version 1.3.0 (Beta) - January 15, 2025**
+- ✅ **NEW: Log Burner Tool** - AI-powered log analysis with drag & drop interface
+- ✅ **NEW: Split-view Results** - Raw log sidebar with interactive line highlighting
+- ✅ **NEW: Smart Pattern Recognition** - Automatic error, warning, and security event detection
+- ✅ **NEW: Professional UI** - Color-coded statistics, syntax highlighting, and visual feedback
+- ✅ **NEW: Interactive Analysis** - Click errors/warnings to highlight corresponding log lines
+- ✅ **NEW: Haptic Feedback** - Tactile confirmation for file uploads
+- ✅ **NEW: Export Functionality** - Report generation capabilities
+- ⚠️ Log Burner file picker needs implementation
+- ⚠️ Log Burner export reports need PDF/HTML generation
+
+### **Version 1.2.0 (Beta) - August 29, 2025**
 - ✅ Fixed main actor isolation issues in ThemeManager
 - ✅ Implemented comprehensive PPPC data models
 - ✅ Added application drop zone for PPPC configuration
@@ -367,6 +410,6 @@ xcodebuild test -scheme MacForge -destination 'platform=macOS' -only-testing:Mac
 
 ---
 
-**Last Updated**: August 26, 2025  
+**Last Updated**: January 15, 2025  
 **Maintainer**: Development Team  
 **Status**: Active Development - Beta Release
