@@ -42,9 +42,8 @@ MacForge is a modern macOS application that provides essential tools for Mac adm
 
 ## Documentation
 
-- **[Contributor WIKI](Contributor_WIKI.md)** - Current status, known issues, and development info
+- **[Contributor WIKI](Contributor_WIKI.md)** - Development status, roadmap, and contributor guidelines
 - **[Feature WIKI](FEATURE_WIKI.md)** - Detailed feature documentation and rationale
-- **[Development Plan](DEVELOPMENT_PLAN.md)** - Roadmap and development phases
 
 ## License
 

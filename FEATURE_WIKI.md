@@ -264,9 +264,7 @@ class PackageAnalysisService: ObservableObject {
 ## 📚 **Documentation Structure**
 
 - **[README.md](README.md)** - Project overview and quick start
-- **[Contributor_WIKI.md](Contributor_WIKI.md)** - Development status and guidelines
-- **[DEVELOPMENT_PLAN.md](DEVELOPMENT_PLAN.md)** - Roadmap and development phases
-- **[CURRENT_STATUS.md](CURRENT_STATUS.md)** - Current focus and known issues
+- **[Contributor_WIKI.md](Contributor_WIKI.md)** - Development status, roadmap, and contributor guidelines
 - **[FEATURE_WIKI.md](FEATURE_WIKI.md)** - This comprehensive feature documentation
 
 ## 🤝 **Contributing**
