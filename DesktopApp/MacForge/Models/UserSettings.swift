@@ -164,12 +164,33 @@ class UserSettings: ObservableObject {
     
     /// Export all user data for GDPR compliance
     func exportUserData() -> UserDataExport {
+        let appPreferences: [String: String] = [
+            "isLCARSActive": String(themePreferences.isLCARSActive),
+            "panelOpacity": String(themePreferences.panelOpacity),
+            "animationSpeed": themePreferences.animationSpeed.rawValue,
+            "accentColor": themePreferences.accentColor.rawValue,
+            "defaultIdentifierPrefix": profileDefaults.defaultIdentifierPrefix,
+            "defaultProfileName": profileDefaults.defaultProfileName,
+            "defaultExportLocation": profileDefaults.defaultExportLocation,
+            "autoSaveInterval": String(profileDefaults.autoSaveInterval),
+            "includeMetadata": String(profileDefaults.includeMetadata),
+            "exportFormat": "JSON"
+        ]
+        
+        let metadata = ExportMetadata(
+            totalAccounts: mdmAccounts.count,
+            totalProfiles: 1, // ProfileDefaults is a single object
+            exportFormat: "JSON",
+            dataStructure: "v2.0"
+        )
+        
         return UserDataExport(
+            exportDate: Date(),
+            exportVersion: "2.0.0",
+            mdmAccounts: mdmAccounts,
             profileDefaults: profileDefaults,
-            themePreferences: themePreferences,
-            generalSettings: generalSettings,
-            mdmAccountsCount: mdmAccounts.count,
-            exportDate: Date()
+            appPreferences: appPreferences,
+            metadata: metadata
         )
     }
     
@@ -290,11 +311,12 @@ struct GeneralSettings: Codable {
 // MARK: - GDPR Compliance Types
 
 struct UserDataExport: Codable {
-    let profileDefaults: ProfileDefaults
-    let themePreferences: ThemePreferences
-    let generalSettings: GeneralSettings
-    let mdmAccountsCount: Int
     let exportDate: Date
+    let exportVersion: String
+    let mdmAccounts: [MDMAccount]
+    let profileDefaults: ProfileDefaults
+    let appPreferences: [String: String]
+    let metadata: ExportMetadata
     
     var jsonData: Data? {
         return try? JSONEncoder().encode(self)
@@ -304,4 +326,11 @@ struct UserDataExport: Codable {
         guard let data = jsonData else { return nil }
         return String(data: data, encoding: .utf8)
     }
+}
+
+struct ExportMetadata: Codable {
+    let totalAccounts: Int
+    let totalProfiles: Int
+    let exportFormat: String
+    let dataStructure: String
 }

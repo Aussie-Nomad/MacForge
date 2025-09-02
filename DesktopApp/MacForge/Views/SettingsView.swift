@@ -14,7 +14,7 @@ struct SettingsView: View {
     @State private var showingAddAccount = false
     @State private var selectedTab = "General"
     
-    private let tabs = ["General", "Profile Defaults", "Theme", "MDM Accounts"]
+    private let tabs = ["General", "Profile Defaults", "Theme", "MDM Accounts", "Privacy"]
     
     var body: some View {
         VStack(spacing: 0) {
@@ -65,6 +65,9 @@ struct SettingsView: View {
                 
                 MDMAccountsTab(userSettings: userSettings, showingAddAccount: $showingAddAccount)
                     .tag("MDM Accounts")
+                
+                PrivacySettingsTab(userSettings: userSettings)
+                    .tag("Privacy")
             }
             .tabViewStyle(.automatic)
         }
@@ -541,6 +544,187 @@ struct AddMDMAccountView: View {
                 authStatus = "Debug Info:\n\(debugInfo)"
             }
         }
+    }
+}
+
+// MARK: - Privacy Settings Tab
+struct PrivacySettingsTab: View {
+    @ObservedObject var userSettings: UserSettings
+    @State private var showingPrivacyPolicy = false
+    @State private var showingDataExport = false
+    @State private var showingDataDeletion = false
+    
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                // Privacy Policy Section
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Privacy Policy")
+                        .font(.headline)
+                        .foregroundColor(LCARSTheme.textPrimary)
+                    
+                    Text("Review our privacy policy to understand how we collect, use, and protect your data.")
+                        .font(.subheadline)
+                        .foregroundColor(LCARSTheme.textSecondary)
+                    
+                    Button("View Privacy Policy") {
+                        showingPrivacyPolicy = true
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .buttonAccessibility(
+                        label: "View Privacy Policy",
+                        hint: "Open the privacy policy document"
+                    )
+                }
+                .padding()
+                .background(LCARSTheme.panel)
+                .cornerRadius(12)
+                
+                // Data Rights Section
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Your Data Rights")
+                        .font(.headline)
+                        .foregroundColor(LCARSTheme.textPrimary)
+                    
+                    Text("Under GDPR and other privacy regulations, you have specific rights regarding your personal data.")
+                        .font(.subheadline)
+                        .foregroundColor(LCARSTheme.textSecondary)
+                    
+                    VStack(spacing: 8) {
+                        Button("Export My Data") {
+                            showingDataExport = true
+                        }
+                        .buttonStyle(.bordered)
+                        .buttonAccessibility(
+                            label: "Export My Data",
+                            hint: "Download a copy of all your data in machine-readable format"
+                        )
+                        
+                        Button("Delete My Data") {
+                            showingDataDeletion = true
+                        }
+                        .buttonStyle(.bordered)
+                        .foregroundColor(.red)
+                        .buttonAccessibility(
+                            label: "Delete My Data",
+                            hint: "Permanently delete all your data from MacForge"
+                        )
+                    }
+                }
+                .padding()
+                .background(LCARSTheme.panel)
+                .cornerRadius(12)
+                
+                // Data Collection Section
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Data Collection")
+                        .font(.headline)
+                        .foregroundColor(LCARSTheme.textPrimary)
+                    
+                    VStack(alignment: .leading, spacing: 8) {
+                        DataCollectionRow(
+                            title: "MDM Account Information",
+                            description: "Server URLs, authentication tokens, and account preferences",
+                            isCollected: true
+                        )
+                        
+                        DataCollectionRow(
+                            title: "Profile Configurations",
+                            description: "PPPC settings, payload configurations, and templates",
+                            isCollected: true
+                        )
+                        
+                        DataCollectionRow(
+                            title: "Application Preferences",
+                            description: "Theme settings, default values, and UI preferences",
+                            isCollected: true
+                        )
+                        
+                        DataCollectionRow(
+                            title: "Log Analysis Data",
+                            description: "Temporary processing of uploaded log files (not stored)",
+                            isCollected: false
+                        )
+                        
+                        DataCollectionRow(
+                            title: "Package Analysis Data",
+                            description: "Temporary processing of uploaded packages (not stored)",
+                            isCollected: false
+                        )
+                    }
+                }
+                .padding()
+                .background(LCARSTheme.panel)
+                .cornerRadius(12)
+                
+                // Contact Information
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Contact & Support")
+                        .font(.headline)
+                        .foregroundColor(LCARSTheme.textPrimary)
+                    
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("For privacy-related questions or concerns:")
+                            .font(.subheadline)
+                            .foregroundColor(LCARSTheme.textSecondary)
+                        
+                        Text("Email: privacy@macforge.app")
+                            .font(.subheadline)
+                            .foregroundColor(LCARSTheme.accent)
+                        
+                        Text("Response Time: Within 72 hours")
+                            .font(.caption)
+                            .foregroundColor(LCARSTheme.textSecondary)
+                    }
+                }
+                .padding()
+                .background(LCARSTheme.panel)
+                .cornerRadius(12)
+            }
+            .padding()
+        }
+        .sheet(isPresented: $showingPrivacyPolicy) {
+            PrivacyPolicyView()
+        }
+        .sheet(isPresented: $showingDataExport) {
+            DataExportView(userSettings: userSettings)
+        }
+        .sheet(isPresented: $showingDataDeletion) {
+            DataDeletionView(userSettings: userSettings)
+        }
+    }
+}
+
+// MARK: - Data Collection Row
+struct DataCollectionRow: View {
+    let title: String
+    let description: String
+    let isCollected: Bool
+    
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: isCollected ? "checkmark.circle.fill" : "xmark.circle.fill")
+                .foregroundColor(isCollected ? .green : .red)
+                .imageAccessibility(
+                    label: isCollected ? "Data is collected" : "Data is not collected",
+                    hint: "Indicates whether this type of data is collected by MacForge"
+                )
+            
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundColor(LCARSTheme.textPrimary)
+                
+                Text(description)
+                    .font(.caption)
+                    .foregroundColor(LCARSTheme.textSecondary)
+            }
+            
+            Spacer()
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(title): \(description). \(isCollected ? "Data is collected" : "Data is not collected")")
     }
 }
 

@@ -16,8 +16,8 @@ struct PrivacyPolicyView: View {
     @State private var dataExportContent: String = ""
     
     var body: some View {
-        NavigationView {
-            ScrollView {
+        NavigationStack {
+            ScrollView(.vertical, showsIndicators: true) {
                 VStack(alignment: .leading, spacing: 24) {
                     // Header
                     VStack(alignment: .leading, spacing: 8) {
@@ -183,16 +183,16 @@ struct PrivacyPolicyView: View {
                 .padding()
             }
             .navigationTitle("Privacy Policy")
-            .toolbar {
+            .toolbar(content: {
                 ToolbarItem(placement: .primaryAction) {
                     Button("Done") {
                         // Close view
                     }
                 }
-            }
+            })
         }
         .sheet(isPresented: $showingDataExport) {
-            DataExportView(content: dataExportContent)
+            DataExportView(userSettings: userSettings)
         }
         .alert("Delete All Data", isPresented: $showingDataDeletion) {
             Button("Cancel", role: .cancel) { }
@@ -298,66 +298,7 @@ struct ContactItem: View {
     }
 }
 
-struct DataExportView: View {
-    let content: String
-    @Environment(\.dismiss) private var dismiss
-    
-    var body: some View {
-        NavigationView {
-            VStack {
-                Text("Your Data Export")
-                    .font(.title2)
-                    .fontWeight(.bold)
-                    .padding()
-                
-                ScrollView {
-                    Text(content)
-                        .font(.system(.body, design: .monospaced))
-                        .textSelection(.enabled)
-                        .padding()
-                }
-                .background(
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(Color(.controlBackgroundColor))
-                )
-                .padding()
-                
-                HStack {
-                    Button("Copy to Clipboard") {
-                        NSPasteboard.general.clearContents()
-                        NSPasteboard.general.setString(content, forType: .string)
-                    }
-                    .buttonStyle(.bordered)
-                    
-                    Button("Save to File") {
-                        saveToFile()
-                    }
-                    .buttonStyle(.borderedProminent)
-                }
-                .padding()
-            }
-            .navigationTitle("Data Export")
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                }
-            }
-        }
-        .frame(minWidth: 600, minHeight: 400)
-    }
-    
-    private func saveToFile() {
-        let panel = NSSavePanel()
-        panel.allowedContentTypes = [.json]
-        panel.nameFieldStringValue = "macforge_data_export_\(Date().timeIntervalSince1970).json"
-        
-        if panel.runModal() == .OK, let url = panel.url {
-            try? content.data(using: .utf8)?.write(to: url)
-        }
-    }
-}
+
 
 #Preview {
     PrivacyPolicyView()
