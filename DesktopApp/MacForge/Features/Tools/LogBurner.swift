@@ -498,6 +498,7 @@ struct LogBurnerView: View {
     @State private var isDragOver = false
     @State private var showingResults = false
     @State private var uploadedFileName: String? = nil
+    @State private var showingFilePicker = false
     
     var body: some View {
         VStack(spacing: 20) {
@@ -618,7 +619,7 @@ struct LogBurnerView: View {
                                 .foregroundColor(.secondary)
                             
                             Button("Browse Files") {
-                                // TODO: Implement file picker
+                                showingFilePicker = true
                             }
                             .buttonStyle(.borderedProminent)
                         }
@@ -680,6 +681,12 @@ struct LogBurnerView: View {
         }
         .padding()
         .navigationTitle("Log Burner")
+        .onChange(of: showingFilePicker) { _, showing in
+            if showing {
+                handleFilePicker()
+                showingFilePicker = false
+            }
+        }
     }
     
     private func handleFileDrop(providers: [NSItemProvider]) -> Bool {
@@ -700,6 +707,33 @@ struct LogBurnerView: View {
         }
         
         return true
+    }
+    
+    // MARK: - File Picker
+    private func handleFilePicker() {
+        let panel = NSOpenPanel()
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+        panel.canChooseFiles = true
+        panel.allowedContentTypes = [.log, .text, .plainText]
+        panel.title = "Select Log File"
+        panel.message = "Choose a log file to analyze (.log, .txt, or system logs)"
+        
+        if panel.runModal() == .OK, let url = panel.url {
+            handleFileSelection(url: url)
+        }
+    }
+    
+    private func handleFileSelection(url: URL) {
+        do {
+            uploadedFileName = url.lastPathComponent
+            
+            Task {
+                await logAnalysisService.analyzeLogFile(at: url)
+            }
+        } catch {
+            logAnalysisService.errorMessage = "Failed to read file: \(error.localizedDescription)"
+        }
     }
 }
 

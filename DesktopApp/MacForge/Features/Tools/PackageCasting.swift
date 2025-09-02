@@ -476,6 +476,7 @@ struct PackageCastingView: View {
     @State private var showingAnalysis = false
     @State private var showingRepackaging = false
     @State private var uploadedFileName: String? = nil
+    @State private var showingFilePicker = false
     
     var body: some View {
         VStack(spacing: 20) {
@@ -601,7 +602,7 @@ struct PackageCastingView: View {
                                 .foregroundColor(.secondary)
                             
                             Button("Browse Files") {
-                                // TODO: Implement file picker
+                                showingFilePicker = true
                             }
                             .buttonStyle(.borderedProminent)
                         }
@@ -647,6 +648,35 @@ struct PackageCastingView: View {
             if let result = analysisService.analysisResult {
                 PackageRepackagingView(analysis: result, analysisService: analysisService)
             }
+        }
+        .onChange(of: showingFilePicker) { _, showing in
+            if showing {
+                handleFilePicker()
+                showingFilePicker = false
+            }
+        }
+    }
+    
+    // MARK: - File Picker
+    private func handleFilePicker() {
+        let panel = NSOpenPanel()
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+        panel.canChooseFiles = true
+        panel.allowedContentTypes = [.package, .diskImage, .application, .zip]
+        panel.title = "Select Package File"
+        panel.message = "Choose a package file to analyze (.pkg, .dmg, .app, or .zip)"
+        
+        if panel.runModal() == .OK, let url = panel.url {
+            handleFileSelection(url: url)
+        }
+    }
+    
+    private func handleFileSelection(url: URL) {
+        uploadedFileName = url.lastPathComponent
+        
+        Task {
+            await analysisService.analyzePackage(at: url)
         }
     }
     
