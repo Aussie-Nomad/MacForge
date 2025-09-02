@@ -1,0 +1,34 @@
+name: Dependabot Updates
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+
+jobs:
+  dependabot-update:
+    runs-on: ubuntu-latest
+    if: github.actor == 'dependabot[bot]'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Check if PR is from Dependabot
+      run: |
+        echo "Processing Dependabot PR: ${{ github.event.pull_request.title }}"
+        echo "PR Number: ${{ github.event.pull_request.number }}"
+        echo "PR State: ${{ github.event.pull_request.state }}"
+    
+    - name: Auto-merge Dependabot PRs
+      if: github.event.pull_request.state == 'closed' && github.event.pull_request.merged == true
+      run: |
+        echo "Dependabot PR #${{ github.event.pull_request.number }} was merged successfully"
+        echo "Dependency update: ${{ github.event.pull_request.title }}"
+    
+    - name: Comment on Dependabot PR
+      if: github.event.pull_request.state == 'opened'
+      run: |
+        echo "New Dependabot PR opened: ${{ github.event.pull_request.title }}"
+        echo "This is an automated dependency update from Dependabot"

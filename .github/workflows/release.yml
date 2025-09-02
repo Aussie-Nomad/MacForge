@@ -14,20 +14,33 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
 
     - name: Get tag name
       id: get_tag
-      run: echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+      run: |
+        TAG=${GITHUB_REF#refs/tags/}
+        VERSION=${TAG#v}
+        echo "TAG=$TAG" >> $GITHUB_OUTPUT
+        echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+        echo "Tag: $TAG, Version: $VERSION"
 
     - name: Set up Xcode
-      run: sudo xcode-select -s /Applications/Xcode_16.4.app/Contents/Developer
-
-    - name: Verify Xcode version
-      run: xcodebuild -version
+      run: |
+        # Use the default Xcode version
+        sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+        xcodebuild -version
 
     - name: Build Release App
       run: |
         cd DesktopApp
+        echo "Building MacForge Release v${{ steps.get_tag.outputs.VERSION }}..."
+        
+        # Clean first
+        xcodebuild clean -project MacForge.xcodeproj -scheme MacForge -configuration Release
+        
+        # Build
         xcodebuild build \
           -project MacForge.xcodeproj \
           -scheme MacForge \
@@ -37,25 +50,39 @@ jobs:
           CODE_SIGN_IDENTITY="" \
           CODE_SIGNING_REQUIRED=NO \
           CODE_SIGNING_ALLOWED=NO \
-          MARKETING_VERSION=${{ steps.get_tag.outputs.TAG }} \
+          MARKETING_VERSION="${{ steps.get_tag.outputs.VERSION }}" \
           CURRENT_PROJECT_VERSION=1
               
     - name: Create Release Archive
       run: |
-        TAG_NAME=${{ steps.get_tag.outputs.TAG }}
+        TAG_NAME="${{ steps.get_tag.outputs.TAG }}"
+        VERSION="${{ steps.get_tag.outputs.VERSION }}"
         APP_NAME="MacForge"
         RELEASE_APP_PATH="DesktopApp/build/Build/Products/Release/${APP_NAME}.app"
         DIST_DIR="dist"
         
-        mkdir -p "${DIST_DIR}"
-        cp -R "${RELEASE_APP_PATH}" "${DIST_DIR}/${APP_NAME}-${TAG_NAME}.app"
+        echo "Creating release archive for $TAG_NAME (version $VERSION)"
         
-        cd "${DIST_DIR}"
+        # Check if app exists
+        if [ ! -d "$RELEASE_APP_PATH" ]; then
+          echo "❌ Error: Application not found at $RELEASE_APP_PATH"
+          echo "Available files in build directory:"
+          find DesktopApp/build -name "*.app" -type d 2>/dev/null || echo "No .app files found"
+          exit 1
+        fi
+        
+        mkdir -p "$DIST_DIR"
+        cp -R "$RELEASE_APP_PATH" "$DIST_DIR/${APP_NAME}-${TAG_NAME}.app"
+        
+        cd "$DIST_DIR"
         zip -r "${APP_NAME}-${TAG_NAME}.zip" "${APP_NAME}-${TAG_NAME}.app"
         shasum -a 256 "${APP_NAME}-${TAG_NAME}.zip" > "${APP_NAME}-${TAG_NAME}.zip.sha256"
         
         echo "RELEASE_ZIP_PATH=${DIST_DIR}/${APP_NAME}-${TAG_NAME}.zip" >> $GITHUB_ENV
         echo "RELEASE_CHECKSUM_PATH=${DIST_DIR}/${APP_NAME}-${TAG_NAME}.zip.sha256" >> $GITHUB_ENV
+        
+        echo "✅ Release files created:"
+        ls -la
 
     - name: Read Release Notes
       id: read_release_notes
@@ -93,7 +120,7 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         tag_name: ${{ steps.get_tag.outputs.TAG }}
-        name: Release ${{ steps.get_tag.outputs.TAG }}
+        name: MacForge ${{ steps.get_tag.outputs.TAG }}
         body: ${{ steps.read_release_notes.outputs.release_body }}
         draft: false
         prerelease: false
