@@ -1132,7 +1132,7 @@ struct ComplianceRulesSectionView: View {
             condition: ComplianceCondition(
                 type: .deviceProperty,
                 parameter: "",
-                operator: .equals,
+                operatorType: .equals,
                 value: ""
             ),
             action: ComplianceAction(type: .notify)

@@ -343,7 +343,7 @@ class DDMBlueprintsService: ObservableObject {
         let testResult = BlueprintTestResult(
             success: true,
             deploymentTime: blueprint.metadata.estimatedDeploymentTime,
-            issues: validationResult.warnings.map { .warning("Warning") },
+            issues: validationResult.warnings.map { _ in .warning("Warning") },
             recommendations: generateRecommendations(for: blueprint)
         )
         
