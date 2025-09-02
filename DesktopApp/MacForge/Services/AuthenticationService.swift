@@ -74,6 +74,36 @@ final class JAMFAuthenticationService: JAMFAuthenticationServiceProtocol {
         return token
     }
     
+    /// Authenticate using OAuth 2.0 with PKCE (Recommended method)
+    func authenticateOAuth2WithPKCE(
+        clientID: String,
+        redirectURI: String,
+        serverURL: String,
+        scopes: [String] = ["read", "write"]
+    ) async throws -> OAuth2TokenResponse {
+        
+        // Validate inputs
+        let validationService = ValidationService.shared
+        let validatedClientID = try validationService.validateClientID(clientID)
+        let validatedRedirectURI = try validationService.validateServerURL(redirectURI)
+        let validatedServerURL = try validationService.validateServerURL(serverURL)
+        
+        // Check rate limiting
+        try validationService.checkRateLimit(for: "oauth2_pkce_\(validatedServerURL.host ?? "unknown")")
+        
+        // Start OAuth 2.0 authorization flow
+        let authResult = try await OAuth2Service.shared.startAuthorizationFlow(
+            clientID: validatedClientID,
+            redirectURI: validatedRedirectURI.absoluteString,
+            serverURL: validatedServerURL.absoluteString,
+            scopes: scopes
+        )
+        
+        // Note: The actual authorization code exchange will happen in the UI
+        // This method returns the authorization result for the UI to handle
+        throw AuthenticationError.oauth2AuthorizationRequired(authResult)
+    }
+    
     /// Authenticate using Basic authentication
     func authenticateBasic(username: String, password: String, serverURL: String) async throws -> String {
         // Validate inputs
@@ -419,6 +449,7 @@ enum AuthenticationError: LocalizedError, Equatable {
     case networkError(String)
     case authenticationFailed(String)
     case serverUnreachable
+    case oauth2AuthorizationRequired(OAuth2AuthorizationResult)
     
     var errorDescription: String? {
         switch self {
@@ -430,6 +461,8 @@ enum AuthenticationError: LocalizedError, Equatable {
             return "Authentication failed: \(message)"
         case .serverUnreachable:
             return "Server is unreachable"
+        case .oauth2AuthorizationRequired:
+            return "OAuth 2.0 authorization required"
         }
     }
 }
