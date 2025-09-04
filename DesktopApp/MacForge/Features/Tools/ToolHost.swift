@@ -198,7 +198,7 @@ struct ScriptBuilderSettingsView: View {
 
             Group {
                 Text("AI PROVIDER").lcarsPill()
-                Picker("Provider", selection: $vm.config.provider) {
+                Picker("", selection: $vm.config.provider) {
                     ForEach(AIProviderType.allCases) { p in Text(p.displayName).tag(p) }
                 }.pickerStyle(.segmented)
 
@@ -219,7 +219,7 @@ struct ScriptBuilderSettingsView: View {
                 }
 
                 Text("LANGUAGE").lcarsPill()
-                Picker("Language", selection: $vm.language) {
+                Picker("", selection: $vm.language) {
                     Text("zsh").tag("zsh")
                     Text("bash").tag("bash")
                     Text("python").tag("python")
@@ -227,7 +227,7 @@ struct ScriptBuilderSettingsView: View {
                 }.pickerStyle(.segmented)
                 
                 Text("OUTPUT MODE").lcarsPill()
-                Picker("Output Mode", selection: $vm.outputMode) {
+                Picker("", selection: $vm.outputMode) {
                     Text("Script").tag("script")
                     Text("Extension Attribute").tag("extension_attribute")
                     Text("One-liner").tag("one_liner")
