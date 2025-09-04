@@ -15,6 +15,7 @@ class UserSettings: ObservableObject {
     @Published var mdmAccounts: [MDMAccount]
     @Published var aiAccounts: [AIAccount]
     @Published var generalSettings: GeneralSettings
+    @Published var hasSeenWelcome: Bool
     
     private let keychainService = KeychainService.shared
     private let secureLogger = SecureLogger.shared
@@ -25,6 +26,7 @@ class UserSettings: ObservableObject {
         self.mdmAccounts = []
         self.aiAccounts = []
         self.generalSettings = GeneralSettings()
+        self.hasSeenWelcome = UserDefaults.standard.bool(forKey: "hasSeenWelcome")
         loadSettings()
     }
     
@@ -40,6 +42,7 @@ class UserSettings: ObservableObject {
         if let encoded = try? JSONEncoder().encode(generalSettings) {
             UserDefaults.standard.set(encoded, forKey: "generalSettings")
         }
+        UserDefaults.standard.set(hasSeenWelcome, forKey: "hasSeenWelcome")
         
         // Save sensitive accounts to Keychain
         saveMDMAccountsToKeychain()
@@ -252,6 +255,12 @@ class UserSettings: ObservableObject {
             aiAccounts[index].isDefault = true
             saveSettings()
         }
+    }
+    
+    // MARK: - Welcome Management
+    func markWelcomeAsSeen() {
+        hasSeenWelcome = true
+        saveSettings()
     }
     
     // MARK: - GDPR Compliance Methods

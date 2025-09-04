@@ -12,6 +12,7 @@ struct ContentView: View {
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
     @State private var selectedMDM: MDMVendor? = nil
     @State private var showingAccountSettings = false
+    @State private var showingWelcome = false
     @StateObject private var model = BuilderModel()
     @EnvironmentObject var userSettings: UserSettings
 
@@ -147,6 +148,20 @@ struct ContentView: View {
         }
         .sheet(isPresented: $showingAccountSettings) {
             SettingsView(userSettings: UserSettings())
+        }
+        .sheet(isPresented: $showingWelcome) {
+            WelcomeView(isPresented: $showingWelcome)
+                .onDisappear {
+                    userSettings.markWelcomeAsSeen()
+                }
+        }
+        .onAppear {
+            // Show welcome popup for first-time users
+            if !userSettings.hasSeenWelcome {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    showingWelcome = true
+                }
+            }
         }
     }
 
