@@ -33,6 +33,9 @@ MacForge is a comprehensive macOS MDM toolkit for enterprise administrators. Thi
 - **NEW: Script Injection** - Add custom scripts to fix poorly built applications
 - **NEW: Code Signing** - Apple Developer ID certificate integration
 - **NEW: PPPC Auto-Generation** - Automatic privacy profile creation for MDM deployment
+- **NEW: AI Tool Accounts** - Secure credential management for AI providers (OpenAI, Anthropic, Ollama, Custom)
+- **NEW: Script Smelter Enhancement** - AI-assisted script generation with multiple provider support
+- **NEW: Ollama Integration** - Local AI model support for testing and development
 
 #### **Phase 2: Improvements & Security Hardening** 🚧 IN PROGRESS
 **Current Focus:**
@@ -48,6 +51,8 @@ MacForge is a comprehensive macOS MDM toolkit for enterprise administrators. Thi
 - Complete MDM integration features
 - Enhanced PPPC configuration interface
 - Advanced template service configuration
+- **Log Burner AI Integration** - Use saved AI accounts for enhanced log analysis
+- **Script Builder Integration** - Seamless use of saved AI accounts
 - Profile validation and preview improvements
 - UI layout refinements and accessibility
 - Comprehensive testing coverage
@@ -422,6 +427,39 @@ xcodebuild test -scheme MacForge -destination 'platform=macOS' -only-testing:Mac
 - **Networking**: Advanced caching and offline support
 - **Security**: Keychain integration and encryption
 - **Performance**: Background processing and optimization
+
+### **AI Tool Accounts Implementation**
+
+#### **Core Components**
+- **AIAccount Model** (`Types.swift`) - Codable struct with provider-specific configuration
+- **UserSettings Integration** - Secure keychain storage with GDPR compliance
+- **AIService** - Unified interface for OpenAI, Anthropic, Ollama, and custom endpoints
+- **Settings UI** - Tab-based account management with provider-specific forms
+
+#### **Security Features**
+- **Keychain Storage** - API keys stored securely using macOS Keychain Services
+- **Account Activation** - Enable/disable accounts without deletion
+- **Default Management** - Single default account with proper state handling
+- **GDPR Compliance** - Full export/delete functionality for user data
+
+#### **Provider Support**
+- **OpenAI** - GPT models with API key authentication
+- **Anthropic** - Claude models with API key authentication  
+- **Ollama** - Local models with no authentication required
+- **Custom** - Flexible endpoint configuration for any OpenAI-compatible service
+
+#### **Testing with Ollama**
+```bash
+# Install Ollama
+brew install ollama
+
+# Pull recommended models
+ollama pull codellama:7b-instruct
+ollama pull mistral:7b-instruct
+
+# Verify service
+curl http://localhost:11434/v1/models
+```
 
 ## 📝 **Development Guidelines**
 

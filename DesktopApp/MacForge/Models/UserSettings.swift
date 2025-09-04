@@ -13,6 +13,7 @@ class UserSettings: ObservableObject {
     @Published var profileDefaults: ProfileDefaults
     @Published var themePreferences: ThemePreferences
     @Published var mdmAccounts: [MDMAccount]
+    @Published var aiAccounts: [AIAccount]
     @Published var generalSettings: GeneralSettings
     
     private let keychainService = KeychainService.shared
@@ -22,6 +23,7 @@ class UserSettings: ObservableObject {
         self.profileDefaults = ProfileDefaults()
         self.themePreferences = ThemePreferences()
         self.mdmAccounts = []
+        self.aiAccounts = []
         self.generalSettings = GeneralSettings()
         loadSettings()
     }
@@ -39,8 +41,9 @@ class UserSettings: ObservableObject {
             UserDefaults.standard.set(encoded, forKey: "generalSettings")
         }
         
-        // Save sensitive MDM accounts to Keychain
+        // Save sensitive accounts to Keychain
         saveMDMAccountsToKeychain()
+        saveAIAccountsToKeychain()
     }
     
     private func saveMDMAccountsToKeychain() {
@@ -83,8 +86,9 @@ class UserSettings: ObservableObject {
             generalSettings = decoded
         }
         
-        // Load sensitive MDM accounts from Keychain
+        // Load sensitive accounts from Keychain
         loadMDMAccountsFromKeychain()
+        loadAIAccountsFromKeychain()
     }
     
     private func loadMDMAccountsFromKeychain() {
@@ -123,6 +127,47 @@ class UserSettings: ObservableObject {
         mdmAccounts = loadedAccounts
     }
     
+    private func saveAIAccountsToKeychain() {
+        do {
+            // Store each AI account securely in keychain
+            for account in aiAccounts {
+                try keychainService.storeAIAccount(account)
+            }
+            
+            // Store account IDs list in UserDefaults (non-sensitive)
+            let accountIds = aiAccounts.map { $0.id.uuidString }
+            UserDefaults.standard.set(accountIds, forKey: "aiAccountIds")
+            
+        } catch {
+            secureLogger.logError(error, context: "Failed to save AI accounts to keychain")
+        }
+    }
+    
+    private func loadAIAccountsFromKeychain() {
+        // Get account IDs from UserDefaults
+        guard let accountIds = UserDefaults.standard.array(forKey: "aiAccountIds") as? [String] else {
+            return
+        }
+        
+        var loadedAccounts: [AIAccount] = []
+        
+        for accountIdString in accountIds {
+            guard let accountId = UUID(uuidString: accountIdString) else { continue }
+            
+            do {
+                // Load account from keychain
+                let account = try keychainService.retrieveAIAccount(id: accountId)
+                loadedAccounts.append(account)
+                
+            } catch {
+                secureLogger.logError(error, context: "Failed to load AI account \(accountIdString)")
+                continue
+            }
+        }
+        
+        aiAccounts = loadedAccounts
+    }
+    
     // MARK: - MDM Account Management
     
     func updateMDMAccountAuth(_ accountId: UUID, token: String, expiry: Date?) {
@@ -155,6 +200,60 @@ class UserSettings: ObservableObject {
         }
     }
     
+    // MARK: - AI Account Management
+    
+    func addAIAccount(_ account: AIAccount) {
+        aiAccounts.append(account)
+        saveSettings()
+    }
+    
+    func updateAIAccount(_ account: AIAccount) {
+        if let index = aiAccounts.firstIndex(where: { $0.id == account.id }) {
+            aiAccounts[index] = account
+            saveSettings()
+        }
+    }
+    
+    func deleteAIAccount(id: UUID) {
+        do {
+            // Remove from keychain
+            try keychainService.delete(key: "ai_account_\(id.uuidString)", service: "MacForge.AI")
+            
+            // Remove from local array
+            aiAccounts.removeAll { $0.id == id }
+            
+            // Update stored account IDs
+            let accountIds = aiAccounts.map { $0.id.uuidString }
+            UserDefaults.standard.set(accountIds, forKey: "aiAccountIds")
+            
+            secureLogger.log("AI account \(id) deleted")
+            
+        } catch {
+            secureLogger.logError(error, context: "Failed to delete AI account \(id)")
+        }
+    }
+    
+    func getDefaultAIAccount() -> AIAccount? {
+        return aiAccounts.first { $0.isDefault && $0.isActive }
+    }
+    
+    func getActiveAIAccounts() -> [AIAccount] {
+        return aiAccounts.filter { $0.isActive }
+    }
+    
+    func setDefaultAIAccount(id: UUID) {
+        // Remove default from all accounts
+        for index in aiAccounts.indices {
+            aiAccounts[index].isDefault = false
+        }
+        
+        // Set new default
+        if let index = aiAccounts.firstIndex(where: { $0.id == id }) {
+            aiAccounts[index].isDefault = true
+            saveSettings()
+        }
+    }
+    
     // MARK: - GDPR Compliance Methods
     
     /// Export all user data for GDPR compliance
@@ -183,6 +282,7 @@ class UserSettings: ObservableObject {
             exportDate: Date(),
             exportVersion: "2.0.0",
             mdmAccounts: mdmAccounts,
+            aiAccounts: aiAccounts,
             profileDefaults: profileDefaults,
             appPreferences: appPreferences,
             metadata: metadata
@@ -201,12 +301,14 @@ class UserSettings: ObservableObject {
             defaults.removeObject(forKey: "themePreferences")
             defaults.removeObject(forKey: "generalSettings")
             defaults.removeObject(forKey: "mdmAccountIds")
+            defaults.removeObject(forKey: "aiAccountIds")
             
             // Reset to defaults
             profileDefaults = ProfileDefaults()
             themePreferences = ThemePreferences()
             generalSettings = GeneralSettings()
             mdmAccounts = []
+            aiAccounts = []
             
             secureLogger.log("All user data deleted for GDPR compliance")
             
@@ -309,6 +411,7 @@ struct UserDataExport: Codable {
     let exportDate: Date
     let exportVersion: String
     let mdmAccounts: [MDMAccount]
+    let aiAccounts: [AIAccount]
     let profileDefaults: ProfileDefaults
     let appPreferences: [String: String]
     let metadata: ExportMetadata

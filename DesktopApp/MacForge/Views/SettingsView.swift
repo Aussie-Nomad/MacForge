@@ -12,9 +12,10 @@ struct SettingsView: View {
     @ObservedObject var userSettings: UserSettings
     @Environment(\.dismiss) private var dismiss
     @State private var showingAddAccount = false
+    @State private var showingAddAIAccount = false
     @State private var selectedTab = "General"
     
-    private let tabs = ["General", "Profile Defaults", "Theme", "MDM Accounts", "Privacy"]
+    private let tabs = ["General", "Profile Defaults", "Theme", "MDM Accounts", "AI Tool Accounts", "Privacy"]
     
     var body: some View {
         VStack(spacing: 0) {
@@ -66,6 +67,9 @@ struct SettingsView: View {
                 MDMAccountsTab(userSettings: userSettings, showingAddAccount: $showingAddAccount)
                     .tag("MDM Accounts")
                 
+                AIToolAccountsTab(userSettings: userSettings, showingAddAIAccount: $showingAddAIAccount)
+                    .tag("AI Tool Accounts")
+                
                 PrivacySettingsTab(userSettings: userSettings)
                     .tag("Privacy")
             }
@@ -75,6 +79,9 @@ struct SettingsView: View {
         .background(LCARSTheme.background)
         .sheet(isPresented: $showingAddAccount) {
             AddMDMAccountView(userSettings: userSettings)
+        }
+        .sheet(isPresented: $showingAddAIAccount) {
+            AddAIAccountView(userSettings: userSettings)
         }
     }
 }
@@ -276,6 +283,133 @@ struct MDMAccountsTab: View {
     
     private func deleteAccount(offsets: IndexSet) {
         userSettings.mdmAccounts.remove(atOffsets: offsets)
+    }
+}
+
+// MARK: - AI Tool Accounts Tab
+struct AIToolAccountsTab: View {
+    @ObservedObject var userSettings: UserSettings
+    @Binding var showingAddAIAccount: Bool
+    
+    var body: some View {
+        VStack(spacing: 20) {
+            HStack {
+                Text("Saved AI Tool Accounts")
+                    .font(.headline)
+                    .foregroundStyle(LCARSTheme.accent)
+                
+                Spacer()
+                
+                Button("Add Account") {
+                    showingAddAIAccount = true
+                }
+                .buttonStyle(.borderedProminent)
+            }
+            
+            if userSettings.aiAccounts.isEmpty {
+                VStack(spacing: 12) {
+                    Image(systemName: "brain.head.profile")
+                        .font(.system(size: 48))
+                        .foregroundStyle(LCARSTheme.textSecondary)
+                    
+                    Text("No AI accounts saved")
+                        .font(.title3)
+                        .foregroundStyle(LCARSTheme.textSecondary)
+                    
+                    Text("Add your AI provider accounts to quickly use them in Script Builder and Log Burner")
+                        .font(.body)
+                        .foregroundStyle(LCARSTheme.textMuted)
+                        .multilineTextAlignment(.center)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                List {
+                    ForEach(userSettings.aiAccounts) { account in
+                        AIAccountRow(account: account, userSettings: userSettings)
+                    }
+                    .onDelete(perform: deleteAccount)
+                }
+            }
+        }
+        .padding()
+    }
+    
+    private func deleteAccount(offsets: IndexSet) {
+        for index in offsets {
+            let account = userSettings.aiAccounts[index]
+            userSettings.deleteAIAccount(id: account.id)
+        }
+    }
+}
+
+// MARK: - AI Account Row
+struct AIAccountRow: View {
+    let account: AIAccount
+    @ObservedObject var userSettings: UserSettings
+    
+    var body: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text(account.displayName)
+                        .font(.headline)
+                        .foregroundStyle(LCARSTheme.textPrimary)
+                    
+                    if account.isDefault {
+                        Text("DEFAULT")
+                            .font(.caption2)
+                            .fontWeight(.bold)
+                            .foregroundStyle(LCARSTheme.accent)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(LCARSTheme.accent.opacity(0.2))
+                            .cornerRadius(4)
+                    }
+                    
+                    if !account.isActive {
+                        Text("INACTIVE")
+                            .font(.caption2)
+                            .fontWeight(.bold)
+                            .foregroundStyle(.red)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(.red.opacity(0.2))
+                            .cornerRadius(4)
+                    }
+                }
+                
+                Text(account.provider.displayName)
+                    .font(.caption)
+                    .foregroundStyle(LCARSTheme.textSecondary)
+                
+                Text(account.effectiveBaseURL)
+                    .font(.caption)
+                    .foregroundStyle(LCARSTheme.textMuted)
+                
+                Text("Model: \(account.effectiveModel)")
+                    .font(.caption)
+                    .foregroundStyle(LCARSTheme.textMuted)
+            }
+            
+            Spacer()
+            
+            VStack(spacing: 8) {
+                Button("Set Default") {
+                    userSettings.setDefaultAIAccount(id: account.id)
+                }
+                .buttonStyle(.bordered)
+                .disabled(account.isDefault)
+                
+                Button(account.isActive ? "Deactivate" : "Activate") {
+                    var updatedAccount = account
+                    updatedAccount.isActive.toggle()
+                    userSettings.updateAIAccount(updatedAccount)
+                }
+                .buttonStyle(.bordered)
+                .foregroundStyle(account.isActive ? .red : .green)
+            }
+        }
+        .padding(.vertical, 4)
     }
 }
 

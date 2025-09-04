@@ -215,6 +215,7 @@ struct DataExportView: View {
                     exportDate: Date(),
                     exportVersion: "2.0.0",
                     mdmAccounts: mdmAccounts,
+                    aiAccounts: userSettings.aiAccounts,
                     profileDefaults: profileDefaults,
                     appPreferences: appPreferences,
                     metadata: ExportMetadata(

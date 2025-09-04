@@ -129,16 +129,6 @@ struct JAMFPayload: Codable {
     }
 }
 
-// MARK: - JAMF Profiles Response (v1 API)
-struct JAMFProfilesResponse: Codable {
-    let totalCount: Int
-    let results: [JAMFProfile]
-    
-    enum CodingKeys: String, CodingKey {
-        case totalCount = "totalCount"
-        case results
-    }
-}
 
 // MARK: - JAMF Service Implementation
 final class JAMFService: JAMFServiceProtocol {

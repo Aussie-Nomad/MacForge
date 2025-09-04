@@ -366,3 +366,59 @@ struct MDMAccount: Codable, Identifiable, Hashable {
     }
 }
 
+// MARK: - AI Account
+struct AIAccount: Codable, Identifiable, Hashable {
+    var id = UUID()
+    var provider: AIProviderType
+    var displayName: String
+    var apiKey: String
+    var model: String
+    var baseURL: String
+    var lastUsed: Date
+    var isDefault: Bool
+    var isActive: Bool
+    
+    init(provider: AIProviderType, displayName: String, apiKey: String = "", model: String = "", baseURL: String = "") {
+        self.provider = provider
+        self.displayName = displayName
+        self.apiKey = apiKey
+        self.model = model
+        self.baseURL = baseURL
+        self.lastUsed = Date()
+        self.isDefault = false
+        self.isActive = true
+    }
+    
+    var effectiveBaseURL: String {
+        if baseURL.isEmpty {
+            switch provider {
+            case .openai:
+                return "https://api.openai.com/v1"
+            case .anthropic:
+                return "https://api.anthropic.com/v1"
+            case .ollama:
+                return "http://localhost:11434"
+            case .custom:
+                return ""
+            }
+        }
+        return baseURL
+    }
+    
+    var effectiveModel: String {
+        if model.isEmpty {
+            switch provider {
+            case .openai:
+                return "gpt-4o-mini"
+            case .anthropic:
+                return "claude-3-5-sonnet-20240620"
+            case .ollama:
+                return "codellama:7b-instruct"
+            case .custom:
+                return ""
+            }
+        }
+        return model
+    }
+}
+

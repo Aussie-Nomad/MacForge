@@ -137,6 +137,16 @@ final class KeychainService {
         return try retrieveCodable(key: "mdm_account_\(id.uuidString)", type: MDMAccount.self, service: "MacForge.MDM")
     }
     
+    /// Store AI account securely
+    func storeAIAccount(_ account: AIAccount) throws {
+        try storeCodable(key: "ai_account_\(account.id.uuidString)", value: account, service: "MacForge.AI")
+    }
+    
+    /// Retrieve AI account securely
+    func retrieveAIAccount(id: UUID) throws -> AIAccount {
+        return try retrieveCodable(key: "ai_account_\(id.uuidString)", type: AIAccount.self, service: "MacForge.AI")
+    }
+    
     /// Store authentication token securely
     func storeAuthToken(accountId: UUID, token: String, expiry: Date?) throws {
         let tokenData = AuthTokenData(token: token, expiry: expiry)

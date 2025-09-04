@@ -52,6 +52,7 @@ class ScriptBuilderModel: ObservableObject {
     @Published var prompt = ""
     @Published var script = ""
     @Published var language = "zsh"
+    @Published var outputMode = "script"
     @Published var isRunning = false
     @Published var errorText: String?
     
@@ -64,18 +65,109 @@ class ScriptBuilderModel: ObservableObject {
     
     @Published var config = Config()
     
+    func getOutputModeDescription() -> String {
+        switch outputMode {
+        case "script":
+            return "scripts"
+        case "extension_attribute":
+            return "extension attributes for JAMF (use <result> tags, keep simple and fast)"
+        case "one_liner":
+            return "one-liner commands (single line, no functions)"
+        case "function":
+            return "reusable functions (define function, no main execution)"
+        default:
+            return "scripts"
+        }
+    }
+    
     func askAI(system: String) async {
-        // TODO: Implement AI integration
+        await MainActor.run {
+            isRunning = true
+            errorText = nil
+        }
+        
+        defer {
+            Task { @MainActor in
+                isRunning = false
+            }
+        }
+        
+        do {
+            // Validate configuration
+            try validateConfiguration()
+            
+            // Create AI service
+            let aiConfig = AIServiceConfig(
+                provider: config.provider,
+                apiKey: config.apiKey,
+                model: config.model,
+                baseURL: config.baseURL
+            )
+            
+            let aiService = AIService(config: aiConfig)
+            
+            // Determine the action based on system prompt
+            let result: String
+            if system.contains("Generate") {
+                result = try await aiService.generateScript(
+                    prompt: prompt,
+                    language: language,
+                    systemPrompt: system
+                )
+            } else if system.contains("Explain") {
+                result = try await aiService.explainScript(
+                    script: script,
+                    systemPrompt: system
+                )
+            } else if system.contains("Harden") {
+                result = try await aiService.hardenScript(
+                    script: script,
+                    systemPrompt: system
+                )
+            } else {
+                result = try await aiService.generateScript(
+                    prompt: prompt,
+                    language: language,
+                    systemPrompt: system
+                )
+            }
+            
+            await MainActor.run {
+                if system.contains("Explain") {
+                    // For explanations, append to script with clear separation
+                    script = "\(script)\n\n# ===== EXPLANATION =====\n\(result)"
+                } else {
+                    script = result
+                }
+                errorText = nil
+            }
+            
+        } catch {
+            await MainActor.run {
+                errorText = error.localizedDescription
+            }
+        }
+    }
+    
+    private func validateConfiguration() throws {
+        switch config.provider {
+        case .openai, .anthropic:
+            if config.apiKey.isEmpty {
+                throw AIError.missingAPIKey
+            }
+        case .ollama:
+            // Ollama doesn't require API key, but we should validate URL
+            if config.baseURL.isEmpty {
+                config.baseURL = "http://localhost:11434"
+            }
+        case .custom:
+            if config.baseURL.isEmpty {
+                throw AIError.invalidConfiguration
+            }
+        }
     }
 }
 
-enum AIProviderType: String, CaseIterable, Identifiable {
-    case openai = "openai"
-    case anthropic = "anthropic"
-    case custom = "custom"
-    
-    var id: String { rawValue }
-}
 
 
 
@@ -106,14 +198,20 @@ struct ScriptBuilderSettingsView: View {
 
             Group {
                 Text("AI PROVIDER").lcarsPill()
-                Picker("Provider", selection: $vm.config.provider) {
-                    ForEach(AIProviderType.allCases) { p in Text(p.rawValue.capitalized).tag(p) }
+                Picker("", selection: $vm.config.provider) {
+                    ForEach(AIProviderType.allCases) { p in Text(p.displayName).tag(p) }
                 }.pickerStyle(.segmented)
 
                 if vm.config.provider == .openai || vm.config.provider == .anthropic {
                     ThemedField(title: "API Key", text: $vm.config.apiKey, secure: true)
                     ThemedField(title: "Model", text: $vm.config.model, placeholder: vm.config.provider == .openai ? "gpt-4o-mini" : "claude-3-5-sonnet-20240620")
                     ThemedField(title: "Base URL (optional)", text: $vm.config.baseURL, placeholder: "")
+                } else if vm.config.provider == .ollama {
+                    ThemedField(title: "Ollama URL", text: $vm.config.baseURL, placeholder: "http://localhost:11434")
+                    ThemedField(title: "Model", text: $vm.config.model, placeholder: "codellama:7b-instruct")
+                    Text("No API key required for local Ollama")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 } else {
                     ThemedField(title: "Endpoint URL", text: $vm.config.baseURL, placeholder: "https://your-endpoint")
                     ThemedField(title: "Model (optional)", text: $vm.config.model)
@@ -121,11 +219,19 @@ struct ScriptBuilderSettingsView: View {
                 }
 
                 Text("LANGUAGE").lcarsPill()
-                Picker("Language", selection: $vm.language) {
+                Picker("", selection: $vm.language) {
                     Text("zsh").tag("zsh")
                     Text("bash").tag("bash")
                     Text("python").tag("python")
                     Text("applescript").tag("applescript")
+                }.pickerStyle(.segmented)
+                
+                Text("OUTPUT MODE").lcarsPill()
+                Picker("", selection: $vm.outputMode) {
+                    Text("Script").tag("script")
+                    Text("Extension Attribute").tag("extension_attribute")
+                    Text("One-liner").tag("one_liner")
+                    Text("Function").tag("function")
                 }.pickerStyle(.segmented)
             }
             Spacer()
@@ -169,21 +275,21 @@ struct ScriptBuilderButtonsView: View {
     var body: some View {
         HStack {
             Button(vm.isRunning ? "Generating…" : "Generate Script") { 
-                Task { await vm.askAI(system: "You are a macOS endpoint management expert. Generate production-ready scripts.") } 
+                Task { await vm.askAI(system: "You are a macOS endpoint management expert. Generate clean, production-ready \(vm.language) \(vm.getOutputModeDescription()). Return ONLY the code without explanations, comments, or markdown formatting. Use proper shebang for \(vm.language). Ensure the code is functional and follows best practices.") } 
             }
             .buttonStyle(.borderedProminent)
             .disabled(vm.isRunning)
             .contentShape(Rectangle())
             
             Button("Explain") { 
-                Task { await vm.askAI(system: "Explain the following script in detail and include security considerations. Return explanation only.") } 
+                Task { await vm.askAI(system: "Explain the following \(vm.language) script in detail. Include: 1) What the script does, 2) How it works, 3) Security considerations, 4) Potential improvements. Format as a clear explanation with bullet points.") } 
             }
             .buttonStyle(.bordered)
             .disabled(vm.isRunning)
             .contentShape(Rectangle())
             
             Button("Harden") { 
-                Task { await vm.askAI(system: "Refactor and harden the following script. Add logging, error handling, and idempotence. Return only the script.") } 
+                Task { await vm.askAI(system: "Refactor and harden the following \(vm.language) script. Add: 1) Proper error handling, 2) Input validation, 3) Logging, 4) Idempotence, 5) Security improvements. Return ONLY the improved script code without explanations or markdown.") } 
             }
             .buttonStyle(.bordered)
             .disabled(vm.isRunning)
