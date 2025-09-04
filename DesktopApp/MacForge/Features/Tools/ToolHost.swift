@@ -55,6 +55,7 @@ class ScriptBuilderModel: ObservableObject {
     @Published var outputMode = "script"
     @Published var isRunning = false
     @Published var errorText: String?
+    @Published var selectedAccountId: UUID?
     
     struct Config {
         var provider: AIProviderType = .openai
@@ -64,6 +65,23 @@ class ScriptBuilderModel: ObservableObject {
     }
     
     @Published var config = Config()
+    
+    init() {
+        // Initialize with default account if available
+        selectedAccountId = nil
+    }
+    
+    func loadAccountSettings(from userSettings: UserSettings, accountId: UUID?) {
+        guard let accountId = accountId,
+              let account = userSettings.aiAccounts.first(where: { $0.id == accountId }) else {
+            return
+        }
+        
+        config.provider = account.provider
+        config.apiKey = account.apiKey
+        config.model = account.model
+        config.baseURL = account.baseURL
+    }
     
     func getOutputModeDescription() -> String {
         switch outputMode {
@@ -176,11 +194,12 @@ class ScriptBuilderModel: ObservableObject {
 struct HammeringScriptsHostView: View {
     var model: BuilderModel
     var selectedMDM: MDMVendor?
+    var userSettings: UserSettings
     @StateObject private var vm = ScriptBuilderModel()
 
     var body: some View {
         HStack(spacing: 16) {
-            ScriptBuilderSettingsView(vm: vm)
+            ScriptBuilderSettingsView(vm: vm, userSettings: userSettings)
             ScriptBuilderMainView(vm: vm)
         }
         .padding(24)
@@ -190,6 +209,7 @@ struct HammeringScriptsHostView: View {
 
 struct ScriptBuilderSettingsView: View {
     @ObservedObject var vm: ScriptBuilderModel
+    var userSettings: UserSettings
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -197,6 +217,29 @@ struct ScriptBuilderSettingsView: View {
             Text("Generate, fix and explain admin scripts with AI").foregroundStyle(.secondary)
 
             Group {
+                // AI Account Selection
+                Text("AI ACCOUNT").lcarsPill()
+                if userSettings.aiAccounts.isEmpty {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("No AI accounts configured")
+                            .foregroundStyle(.secondary)
+                        Text("Go to Settings > AI Tool Accounts to add your AI provider credentials")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(.vertical, 8)
+                } else {
+                    Picker("", selection: $vm.selectedAccountId) {
+                        ForEach(userSettings.getActiveAIAccounts()) { account in
+                            Text(account.displayName).tag(account.id)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .onChange(of: vm.selectedAccountId) { _, newId in
+                        vm.loadAccountSettings(from: userSettings, accountId: newId)
+                    }
+                }
+                
                 Text("AI PROVIDER").lcarsPill()
                 Picker("", selection: $vm.config.provider) {
                     ForEach(AIProviderType.allCases) { p in Text(p.displayName).tag(p) }
@@ -240,6 +283,13 @@ struct ScriptBuilderSettingsView: View {
         .padding(16)
         .background(LCARSTheme.panel)
         .clipShape(RoundedRectangle(cornerRadius: 14))
+        .onAppear {
+            // Load default account if available
+            if let defaultAccount = userSettings.getDefaultAIAccount() {
+                vm.selectedAccountId = defaultAccount.id
+                vm.loadAccountSettings(from: userSettings, accountId: defaultAccount.id)
+            }
+        }
     }
 }
 
@@ -369,9 +419,10 @@ struct DeviceFoundryHostView: View {
 struct LogBurnerHostView: View {
     var model: BuilderModel
     var selectedMDM: MDMVendor?
+    var userSettings: UserSettings
 
     var body: some View {
-        LogBurnerView()
+        LogBurnerView(userSettings: userSettings)
     }
 }
 

@@ -13,6 +13,7 @@ struct ContentView: View {
     @State private var selectedMDM: MDMVendor? = nil
     @State private var showingAccountSettings = false
     @StateObject private var model = BuilderModel()
+    @EnvironmentObject var userSettings: UserSettings
 
     // MARK: - Layout
     private let sidebarWidth: CGFloat = LCARSTheme.Sidebar.width
@@ -38,10 +39,10 @@ struct ContentView: View {
                 DDMBlueprintsHostView(model: model, selectedMDM: selectedMDM)
 
             case .hammeringScripts:
-                HammeringScriptsHostView(model: model, selectedMDM: selectedMDM)
+                HammeringScriptsHostView(model: model, selectedMDM: selectedMDM, userSettings: userSettings)
 
             case .logBurner:
-                LogBurnerHostView(model: model, selectedMDM: selectedMDM)
+                LogBurnerHostView(model: model, selectedMDM: selectedMDM, userSettings: userSettings)
             }
         } else {
             // No tool chosen yet → landing / author notes

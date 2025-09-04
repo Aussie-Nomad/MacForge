@@ -520,6 +520,7 @@ class LogAnalysisService: ObservableObject {
 
 // MARK: - Log Burner View
 struct LogBurnerView: View {
+    var userSettings: UserSettings
     @StateObject private var logAnalysisService = LogAnalysisService()
     @State private var isDragOver = false
     @State private var showingResults = false
@@ -1549,5 +1550,5 @@ struct TimelineRow: View {
 }
 
 #Preview {
-    LogBurnerView()
+    LogBurnerView(userSettings: UserSettings())
 }

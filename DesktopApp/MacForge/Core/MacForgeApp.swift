@@ -41,6 +41,8 @@ private func jfPost(_ name: Notification.Name, _ payload: [AnyHashable: Any]? = 
 struct MacForgeApp: App {
     // NOTE: We let ContentView own its own @StateObject private var model = BuilderModel()
     // Avoid injecting a second, competing instance here.
+    
+    @StateObject private var userSettings = UserSettings()
 
     @Environment(\.scenePhase) private var scenePhase
 
@@ -48,6 +50,7 @@ struct MacForgeApp: App {
         // Main window
         WindowGroup {
             ContentView()
+                .environmentObject(userSettings)
                 .preferredColorScheme(.dark)
                 .environment(\.themeManager, ThemeManager())
 
