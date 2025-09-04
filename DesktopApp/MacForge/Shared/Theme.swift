@@ -12,20 +12,26 @@ import AppKit
 
 // MARK: - LCARS Theme Colors
 struct LCARSTheme {
-    // Core Colors
-    static let background = Color(red: 0.05, green: 0.05, blue: 0.1)
-    static let surface = Color(red: 0.12, green: 0.12, blue: 0.18)
-    static let panel = Color(red: 0.15, green: 0.15, blue: 0.22)
+    // Core Colors - Improved contrast ratios
+    static let background = Color(red: 0.03, green: 0.03, blue: 0.08)      // Darker for better contrast
+    static let surface = Color(red: 0.08, green: 0.08, blue: 0.12)         // Better contrast with background
+    static let panel = Color(red: 0.12, green: 0.12, blue: 0.18)           // Improved panel contrast
     
-    // Accent Colors
-    static let primary = Color(red: 0.8, green: 0.4, blue: 0.0)      // Orange
-    static let secondary = Color(red: 0.6, green: 0.3, blue: 0.8)    // Purple
-    static let accent = Color(red: 1.0, green: 0.53, blue: 0.0)      // Amber
+    // Accent Colors - Enhanced visibility
+    static let primary = Color(red: 0.85, green: 0.45, blue: 0.0)          // Brighter orange
+    static let secondary = Color(red: 0.65, green: 0.35, blue: 0.85)       // Enhanced purple
+    static let accent = Color(red: 1.0, green: 0.6, blue: 0.0)             // Brighter amber
     
-    // Text Colors
+    // Text Colors - Improved readability
     static let textPrimary = Color.white
-    static let textSecondary = Color(red: 0.8, green: 0.8, blue: 0.8)
-    static let textMuted = Color(red: 0.6, green: 0.6, blue: 0.6)
+    static let textSecondary = Color(red: 0.85, green: 0.85, blue: 0.9)    // Better contrast
+    static let textMuted = Color(red: 0.7, green: 0.7, blue: 0.75)         // Improved muted text
+    
+    // Status Colors - Enhanced visibility
+    static let success = Color(red: 0.2, green: 0.8, blue: 0.4)            // Bright green
+    static let warning = Color(red: 1.0, green: 0.7, blue: 0.0)            // Bright yellow
+    static let error = Color(red: 1.0, green: 0.4, blue: 0.4)              // Bright red
+    static let info = Color(red: 0.4, green: 0.7, blue: 1.0)               // Bright blue
     
     // Legacy Support - now using LCARS theme values
     static let bg = background
@@ -45,6 +51,22 @@ struct LCARSTheme {
         // Tile styling
         static let tileCorner: CGFloat = 12
         static let tileStroke: CGFloat = 2
+    }
+    
+    // MARK: - Accessibility
+    static let highContrastMode = false // Can be toggled for accessibility
+    
+    // High contrast color variants
+    static var highContrastBackground: Color {
+        return highContrastMode ? Color(red: 0.0, green: 0.0, blue: 0.0) : background
+    }
+    
+    static var highContrastSurface: Color {
+        return highContrastMode ? Color(red: 0.1, green: 0.1, blue: 0.15) : surface
+    }
+    
+    static var highContrastPanel: Color {
+        return highContrastMode ? Color(red: 0.15, green: 0.15, blue: 0.2) : panel
     }
 }
 

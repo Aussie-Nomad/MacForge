@@ -115,6 +115,8 @@ final class ProfileExportService: ProfileExportServiceProtocol {
         // Check name
         if profile.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             errors.append(.emptyName)
+        } else if profile.name.count > 100 {
+            errors.append(.nameTooLong)
         }
         
         // Check identifier
@@ -122,6 +124,11 @@ final class ProfileExportService: ProfileExportServiceProtocol {
             errors.append(.emptyIdentifier)
         } else if !isValidIdentifier(profile.identifier) {
             errors.append(.invalidIdentifier)
+        }
+        
+        // Check organization
+        if profile.organization.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            errors.append(.emptyOrganization)
         }
         
         // Check payloads
@@ -134,6 +141,128 @@ final class ProfileExportService: ProfileExportServiceProtocol {
             for duplicate in duplicates {
                 errors.append(.duplicatePayloadIdentifier(duplicate))
             }
+            
+            // Validate individual payloads
+            for payload in profile.payloads {
+                let payloadErrors = validatePayload(payload)
+                errors.append(contentsOf: payloadErrors)
+            }
+        }
+        
+        return errors
+    }
+    
+    private func validatePayload(_ payload: ProfilePayload) -> [ProfileValidationError] {
+        var errors: [ProfileValidationError] = []
+        
+        // Check payload type
+        if payload.type.isEmpty {
+            errors.append(.invalidPayloadType(payload.identifier))
+        }
+        
+        // Check payload identifier
+        if payload.identifier.isEmpty {
+            errors.append(.emptyPayloadIdentifier)
+        }
+        
+        // Check payload display name
+        if payload.displayName.isEmpty {
+            errors.append(.emptyPayloadDisplayName(payload.identifier))
+        }
+        
+        // Validate PPPC payload specifically
+        if payload.type == "com.apple.TCC" {
+            let pppcErrors = validatePPPCPayload(payload)
+            errors.append(contentsOf: pppcErrors)
+        }
+        
+        // Validate WiFi payload specifically
+        if payload.type == "com.apple.wifi.managed" {
+            let wifiErrors = validateWiFiPayload(payload)
+            errors.append(contentsOf: wifiErrors)
+        }
+        
+        // Validate VPN payload specifically
+        if payload.type == "com.apple.vpn.managed" {
+            let vpnErrors = validateVPNPayload(payload)
+            errors.append(contentsOf: vpnErrors)
+        }
+        
+        return errors
+    }
+    
+    private func validatePPPCPayload(_ payload: ProfilePayload) -> [ProfileValidationError] {
+        var errors: [ProfileValidationError] = []
+        
+        guard let services = payload.settings["Services"] as? [[String: Any]] else {
+            errors.append(.missingPPPCServices(payload.identifier))
+            return errors
+        }
+        
+        if services.isEmpty {
+            errors.append(.emptyPPPCServices(payload.identifier))
+            return errors
+        }
+        
+        for (index, service) in services.enumerated() {
+            // Check required fields
+            if let serviceName = service["Service"] as? String, serviceName.isEmpty {
+                errors.append(.invalidPPPCServiceName(payload.identifier, index))
+            }
+            
+            if let authorization = service["Authorization"] as? String, authorization.isEmpty {
+                errors.append(.missingPPPCAuthorization(payload.identifier, index))
+            }
+            
+            // Check identifier requirements
+            if let identifier = service["Identifier"] as? String, identifier.isEmpty {
+                errors.append(.missingPPPCIdentifier(payload.identifier, index))
+            }
+        }
+        
+        return errors
+    }
+    
+    private func validateWiFiPayload(_ payload: ProfilePayload) -> [ProfileValidationError] {
+        var errors: [ProfileValidationError] = []
+        
+        // Check required SSID
+        if let ssid = payload.settings["SSID"] as? String, ssid.isEmpty {
+            errors.append(.missingWiFiSSID(payload.identifier))
+        }
+        
+        // Check security type
+        if let securityType = payload.settings["SecurityType"] as? String, securityType.isEmpty {
+            errors.append(.missingWiFiSecurityType(payload.identifier))
+        }
+        
+        // Check password for secured networks
+        if let securityType = payload.settings["SecurityType"] as? String,
+           securityType != "None",
+           let password = payload.settings["Password"] as? String,
+           password.isEmpty {
+            errors.append(.missingWiFiPassword(payload.identifier))
+        }
+        
+        return errors
+    }
+    
+    private func validateVPNPayload(_ payload: ProfilePayload) -> [ProfileValidationError] {
+        var errors: [ProfileValidationError] = []
+        
+        // Check required server address
+        if let serverAddress = payload.settings["ServerAddress"] as? String, serverAddress.isEmpty {
+            errors.append(.missingVPNServerAddress(payload.identifier))
+        }
+        
+        // Check VPN type
+        if let vpnType = payload.settings["VPNType"] as? String, vpnType.isEmpty {
+            errors.append(.missingVPNType(payload.identifier))
+        }
+        
+        // Check authentication method
+        if let authMethod = payload.settings["AuthenticationMethod"] as? String, authMethod.isEmpty {
+            errors.append(.missingVPNAuthenticationMethod(payload.identifier))
         }
         
         return errors

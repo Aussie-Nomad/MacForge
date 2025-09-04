@@ -37,185 +37,13 @@ struct FeatureRow: View {
     }
 }
 
-// MARK: - Package Smelting
-struct PackageSmeltingHostView: View {
+// MARK: - Package Casting
+struct PackageCastingHostView: View {
     var model: BuilderModel
     var selectedMDM: MDMVendor?
     
-    @State private var selectedPackage: URL?
-    @State private var packageInfo: PackageInfo?
-    @State private var isAnalyzing = false
-    @State private var errorMessage: String?
-
     var body: some View {
-        VStack(spacing: 20) {
-            // Header
-            HStack {
-                Text("📦 Package Smelting")
-                    .font(.largeTitle).bold()
-                Spacer()
-                if let mdm = selectedMDM {
-                    Text("Connected to: \(mdm.rawValue)")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
-            
-            // Tool Purpose
-            VStack(alignment: .leading, spacing: 16) {
-                Text("Tool Purpose")
-                    .font(.title2).bold()
-                    .foregroundStyle(LCARSTheme.accent)
-                
-                Text("Package Smelting is a distribution package manager that allows you to analyze, modify, and deploy macOS packages (.pkg files) to your MDM system. This tool helps you understand package contents, validate compatibility, and streamline deployment workflows.")
-                    .font(.body)
-                    .foregroundStyle(.secondary)
-                
-                // Feature Rows
-                VStack(spacing: 12) {
-                    FeatureRow(
-                        icon: "doc.text.magnifyingglass",
-                        title: "Package Analysis",
-                        description: "Deep inspection of package contents, dependencies, and metadata"
-                    )
-                    
-                    FeatureRow(
-                        icon: "arrow.up.doc",
-                        title: "MDM Integration",
-                        description: "Direct upload and deployment to connected MDM systems"
-                    )
-                    
-                    FeatureRow(
-                        icon: "gearshape.2",
-                        title: "Package Modification",
-                        description: "Edit package properties and customize installation behavior"
-                    )
-                }
-            }
-            .padding()
-            .background(LCARSTheme.panel)
-            .cornerRadius(12)
-            
-            // Main content with proper scrolling
-            ScrollView {
-                VStack(spacing: 16) {
-                    Text("Distribution Package Manager")
-                        .font(.headline)
-                    
-                    if let packageInfo = packageInfo {
-                        // Package Info Display
-                        VStack(alignment: .leading, spacing: 12) {
-                            HStack {
-                                Text("Package Name:")
-                                Spacer()
-                                Text(packageInfo.name)
-                                    .fontWeight(.semibold)
-                            }
-                            
-                            HStack {
-                                Text("Bundle ID:")
-                                Spacer()
-                                Text(packageInfo.bundleID)
-                                    .font(.system(.body, design: .monospaced))
-                            }
-                            
-                            HStack {
-                                Text("Version:")
-                                Spacer()
-                                Text(packageInfo.version)
-                            }
-                            
-                            HStack {
-                                Text("Size:")
-                                Spacer()
-                                Text(packageInfo.formattedSize)
-                            }
-                            
-                            Button("Upload to \(selectedMDM?.rawValue ?? "MDM")") {
-                                // TODO: Implement MDM upload
-                            }
-                            .buttonStyle(.borderedProminent)
-                            .disabled(selectedMDM == nil)
-                            .contentShape(Rectangle())
-                        }
-                        .padding()
-                        .background(LCARSTheme.panel)
-                        .cornerRadius(12)
-                        
-                    } else {
-                        // Drop Zone
-                        VStack(spacing: 12) {
-                            Image(systemName: "arrow.down.circle")
-                                .font(.system(size: 48))
-                                .foregroundStyle(LCARSTheme.accent)
-                            
-                            Text("Drop a .pkg file here")
-                                .font(.headline)
-                            
-                            Text("or click to browse")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                        .frame(maxWidth: .infinity, minHeight: 200)
-                        .background(
-                            RoundedRectangle(cornerRadius: 16)
-                                .stroke(LCARSTheme.accent, style: StrokeStyle(lineWidth: 2, dash: [5]))
-                                .fill(LCARSTheme.panel.opacity(0.3))
-                        )
-                        .onTapGesture {
-                            selectPackage()
-                        }
-                        .onDrop(of: [.fileURL], isTargeted: nil) { providers in
-                            let _ = handlePackageDrop(providers)
-                            return true
-                        }
-                    }
-                    
-                    if isAnalyzing {
-                        HStack {
-                            ProgressView()
-                                .scaleEffect(0.8)
-                            Text("Analyzing package...")
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                    
-                    if let errorMessage = errorMessage {
-                        Text(errorMessage)
-                            .foregroundStyle(.red)
-                            .font(.caption)
-                    }
-                }
-                .padding(.bottom, 20)
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            
-            Spacer()
-        }
-        .padding(24)
-        .background(LCARSTheme.background)
-    }
-    
-    private func selectPackage() {
-        let panel = NSOpenPanel()
-        panel.allowedContentTypes = [.fileURL]
-        panel.allowsMultipleSelection = false
-        
-        if panel.runModal() == .OK {
-            if let _ = panel.url {
-                let _ = handlePackageDrop([NSItemProvider()])
-                // TODO: Use the selected URL for package analysis
-            }
-        }
-    }
-    
-    private func handlePackageDrop(_ providers: [NSItemProvider]) -> Bool {
-        // TODO: Implement package analysis
-        return true
-    }
-    
-    private func uploadToMDM() {
-        // TODO: Implement MDM upload
+        PackageCastingView()
     }
 }
 
@@ -224,6 +52,7 @@ class ScriptBuilderModel: ObservableObject {
     @Published var prompt = ""
     @Published var script = ""
     @Published var language = "zsh"
+    @Published var outputMode = "script"
     @Published var isRunning = false
     @Published var errorText: String?
     
@@ -236,18 +65,109 @@ class ScriptBuilderModel: ObservableObject {
     
     @Published var config = Config()
     
+    func getOutputModeDescription() -> String {
+        switch outputMode {
+        case "script":
+            return "scripts"
+        case "extension_attribute":
+            return "extension attributes for JAMF (use <result> tags, keep simple and fast)"
+        case "one_liner":
+            return "one-liner commands (single line, no functions)"
+        case "function":
+            return "reusable functions (define function, no main execution)"
+        default:
+            return "scripts"
+        }
+    }
+    
     func askAI(system: String) async {
-        // TODO: Implement AI integration
+        await MainActor.run {
+            isRunning = true
+            errorText = nil
+        }
+        
+        defer {
+            Task { @MainActor in
+                isRunning = false
+            }
+        }
+        
+        do {
+            // Validate configuration
+            try validateConfiguration()
+            
+            // Create AI service
+            let aiConfig = AIServiceConfig(
+                provider: config.provider,
+                apiKey: config.apiKey,
+                model: config.model,
+                baseURL: config.baseURL
+            )
+            
+            let aiService = AIService(config: aiConfig)
+            
+            // Determine the action based on system prompt
+            let result: String
+            if system.contains("Generate") {
+                result = try await aiService.generateScript(
+                    prompt: prompt,
+                    language: language,
+                    systemPrompt: system
+                )
+            } else if system.contains("Explain") {
+                result = try await aiService.explainScript(
+                    script: script,
+                    systemPrompt: system
+                )
+            } else if system.contains("Harden") {
+                result = try await aiService.hardenScript(
+                    script: script,
+                    systemPrompt: system
+                )
+            } else {
+                result = try await aiService.generateScript(
+                    prompt: prompt,
+                    language: language,
+                    systemPrompt: system
+                )
+            }
+            
+            await MainActor.run {
+                if system.contains("Explain") {
+                    // For explanations, append to script with clear separation
+                    script = "\(script)\n\n# ===== EXPLANATION =====\n\(result)"
+                } else {
+                    script = result
+                }
+                errorText = nil
+            }
+            
+        } catch {
+            await MainActor.run {
+                errorText = error.localizedDescription
+            }
+        }
+    }
+    
+    private func validateConfiguration() throws {
+        switch config.provider {
+        case .openai, .anthropic:
+            if config.apiKey.isEmpty {
+                throw AIError.missingAPIKey
+            }
+        case .ollama:
+            // Ollama doesn't require API key, but we should validate URL
+            if config.baseURL.isEmpty {
+                config.baseURL = "http://localhost:11434"
+            }
+        case .custom:
+            if config.baseURL.isEmpty {
+                throw AIError.invalidConfiguration
+            }
+        }
     }
 }
 
-enum AIProviderType: String, CaseIterable, Identifiable {
-    case openai = "openai"
-    case anthropic = "anthropic"
-    case custom = "custom"
-    
-    var id: String { rawValue }
-}
 
 
 
@@ -279,13 +199,19 @@ struct ScriptBuilderSettingsView: View {
             Group {
                 Text("AI PROVIDER").lcarsPill()
                 Picker("Provider", selection: $vm.config.provider) {
-                    ForEach(AIProviderType.allCases) { p in Text(p.rawValue.capitalized).tag(p) }
+                    ForEach(AIProviderType.allCases) { p in Text(p.displayName).tag(p) }
                 }.pickerStyle(.segmented)
 
                 if vm.config.provider == .openai || vm.config.provider == .anthropic {
                     ThemedField(title: "API Key", text: $vm.config.apiKey, secure: true)
                     ThemedField(title: "Model", text: $vm.config.model, placeholder: vm.config.provider == .openai ? "gpt-4o-mini" : "claude-3-5-sonnet-20240620")
                     ThemedField(title: "Base URL (optional)", text: $vm.config.baseURL, placeholder: "")
+                } else if vm.config.provider == .ollama {
+                    ThemedField(title: "Ollama URL", text: $vm.config.baseURL, placeholder: "http://localhost:11434")
+                    ThemedField(title: "Model", text: $vm.config.model, placeholder: "codellama:7b-instruct")
+                    Text("No API key required for local Ollama")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 } else {
                     ThemedField(title: "Endpoint URL", text: $vm.config.baseURL, placeholder: "https://your-endpoint")
                     ThemedField(title: "Model (optional)", text: $vm.config.model)
@@ -298,6 +224,14 @@ struct ScriptBuilderSettingsView: View {
                     Text("bash").tag("bash")
                     Text("python").tag("python")
                     Text("applescript").tag("applescript")
+                }.pickerStyle(.segmented)
+                
+                Text("OUTPUT MODE").lcarsPill()
+                Picker("Output Mode", selection: $vm.outputMode) {
+                    Text("Script").tag("script")
+                    Text("Extension Attribute").tag("extension_attribute")
+                    Text("One-liner").tag("one_liner")
+                    Text("Function").tag("function")
                 }.pickerStyle(.segmented)
             }
             Spacer()
@@ -341,21 +275,21 @@ struct ScriptBuilderButtonsView: View {
     var body: some View {
         HStack {
             Button(vm.isRunning ? "Generating…" : "Generate Script") { 
-                Task { await vm.askAI(system: "You are a macOS endpoint management expert. Generate production-ready scripts.") } 
+                Task { await vm.askAI(system: "You are a macOS endpoint management expert. Generate clean, production-ready \(vm.language) \(vm.getOutputModeDescription()). Return ONLY the code without explanations, comments, or markdown formatting. Use proper shebang for \(vm.language). Ensure the code is functional and follows best practices.") } 
             }
             .buttonStyle(.borderedProminent)
             .disabled(vm.isRunning)
             .contentShape(Rectangle())
             
             Button("Explain") { 
-                Task { await vm.askAI(system: "Explain the following script in detail and include security considerations. Return explanation only.") } 
+                Task { await vm.askAI(system: "Explain the following \(vm.language) script in detail. Include: 1) What the script does, 2) How it works, 3) Security considerations, 4) Potential improvements. Format as a clear explanation with bullet points.") } 
             }
             .buttonStyle(.bordered)
             .disabled(vm.isRunning)
             .contentShape(Rectangle())
             
             Button("Harden") { 
-                Task { await vm.askAI(system: "Refactor and harden the following script. Add logging, error handling, and idempotence. Return only the script.") } 
+                Task { await vm.askAI(system: "Refactor and harden the following \(vm.language) script. Add: 1) Proper error handling, 2) Input validation, 3) Logging, 4) Idempotence, 5) Security improvements. Return ONLY the improved script code without explanations or markdown.") } 
             }
             .buttonStyle(.bordered)
             .disabled(vm.isRunning)
@@ -421,94 +355,32 @@ struct PackageInfo {
     }
 }
 
-// MARK: - Device Foundry
+// MARK: - Device Foundry Lookup
 struct DeviceFoundryHostView: View {
     var model: BuilderModel
     var selectedMDM: MDMVendor?
 
     var body: some View {
-        VStack(spacing: 24) {
-            // Header
-            HStack(spacing: 16) {
-                Image(systemName: "server.rack")
-                    .font(.system(size: 48))
-                    .foregroundStyle(LCARSTheme.accent)
-                
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Device Foundry")
-                        .font(.system(size: 32, weight: .black, design: .rounded))
-                        .foregroundStyle(LCARSTheme.accent)
-                    Text("Smart & Static Group Creator for devices")
-                        .font(.title2)
-                        .foregroundStyle(LCARSTheme.textSecondary)
-                }
-            }
-            
-            // Simple Description
-            VStack(alignment: .leading, spacing: 16) {
-                Text("Tool Purpose")
-                    .font(.title2).bold()
-                    .foregroundStyle(LCARSTheme.accent)
-                
-                Text("Device Foundry enables you to create, organize, and manage device groups within your MDM system. Create both smart (dynamic) and static groups to efficiently categorize devices based on various criteria.")
-                    .font(.body)
-                    .foregroundStyle(LCARSTheme.textSecondary)
-            }
-            .padding(24)
-            .background(LCARSTheme.panel)
-            .cornerRadius(16)
-            
-            Spacer()
-        }
-        .padding(24)
-        .background(LCARSTheme.background)
+        SerialNumberCheckerView()
     }
 }
 
-// MARK: - Blueprint Builder
-struct BlueprintBuilderHostView: View {
+// MARK: - Log Burner
+struct LogBurnerHostView: View {
     var model: BuilderModel
     var selectedMDM: MDMVendor?
 
     var body: some View {
-        VStack(spacing: 24) {
-            // Header
-            HStack(spacing: 16) {
-                Image(systemName: "doc.text.image")
-                    .font(.system(size: 48))
-                    .foregroundStyle(LCARSTheme.accent)
-                
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Blueprint Builder")
-                        .font(.system(size: 32, weight: .black, design: .rounded))
-                        .foregroundStyle(LCARSTheme.accent)
-                    Text("Design reusable configuration blueprints")
-                        .font(.title2)
-                        .foregroundStyle(LCARSTheme.textSecondary)
-                }
-            }
-            
-            // Simple Description
-            VStack(alignment: .leading, spacing: 16) {
-                Text("Tool Purpose")
-                    .font(.title2).bold()
-                    .foregroundStyle(LCARSTheme.accent)
-                
-                Text("Blueprint Builder is a template system that allows you to create, save, and reuse configuration profiles across different environments. Streamline profile creation with pre-built templates and custom configurations.")
-                    .font(.body)
-                    .foregroundStyle(LCARSTheme.textSecondary)
-            }
-            .padding(24)
-            .background(LCARSTheme.panel)
-            .cornerRadius(16)
-            
-            Spacer()
-        }
-        .padding(24)
-        .background(LCARSTheme.background)
+        LogBurnerView()
     }
 }
 
+// MARK: - DDM Blueprints
+struct DDMBlueprintsHostView: View {
+    var model: BuilderModel
+    var selectedMDM: MDMVendor?
 
-
-
+    var body: some View {
+        DDMBlueprintsView()
+    }
+}

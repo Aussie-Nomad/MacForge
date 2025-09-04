@@ -57,16 +57,16 @@ MacForge is designed to simplify the creation of macOS configuration profiles, p
 - **macOS-Focused**: Removed unnecessary cross-platform complexity
 
 #### **Core Functionality**
-- **Profile Builder**: Fully implemented with comprehensive PPPC support
+- **PPPC Profile Creator**: Fully implemented with comprehensive PPPC support
 - **JAMF Pro Integration**: Complete authentication and profile submission
 - **PPPC Editor**: Robust permission management with visual interface
-- **Package Smelting**: Basic but functional package management tool
+- **Package Casting**: Basic but functional package management tool
 - **Theme System**: Consistent LCARS-inspired design throughout
 
 ### ✅ **What's Been Improved**
 
 #### **Completed Features**
-- **Package Smelting**: Now functional with drag-and-drop package analysis
+- **Package Casting**: Now functional with drag-and-drop package analysis
 - **Simplified Architecture**: Removed unnecessary protocols and abstractions
 - **State Management**: Simplified NotificationCenter usage with direct event handling
 - **File Organization**: Better structured feature-based organization
@@ -104,7 +104,7 @@ MacForge/
 │   ├── PPPC/                      # PPPC editor functionality
 │   │   └── PPPCEditor.swift
 │   └── Tools/                     # Development and debugging tools
-│       ├── ToolHost.swift         # Tool hosting and Package Smelting
+│       ├── ToolHost.swift         # Tool hosting and Package Casting
 │       ├── PaylodEditors.swift    # Payload editing utilities
 │       └── JamfDebugView.swift   # JAMF debugging interface
 ├── Services/                       # Business logic layer
@@ -213,23 +213,23 @@ The codebase follows a clear, feature-based organization that makes it easy for 
 
 ### 🚧 **Planned Features (Placeholder Status)**
 
-#### **Package Smelting** 📦
+#### **Package Casting** 📦
 - **Status**: ✅ Functional implementation
 - **Purpose**: Upload and manage distribution packages
 - **Features**: Drag-and-drop support, package analysis, MDM integration ready
 - **Implementation**: Basic package info extraction and display
 
-#### **Device Foundry** 🖥️
+#### **Drawing Room** 🖥️
 - **Status**: UI placeholder only
 - **Purpose**: Smart & Static Group Creator for devices
 - **Implementation**: Not started
 
-#### **Blueprint Builder** 📐
+#### **Apple DDM Builder** 📐
 - **Status**: UI placeholder only
 - **Purpose**: Design reusable configuration blueprints
 - **Implementation**: Not started
 
-#### **Hammering Scripts** 🔨
+#### **Script Smelter** 🔨
 - **Status**: UI placeholder with AI integration framework
 - **Purpose**: AI-powered script builder
 - **Implementation**: Basic AI service integration, no UI
@@ -355,7 +355,7 @@ xcodebuild test -scheme MacForge -destination 'platform=macOS' -only-testing:Mac
 ### **Phase 1: Stabilization (COMPLETED ✅)**
 1. **✅ Remove iOS Support**: Eliminated cross-platform complexity
 2. **✅ Complete JAMF Integration**: Focused on JAMF Pro features
-3. **✅ Implement One Additional Tool**: Package Smelting now functional
+3. **✅ Implement One Additional Tool**: Package Casting now functional
 4. **✅ Simplify State Management**: Reduced NotificationCenter usage
 5. **✅ Improve File Organization**: Complete feature-based structure implemented
 
@@ -364,11 +364,11 @@ xcodebuild test -scheme MacForge -destination 'platform=macOS' -only-testing:Mac
 2. **Error Handling**: Comprehensive error messages and recovery
 3. **Testing**: Unit and UI test coverage
 4. **Performance**: Optimize memory usage and responsiveness
-5. **Complete Package Smelting**: Add MDM upload functionality
+5. **Complete Package Casting**: Add MDM upload functionality
 
 ### **Phase 3: Expansion**
 1. **Additional MDM Support**: Implement Intune, Kandji, Mosyle
-2. **Tool Completion**: Finish Package Smelting, Device Foundry, Blueprint Builder
+2. **Tool Completion**: Finish Package Casting, Drawing Room, Apple DDM Builder
 3. **Advanced Features**: Template system, bulk operations
 4. **Performance Optimization**: Advanced caching and optimization
 

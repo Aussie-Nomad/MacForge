@@ -11,10 +11,11 @@ struct ContentView: View {
     @State private var selectedTool: ToolModule? = nil
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
     @State private var selectedMDM: MDMVendor? = nil
+    @State private var showingAccountSettings = false
     @StateObject private var model = BuilderModel()
 
     // MARK: - Layout
-    private let sidebarWidth: CGFloat = LcarsTheme.Sidebar.width
+    private let sidebarWidth: CGFloat = LCARSTheme.Sidebar.width
 
     // MARK: - Detail content
     @ViewBuilder
@@ -24,17 +25,23 @@ struct ContentView: View {
             case .profileBuilder:
                 ProfileBuilderHostView(selectedMDM: selectedMDM, model: model, onHome: { resetTool() })
 
-            case .packageSmelting:
-                PackageSmeltingHostView(model: model, selectedMDM: selectedMDM)
+            case .packageCasting:
+                PackageCastingHostView(model: model, selectedMDM: selectedMDM)
 
             case .deviceFoundry:
                 DeviceFoundryHostView(model: model, selectedMDM: selectedMDM)
 
             case .blueprintBuilder:
-                BlueprintBuilderHostView(model: model, selectedMDM: selectedMDM)
+                DDMBlueprintsHostView(model: model, selectedMDM: selectedMDM)
+
+            case .ddmBlueprints:
+                DDMBlueprintsHostView(model: model, selectedMDM: selectedMDM)
 
             case .hammeringScripts:
                 HammeringScriptsHostView(model: model, selectedMDM: selectedMDM)
+
+            case .logBurner:
+                LogBurnerHostView(model: model, selectedMDM: selectedMDM)
             }
         } else {
             // No tool chosen yet → landing / author notes
@@ -89,6 +96,12 @@ struct ContentView: View {
                     .disabled(selectedTool == nil)
                     .contentShape(Rectangle())
 
+                    Button("Account Settings") {
+                        showingAccountSettings = true
+                    }
+                    .buttonStyle(.bordered)
+                    .contentShape(Rectangle())
+
                     Spacer()
 
                     Button("Report Bug") {
@@ -124,9 +137,15 @@ struct ContentView: View {
         .onReceive(NotificationCenter.default.publisher(for: .jfChangeMDMRequested)) { _ in
             resetMDM()
         }
+        .onReceive(NotificationCenter.default.publisher(for: .jfAccountSettingsRequested)) { _ in
+            showingAccountSettings = true
+        }
         .onReceive(NotificationCenter.default.publisher(for: .jfReportBugRequested)) { _ in
             // Handle bug reporting - could open email or GitHub issue
             print("Bug report requested")
+        }
+        .sheet(isPresented: $showingAccountSettings) {
+            SettingsView(userSettings: UserSettings())
         }
     }
 

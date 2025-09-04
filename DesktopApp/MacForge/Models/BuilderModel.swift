@@ -27,44 +27,7 @@ enum JAMFConnectionStatus {
     case failed
 }
 
-// MARK: - Core Data Models
-struct Payload: Identifiable, Hashable, Codable {
-    let id: String
-    var name: String
-    var description: String
-    var platforms: [String]
-    var icon: String
-    var category: String
-    var settings: [String: CodableValue] = [:]
-    var enabled: Bool = true
-    var uuid: String = UUID().uuidString
-}
-
-struct CodableValue: Codable, Hashable {
-    var value: AnyHashable
-    init(_ v: AnyHashable) { value = v }
-    init(from decoder: Decoder) throws {
-        let c = try decoder.singleValueContainer()
-        if let b = try? c.decode(Bool.self) { value = b }
-        else if let i = try? c.decode(Int.self) { value = i }
-        else if let d = try? c.decode(Double.self) { value = d }
-        else if let s = try? c.decode(String.self) { value = s }
-        else if let a = try? c.decode([String].self) { value = AnyHashable(a) }
-        else { value = "" }
-    }
-    func encode(to encoder: Encoder) throws {
-        var c = encoder.singleValueContainer()
-        switch value {
-        case let b as Bool: try c.encode(b)
-        case let i as Int: try c.encode(i)
-        case let d as Double: try c.encode(d)
-        case let s as String: try c.encode(s)
-        case let a as [String]: try c.encode(a)
-        default: try c.encode(String(describing: value))
-        }
-    }
-}
-
+// MARK: - Profile Settings
 struct ProfileSettings: Codable, Hashable {
     var name: String = "New Configuration Profile"
     var description: String = "Created with MacForge"
@@ -73,57 +36,38 @@ struct ProfileSettings: Codable, Hashable {
     var scope: String = "System"
 }
 
-struct TemplateProfile: Identifiable, Hashable {
-    var id: String { name }
-    let name: String
-    let description: String
-    let payloadIDs: [String]
-}
-
-enum MDMVendor: String, CaseIterable, Identifiable {
-    case jamf = "Jamf Pro"
-    case intune = "Microsoft Intune"
-    case kandji = "Kandji"
-    case mosyle = "Mosyle"
-    
-    var id: String { rawValue }
-    var asset: String {
-        switch self {
-        case .jamf:   return "mdm_jamf"
-        case .intune: return "mdm_intune"
-        case .kandji: return "mdm_kandji"
-        case .mosyle: return "mdm_mosyle"
-        }
-    }
-    var sfFallback: String { "building.2.crop.circle" }
-}
-
 enum ToolModule: String, CaseIterable, Identifiable {
     case profileBuilder
-    case packageSmelting
+    case packageCasting
     case deviceFoundry
     case blueprintBuilder
+    case ddmBlueprints
     case hammeringScripts
+    case logBurner
 
     var id: String { self.rawValue }
 
     var displayName: String {
         switch self {
-        case .profileBuilder: return "Profile Builder"
-        case .packageSmelting: return "Package Smelting"
-        case .deviceFoundry: return "Device Foundry"
-        case .blueprintBuilder: return "Blueprint Builder"
-        case .hammeringScripts: return "Hammering Scripts"
+        case .profileBuilder: return "Profile Workbench (PPPC)"
+        case .packageCasting: return "Package Casting"
+        case .deviceFoundry: return "Device Foundry Lookup"
+        case .blueprintBuilder: return "Apple DDM Builder"
+        case .ddmBlueprints: return "DDM Blueprints"
+        case .hammeringScripts: return "Script Smelter"
+        case .logBurner: return "Log Burner"
         }
     }
 
     var icon: String {
         switch self {
         case .profileBuilder: return "doc.badge.gearshape"
-        case .packageSmelting: return "shippingbox"
-        case .deviceFoundry: return "desktopcomputer"
-        case .blueprintBuilder: return "square.grid.3x3"
+        case .packageCasting: return "shippingbox"
+        case .deviceFoundry: return "magnifyingglass.circle.fill"
+        case .blueprintBuilder: return "network.badge.shield.half.filled"
+        case .ddmBlueprints: return "doc.text.magnifyingglass"
         case .hammeringScripts: return "hammer"
+        case .logBurner: return "flame.circle.fill"
         }
     }
 }
@@ -134,74 +78,11 @@ enum AuthDecision: String, Codable, CaseIterable, Hashable {
     case deny = "Deny"
 }
 
-
-
-// MARK: - App Info Model
-struct AppInfo: Identifiable, Equatable {
-    let id = UUID()
-    let name: String
-    let bundleID: String
-    let path: String
-}
-
-// MARK: - PPPC Service Model
-struct PPPCService: Identifiable, Equatable, Hashable {
-    let id: String
-    let name: String
-    let description: String
-    let category: PPPCServiceCategory
-    let requiresBundleID: Bool
-    let requiresCodeRequirement: Bool
-    let requiresIdentifier: Bool
-    
-    var displayName: String { name }
-}
-
-enum PPPCServiceCategory: String, CaseIterable {
-    case system = "System"
-    case accessibility = "Accessibility"
-    case automation = "Automation"
-    case inputMonitoring = "Input Monitoring"
-    case media = "Media"
-    case network = "Network"
-    case systemPolicy = "System Policy"
-    
-    var displayName: String { rawValue }
-}
-
-// MARK: - PPPC Configuration Model
-struct PPPCConfiguration: Identifiable, Equatable {
-    let id = UUID()
-    var service: PPPCService
-    var identifier: String
-    var identifierType: PPPCIdentifierType
-    var codeRequirement: String?
-    var allowed: Bool
-    var userOverride: Bool
-    var comment: String?
-    
-    init(service: PPPCService, identifier: String, identifierType: PPPCIdentifierType = .bundleID) {
-        self.service = service
-        self.identifier = identifier
-        self.identifierType = identifierType
-        self.allowed = true
-        self.userOverride = false
-    }
-}
-
-enum PPPCIdentifierType: String, CaseIterable {
-    case bundleID = "Bundle Identifier"
-    case path = "Path"
-    case codeRequirement = "Code Requirement"
-    
-    var displayName: String { rawValue }
-}
-
 // MARK: - Builder Model
 @MainActor
 final class BuilderModel: ObservableObject {
     // MARK: - Dependencies
-    private let authenticationService: JAMFAuthenticationService
+    private let authenticationService: any JAMFAuthenticationServiceProtocol
     private let jamfService: JAMFServiceProtocol?
     private let profileExportService: ProfileExportServiceProtocol
     
@@ -236,13 +117,109 @@ final class BuilderModel: ObservableObject {
     
     // MARK: - Initialization
     init(
-        authenticationService: JAMFAuthenticationService = JAMFAuthenticationService(),
+        authenticationService: any JAMFAuthenticationServiceProtocol = JAMFAuthenticationService(),
         jamfService: JAMFServiceProtocol? = nil,
         profileExportService: ProfileExportServiceProtocol = ProfileExportService()
     ) {
         self.authenticationService = authenticationService
         self.jamfService = jamfService
         self.profileExportService = profileExportService
+        
+        // Load saved PPPC configurations
+        loadPPPCConfigurations()
+    }
+    
+    // MARK: - PPPC Configuration Management
+    
+    func addPPPCConfiguration(_ configuration: PPPCConfiguration) {
+        // Remove existing configuration for the same service if it exists
+        pppcConfigurations.removeAll { $0.service.id == configuration.service.id }
+        pppcConfigurations.append(configuration)
+        
+        // Update suggested services
+        suggestedServiceIDs.insert(configuration.service.id)
+        
+        // Persist to UserDefaults for wizard step persistence
+        savePPPCConfigurations()
+    }
+    
+    func removePPPCConfiguration(for serviceID: String) {
+        pppcConfigurations.removeAll { $0.service.id == serviceID }
+        suggestedServiceIDs.remove(serviceID)
+        
+        // Persist to UserDefaults for wizard step persistence
+        savePPPCConfigurations()
+    }
+    
+    func updatePPPCConfiguration(_ configuration: PPPCConfiguration) {
+        if let index = pppcConfigurations.firstIndex(where: { $0.service.id == configuration.service.id }) {
+            pppcConfigurations[index] = configuration
+            // Persist to UserDefaults for wizard step persistence
+            savePPPCConfigurations()
+        }
+    }
+    
+    func getPPPCConfiguration(for serviceID: String) -> PPPCConfiguration? {
+        return pppcConfigurations.first { $0.service.id == serviceID }
+    }
+    
+    private func savePPPCConfigurations() {
+        // Convert configurations to UserDefaults-compatible format
+        let configData = pppcConfigurations.map { config in
+            [
+                "serviceID": config.service.id,
+                "identifier": config.identifier,
+                "identifierType": config.identifierType.rawValue,
+                "codeRequirement": config.codeRequirement ?? "",
+                "allowed": config.allowed,
+                "userOverride": config.userOverride,
+                "comment": config.comment ?? ""
+            ]
+        }
+        
+        UserDefaults.standard.set(configData, forKey: "MacForge.PPPCConfigurations")
+        UserDefaults.standard.set(Array(suggestedServiceIDs), forKey: "MacForge.SuggestedServiceIDs")
+    }
+    
+    private func loadPPPCConfigurations() {
+        guard let configData = UserDefaults.standard.array(forKey: "MacForge.PPPCConfigurations") as? [[String: Any]] else {
+            return
+        }
+        
+        pppcConfigurations = configData.compactMap { data -> PPPCConfiguration? in
+            guard let serviceID = data["serviceID"] as? String,
+                  let identifier = data["identifier"] as? String,
+                  let identifierTypeRaw = data["identifierType"] as? String,
+                  let identifierType = PPPCIdentifierType(rawValue: identifierTypeRaw),
+                  let allowed = data["allowed"] as? Bool,
+                  let userOverride = data["userOverride"] as? Bool else {
+                return nil
+            }
+            
+            // Find the service from our catalog
+            let service = pppcServices.first { $0.id == serviceID } ?? PPPCService(
+                id: serviceID,
+                name: serviceID,
+                description: "Service for \(serviceID)",
+                category: .systemPolicy,
+                requiresBundleID: true,
+                requiresCodeRequirement: false,
+                requiresIdentifier: true
+            )
+            
+            var config = PPPCConfiguration(service: service, identifier: identifier, identifierType: identifierType)
+            config.allowed = allowed
+            config.userOverride = userOverride
+            config.codeRequirement = data["codeRequirement"] as? String
+            config.comment = data["comment"] as? String
+            
+            return config
+        }
+        
+        // Load suggested service IDs
+        if let suggestedIDs = UserDefaults.standard.array(forKey: "MacForge.SuggestedServiceIDs") as? [String] {
+            suggestedServiceIDs = Set(suggestedIDs)
+        }
     }
     
     // MARK: - Public Methods
@@ -318,7 +295,7 @@ final class BuilderModel: ObservableObject {
         )
     }
     
-    private func buildPPPCServices() -> [[String: Any]] {
+    func buildPPPCServices() -> [[String: Any]] {
         return pppcConfigurations.compactMap { config in
             var item: [String: Any] = [
                 "Service": config.service.id,
@@ -405,36 +382,61 @@ final class BuilderModel: ObservableObject {
             return copy
         }
         
+        // Clear existing PPPC configurations when applying a new template
+        pppcConfigurations.removeAll()
+        suggestedServiceIDs.removeAll()
+        
         if template.name == "Antivirus Setup" {
             if !dropped.contains(where: { $0.id == "pppc" }),
                let pppcPayload = library.first(where: { $0.id == "pppc" }) {
                 add(pppcPayload)
             }
             
-            // Add default PPPC configurations for antivirus
+            // Add default PPPC configurations for antivirus with proper service configuration
             let antivirusServices = ["SystemPolicyAllFiles", "ScreenCapture", "Accessibility"]
             for serviceID in antivirusServices {
-                // Create a basic PPPC service for testing
-                let service = PPPCService(
-                    id: serviceID,
-                    name: serviceID,
-                    description: "Service for \(serviceID)",
-                    category: .systemPolicy,
-                    requiresBundleID: true,
-                    requiresCodeRequirement: false,
-                    requiresIdentifier: true
-                )
-                
-                if let selectedApp = selectedApp {
-                    let config = PPPCConfiguration(
-                        service: service,
-                        identifier: selectedApp.bundleID
-                    )
-                    pppcConfigurations.append(config)
+                if let service = pppcServices.first(where: { $0.id == serviceID }) {
+                    if let selectedApp = selectedApp {
+                        let config = PPPCConfiguration(
+                            service: service,
+                            identifier: selectedApp.bundleID
+                        )
+                        addPPPCConfiguration(config)
+                    }
                 }
             }
-            suggestedServiceIDs = Set(antivirusServices)
+        } else if template.name == "Security Baseline" {
+            // Configure security baseline with proper PPPC settings
+            let securityServices = ["SystemPolicyAllFiles", "Accessibility", "InputMonitoring"]
+            for serviceID in securityServices {
+                if let service = pppcServices.first(where: { $0.id == serviceID }) {
+                    if let selectedApp = selectedApp {
+                        let config = PPPCConfiguration(
+                            service: service,
+                            identifier: selectedApp.bundleID
+                        )
+                        addPPPCConfiguration(config)
+                    }
+                }
+            }
+        } else if template.name == "Development Tools" {
+            // Configure development tools with appropriate permissions
+            let devServices = ["SystemPolicyAllFiles", "Accessibility", "AppleEvents"]
+            for serviceID in devServices {
+                if let service = pppcServices.first(where: { $0.id == serviceID }) {
+                    if let selectedApp = selectedApp {
+                        let config = PPPCConfiguration(
+                            service: service,
+                            identifier: selectedApp.bundleID
+                        )
+                        addPPPCConfiguration(config)
+                    }
+                }
+            }
         }
+        
+        // Save configurations after applying template
+        savePPPCConfigurations()
     }
     
     func applyCategorySuggestions(_ category: String) {

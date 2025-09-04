@@ -12,9 +12,10 @@ struct SettingsView: View {
     @ObservedObject var userSettings: UserSettings
     @Environment(\.dismiss) private var dismiss
     @State private var showingAddAccount = false
+    @State private var showingAddAIAccount = false
     @State private var selectedTab = "General"
     
-    private let tabs = ["General", "Profile Defaults", "Theme", "MDM Accounts"]
+    private let tabs = ["General", "Profile Defaults", "Theme", "MDM Accounts", "AI Tool Accounts", "Privacy"]
     
     var body: some View {
         VStack(spacing: 0) {
@@ -65,6 +66,12 @@ struct SettingsView: View {
                 
                 MDMAccountsTab(userSettings: userSettings, showingAddAccount: $showingAddAccount)
                     .tag("MDM Accounts")
+                
+                AIToolAccountsTab(userSettings: userSettings, showingAddAIAccount: $showingAddAIAccount)
+                    .tag("AI Tool Accounts")
+                
+                PrivacySettingsTab(userSettings: userSettings)
+                    .tag("Privacy")
             }
             .tabViewStyle(.automatic)
         }
@@ -72,6 +79,9 @@ struct SettingsView: View {
         .background(LCARSTheme.background)
         .sheet(isPresented: $showingAddAccount) {
             AddMDMAccountView(userSettings: userSettings)
+        }
+        .sheet(isPresented: $showingAddAIAccount) {
+            AddAIAccountView(userSettings: userSettings)
         }
     }
 }
@@ -273,6 +283,133 @@ struct MDMAccountsTab: View {
     
     private func deleteAccount(offsets: IndexSet) {
         userSettings.mdmAccounts.remove(atOffsets: offsets)
+    }
+}
+
+// MARK: - AI Tool Accounts Tab
+struct AIToolAccountsTab: View {
+    @ObservedObject var userSettings: UserSettings
+    @Binding var showingAddAIAccount: Bool
+    
+    var body: some View {
+        VStack(spacing: 20) {
+            HStack {
+                Text("Saved AI Tool Accounts")
+                    .font(.headline)
+                    .foregroundStyle(LCARSTheme.accent)
+                
+                Spacer()
+                
+                Button("Add Account") {
+                    showingAddAIAccount = true
+                }
+                .buttonStyle(.borderedProminent)
+            }
+            
+            if userSettings.aiAccounts.isEmpty {
+                VStack(spacing: 12) {
+                    Image(systemName: "brain.head.profile")
+                        .font(.system(size: 48))
+                        .foregroundStyle(LCARSTheme.textSecondary)
+                    
+                    Text("No AI accounts saved")
+                        .font(.title3)
+                        .foregroundStyle(LCARSTheme.textSecondary)
+                    
+                    Text("Add your AI provider accounts to quickly use them in Script Builder and Log Burner")
+                        .font(.body)
+                        .foregroundStyle(LCARSTheme.textMuted)
+                        .multilineTextAlignment(.center)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                List {
+                    ForEach(userSettings.aiAccounts) { account in
+                        AIAccountRow(account: account, userSettings: userSettings)
+                    }
+                    .onDelete(perform: deleteAccount)
+                }
+            }
+        }
+        .padding()
+    }
+    
+    private func deleteAccount(offsets: IndexSet) {
+        for index in offsets {
+            let account = userSettings.aiAccounts[index]
+            userSettings.deleteAIAccount(id: account.id)
+        }
+    }
+}
+
+// MARK: - AI Account Row
+struct AIAccountRow: View {
+    let account: AIAccount
+    @ObservedObject var userSettings: UserSettings
+    
+    var body: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text(account.displayName)
+                        .font(.headline)
+                        .foregroundStyle(LCARSTheme.textPrimary)
+                    
+                    if account.isDefault {
+                        Text("DEFAULT")
+                            .font(.caption2)
+                            .fontWeight(.bold)
+                            .foregroundStyle(LCARSTheme.accent)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(LCARSTheme.accent.opacity(0.2))
+                            .cornerRadius(4)
+                    }
+                    
+                    if !account.isActive {
+                        Text("INACTIVE")
+                            .font(.caption2)
+                            .fontWeight(.bold)
+                            .foregroundStyle(.red)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(.red.opacity(0.2))
+                            .cornerRadius(4)
+                    }
+                }
+                
+                Text(account.provider.displayName)
+                    .font(.caption)
+                    .foregroundStyle(LCARSTheme.textSecondary)
+                
+                Text(account.effectiveBaseURL)
+                    .font(.caption)
+                    .foregroundStyle(LCARSTheme.textMuted)
+                
+                Text("Model: \(account.effectiveModel)")
+                    .font(.caption)
+                    .foregroundStyle(LCARSTheme.textMuted)
+            }
+            
+            Spacer()
+            
+            VStack(spacing: 8) {
+                Button("Set Default") {
+                    userSettings.setDefaultAIAccount(id: account.id)
+                }
+                .buttonStyle(.bordered)
+                .disabled(account.isDefault)
+                
+                Button(account.isActive ? "Deactivate" : "Activate") {
+                    var updatedAccount = account
+                    updatedAccount.isActive.toggle()
+                    userSettings.updateAIAccount(updatedAccount)
+                }
+                .buttonStyle(.bordered)
+                .foregroundStyle(account.isActive ? .red : .green)
+            }
+        }
+        .padding(.vertical, 4)
     }
 }
 
@@ -541,6 +678,187 @@ struct AddMDMAccountView: View {
                 authStatus = "Debug Info:\n\(debugInfo)"
             }
         }
+    }
+}
+
+// MARK: - Privacy Settings Tab
+struct PrivacySettingsTab: View {
+    @ObservedObject var userSettings: UserSettings
+    @State private var showingPrivacyPolicy = false
+    @State private var showingDataExport = false
+    @State private var showingDataDeletion = false
+    
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                // Privacy Policy Section
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Privacy Policy")
+                        .font(.headline)
+                        .foregroundColor(LCARSTheme.textPrimary)
+                    
+                    Text("Review our privacy policy to understand how we collect, use, and protect your data.")
+                        .font(.subheadline)
+                        .foregroundColor(LCARSTheme.textSecondary)
+                    
+                    Button("View Privacy Policy") {
+                        showingPrivacyPolicy = true
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .buttonAccessibility(
+                        label: "View Privacy Policy",
+                        hint: "Open the privacy policy document"
+                    )
+                }
+                .padding()
+                .background(LCARSTheme.panel)
+                .cornerRadius(12)
+                
+                // Data Rights Section
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Your Data Rights")
+                        .font(.headline)
+                        .foregroundColor(LCARSTheme.textPrimary)
+                    
+                    Text("Under GDPR and other privacy regulations, you have specific rights regarding your personal data.")
+                        .font(.subheadline)
+                        .foregroundColor(LCARSTheme.textSecondary)
+                    
+                    VStack(spacing: 8) {
+                        Button("Export My Data") {
+                            showingDataExport = true
+                        }
+                        .buttonStyle(.bordered)
+                        .buttonAccessibility(
+                            label: "Export My Data",
+                            hint: "Download a copy of all your data in machine-readable format"
+                        )
+                        
+                        Button("Delete My Data") {
+                            showingDataDeletion = true
+                        }
+                        .buttonStyle(.bordered)
+                        .foregroundColor(.red)
+                        .buttonAccessibility(
+                            label: "Delete My Data",
+                            hint: "Permanently delete all your data from MacForge"
+                        )
+                    }
+                }
+                .padding()
+                .background(LCARSTheme.panel)
+                .cornerRadius(12)
+                
+                // Data Collection Section
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Data Collection")
+                        .font(.headline)
+                        .foregroundColor(LCARSTheme.textPrimary)
+                    
+                    VStack(alignment: .leading, spacing: 8) {
+                        DataCollectionRow(
+                            title: "MDM Account Information",
+                            description: "Server URLs, authentication tokens, and account preferences",
+                            isCollected: true
+                        )
+                        
+                        DataCollectionRow(
+                            title: "Profile Configurations",
+                            description: "PPPC settings, payload configurations, and templates",
+                            isCollected: true
+                        )
+                        
+                        DataCollectionRow(
+                            title: "Application Preferences",
+                            description: "Theme settings, default values, and UI preferences",
+                            isCollected: true
+                        )
+                        
+                        DataCollectionRow(
+                            title: "Log Analysis Data",
+                            description: "Temporary processing of uploaded log files (not stored)",
+                            isCollected: false
+                        )
+                        
+                        DataCollectionRow(
+                            title: "Package Analysis Data",
+                            description: "Temporary processing of uploaded packages (not stored)",
+                            isCollected: false
+                        )
+                    }
+                }
+                .padding()
+                .background(LCARSTheme.panel)
+                .cornerRadius(12)
+                
+                // Contact Information
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Contact & Support")
+                        .font(.headline)
+                        .foregroundColor(LCARSTheme.textPrimary)
+                    
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("For privacy-related questions or concerns:")
+                            .font(.subheadline)
+                            .foregroundColor(LCARSTheme.textSecondary)
+                        
+                        Text("Email: privacy@macforge.app")
+                            .font(.subheadline)
+                            .foregroundColor(LCARSTheme.accent)
+                        
+                        Text("Response Time: Within 72 hours")
+                            .font(.caption)
+                            .foregroundColor(LCARSTheme.textSecondary)
+                    }
+                }
+                .padding()
+                .background(LCARSTheme.panel)
+                .cornerRadius(12)
+            }
+            .padding()
+        }
+        .sheet(isPresented: $showingPrivacyPolicy) {
+            PrivacyPolicyView()
+        }
+        .sheet(isPresented: $showingDataExport) {
+            DataExportView(userSettings: userSettings)
+        }
+        .sheet(isPresented: $showingDataDeletion) {
+            DataDeletionView(userSettings: userSettings)
+        }
+    }
+}
+
+// MARK: - Data Collection Row
+struct DataCollectionRow: View {
+    let title: String
+    let description: String
+    let isCollected: Bool
+    
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: isCollected ? "checkmark.circle.fill" : "xmark.circle.fill")
+                .foregroundColor(isCollected ? .green : .red)
+                .imageAccessibility(
+                    label: isCollected ? "Data is collected" : "Data is not collected",
+                    hint: "Indicates whether this type of data is collected by MacForge"
+                )
+            
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundColor(LCARSTheme.textPrimary)
+                
+                Text(description)
+                    .font(.caption)
+                    .foregroundColor(LCARSTheme.textSecondary)
+            }
+            
+            Spacer()
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(title): \(description). \(isCollected ? "Data is collected" : "Data is not collected")")
     }
 }
 

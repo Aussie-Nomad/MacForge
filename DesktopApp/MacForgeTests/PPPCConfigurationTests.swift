@@ -229,43 +229,47 @@ struct PPPCServiceCatalogTests {
 struct PPPCConfigurationManagementTests {
     
     @Test("BuilderModel should properly manage PPPC configurations") func testConfigurationManagement() async throws {
-        let model = BuilderModel(
-            authenticationService: MockJAMFAuthenticationService(),
-            jamfService: nil,
-            profileExportService: MockProfileExportService()
-        )
-        
-        // Test adding configurations
-        let service = pppcServices.first!
-        let config = PPPCConfiguration(service: service, identifier: "com.test.app")
-        
-        model.pppcConfigurations.append(config)
-        #expect(model.pppcConfigurations.count == 1)
-        #expect(model.hasConfiguredPermissions() == true)
-        
-        // Test removing configurations
-        model.pppcConfigurations.removeAll()
-        #expect(model.pppcConfigurations.isEmpty)
-        #expect(model.hasConfiguredPermissions() == false)
+        await MainActor.run {
+            let model = BuilderModel(
+                authenticationService: MockJAMFAuthenticationService(),
+                jamfService: nil,
+                profileExportService: MockProfileExportService()
+            )
+            
+            // Test adding configurations
+            let service = pppcServices.first!
+            let config = PPPCConfiguration(service: service, identifier: "com.test.app")
+            
+            model.pppcConfigurations.append(config)
+            #expect(model.pppcConfigurations.count == 1)
+            #expect(model.hasConfiguredPermissions() == true)
+            
+            // Test removing configurations
+            model.pppcConfigurations.removeAll()
+            #expect(model.pppcConfigurations.isEmpty)
+            #expect(model.hasConfiguredPermissions() == false)
+        }
     }
     
     @Test("BuilderModel should validate PPPC configurations") func testConfigurationValidation() async throws {
-        let model = BuilderModel(
-            authenticationService: MockJAMFAuthenticationService(),
-            jamfService: nil,
-            profileExportService: MockProfileExportService()
-        )
-        
-        // Test with valid configuration
-        let validService = pppcServices.first!
-        let validConfig = PPPCConfiguration(service: validService, identifier: "com.valid.app")
-        model.pppcConfigurations.append(validConfig)
-        
-        #expect(model.hasConfiguredPermissions() == true)
-        
-        // Test with empty configurations
-        model.pppcConfigurations.removeAll()
-        #expect(model.hasConfiguredPermissions() == false)
+        await MainActor.run {
+            let model = BuilderModel(
+                authenticationService: MockJAMFAuthenticationService(),
+                jamfService: nil,
+                profileExportService: MockProfileExportService()
+            )
+            
+            // Test with valid configuration
+            let validService = pppcServices.first!
+            let validConfig = PPPCConfiguration(service: validService, identifier: "com.valid.app")
+            model.pppcConfigurations.append(validConfig)
+            
+            #expect(model.hasConfiguredPermissions() == true)
+            
+            // Test with empty configurations
+            model.pppcConfigurations.removeAll()
+            #expect(model.hasConfiguredPermissions() == false)
+        }
     }
 }
 
@@ -273,36 +277,38 @@ struct PPPCConfigurationManagementTests {
 struct PPPCExportTests {
     
     @Test("PPPC configurations should export correctly") func testConfigurationExport() async throws {
-        let model = BuilderModel(
-            authenticationService: MockJAMFAuthenticationService(),
-            jamfService: nil,
-            profileExportService: MockProfileExportService()
-        )
-        
-        // Add test configurations
-        let accessibilityService = pppcServices.first { $0.id == "Accessibility" }!
-        let accessibilityConfig = PPPCConfiguration(
-            service: accessibilityService,
-            identifier: "com.accessibility.app"
-        )
-        
-        let screenCaptureService = pppcServices.first { $0.id == "ScreenCapture" }!
-        let screenCaptureConfig = PPPCConfiguration(
-            service: screenCaptureService,
-            identifier: "com.screencapture.app"
-        )
-        
-        model.pppcConfigurations.append(contentsOf: [accessibilityConfig, screenCaptureConfig])
-        
-        // Test export
-        let exportedServices = model.buildPPPCServices()
-        #expect(exportedServices.count == 2)
-        
-        // Verify exported data structure
-        let accessibilityExport = exportedServices.first { $0["Service"] as? String == "Accessibility" }
-        #expect(accessibilityExport != nil)
-        #expect(accessibilityExport?["Authorization"] as? String == "Allow")
-        #expect(accessibilityExport?["ReceiverIdentifier"] as? String == "com.accessibility.app")
+        await MainActor.run {
+            let model = BuilderModel(
+                authenticationService: MockJAMFAuthenticationService(),
+                jamfService: nil,
+                profileExportService: MockProfileExportService()
+            )
+            
+            // Add test configurations
+            let accessibilityService = pppcServices.first { $0.id == "Accessibility" }!
+            let accessibilityConfig = PPPCConfiguration(
+                service: accessibilityService,
+                identifier: "com.accessibility.app"
+            )
+            
+            let screenCaptureService = pppcServices.first { $0.id == "ScreenCapture" }!
+            let screenCaptureConfig = PPPCConfiguration(
+                service: screenCaptureService,
+                identifier: "com.screencapture.app"
+            )
+            
+            model.pppcConfigurations.append(contentsOf: [accessibilityConfig, screenCaptureConfig])
+            
+            // Test export
+            let exportedServices = model.buildPPPCServices()
+            #expect(exportedServices.count == 2)
+            
+            // Verify exported data structure
+            let accessibilityExport = exportedServices.first { $0["Service"] as? String == "Accessibility" }
+            #expect(accessibilityExport != nil)
+            #expect(accessibilityExport?["Authorization"] as? String == "Allow")
+            #expect(accessibilityExport?["ReceiverIdentifier"] as? String == "com.accessibility.app")
+        }
     }
 }
 

@@ -129,6 +129,7 @@ struct JAMFPayload: Codable {
     }
 }
 
+
 // MARK: - JAMF Service Implementation
 final class JAMFService: JAMFServiceProtocol {
     private let baseURL: URL

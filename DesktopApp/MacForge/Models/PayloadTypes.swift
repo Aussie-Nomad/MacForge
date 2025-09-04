@@ -271,30 +271,6 @@ enum PayloadComplexity: String, CaseIterable {
     }
 }
 
-// MARK: - Profile Validation Error
-enum ProfileValidationError: LocalizedError, Equatable {
-    case emptyName
-    case emptyIdentifier
-    case invalidIdentifier
-    case noPayloads
-    case duplicatePayloadIdentifier(String)
-    
-    var errorDescription: String? {
-        switch self {
-        case .emptyName:
-            return "Profile name cannot be empty"
-        case .emptyIdentifier:
-            return "Profile identifier cannot be empty"
-        case .invalidIdentifier:
-            return "Profile identifier must be a valid reverse domain name (e.g., com.company.profile)"
-        case .noPayloads:
-            return "Profile must contain at least one payload"
-        case .duplicatePayloadIdentifier(let identifier):
-            return "Duplicate payload identifier: \(identifier)"
-        }
-    }
-}
-
 // MARK: - Profile Validation Warning
 struct ProfileValidationWarning {
     let type: WarningType
@@ -353,6 +329,7 @@ struct ComplianceError {
     let severity: ComplianceSeverity
     let requirement: String
     let remediation: String?
+    let missingRequiredFields: [String]?
     
     enum ComplianceType: String, CaseIterable {
         case gdpr = "GDPR"
@@ -392,12 +369,13 @@ struct ComplianceError {
         }
     }
     
-    init(type: ComplianceType, message: String, severity: ComplianceSeverity, requirement: String, remediation: String? = nil) {
+    init(type: ComplianceType, message: String, severity: ComplianceSeverity, requirement: String, remediation: String? = nil, missingRequiredFields: [String]? = nil) {
         self.type = type
         self.message = message
         self.severity = severity
         self.requirement = requirement
         self.remediation = remediation
+        self.missingRequiredFields = missingRequiredFields
     }
 }
 

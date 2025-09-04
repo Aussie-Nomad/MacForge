@@ -2,7 +2,7 @@ name: Branch Synchronization
 
 on:
   workflow_run:
-    workflows: ["Build and Test MacForge", "Swift CI"]
+    workflows: ["MacForge CI/CD", "Swift CI"]
     types: [completed]
     branches: [main]
 
@@ -19,55 +19,26 @@ jobs:
         token: ${{ secrets.GITHUB_TOKEN }}
         fetch-depth: 0
     
-    - name: Sync development branch with main
+    - name: Check if development branch exists
+      run: |
+        echo "Checking for development branch..."
+        if git show-ref --verify --quiet refs/remotes/origin/development; then
+          echo "Development branch exists"
+          echo "DEVELOPMENT_EXISTS=true" >> $GITHUB_ENV
+        else
+          echo "Development branch does not exist - skipping sync"
+          echo "DEVELOPMENT_EXISTS=false" >> $GITHUB_ENV
+        fi
+    
+    - name: Sync development branch
+      if: env.DEVELOPMENT_EXISTS == 'true'
       run: |
         echo "Syncing development branch with main..."
         git config --global user.name 'github-actions[bot]'
         git config --global user.email 'github-actions[bot]@users.noreply.github.com'
         
-        # Check if development branch exists
-        if git show-ref --verify --quiet refs/remotes/origin/development; then
-          echo "Development branch exists, syncing..."
-          git checkout development
-          git pull origin development
-          git merge origin/main --no-edit || echo "Merge conflicts detected"
-          git push origin development
-          echo "Development branch synced successfully"
-        else
-          echo "Development branch does not exist, skipping sync"
-        fi
-
-  cleanup-stale-branches:
-    name: Cleanup Stale Branches
-    runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        fetch-depth: 0
-    
-    - name: List all branches
-      run: |
-        echo "Current branches:"
-        git branch -r
-        echo ""
-        echo "Local branches:"
-        git branch
-    
-    - name: Check branch status
-      run: |
-        echo "Checking branch status..."
-        for branch in development; do
-          if git show-ref --verify --quiet refs/remotes/origin/$branch; then
-            echo "Branch $branch exists"
-            git log --oneline origin/main..origin/$branch | head -5
-            echo "Commits ahead of main: $(git rev-list --count origin/main..origin/$branch)"
-            echo "Commits behind main: $(git rev-list --count origin/$branch..origin/main)"
-            echo "---"
-          else
-            echo "Branch $branch does not exist"
-          fi
-        done
+        git checkout development
+        git pull origin development
+        git merge origin/main --no-edit || echo "Merge conflicts detected - manual intervention required"
+        git push origin development || echo "Push failed - manual intervention required"
+        echo "Development branch sync completed"

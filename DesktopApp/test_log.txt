@@ -1,0 +1,16 @@
+2024-01-15 10:30:15 [INFO] Application started successfully
+2024-01-15 10:30:16 [WARNING] Configuration file not found, using defaults
+2024-01-15 10:30:17 [ERROR] Failed to connect to database server
+2024-01-15 10:30:18 [CRITICAL] Authentication service unavailable
+2024-01-15 10:30:19 [INFO] Retrying connection attempt 1
+2024-01-15 10:30:20 [ERROR] Connection timeout after 30 seconds
+2024-01-15 10:30:21 [WARNING] Falling back to cached data
+2024-01-15 10:30:22 [SECURITY] Unauthorized access attempt from 192.168.1.100
+2024-01-15 10:30:23 [INFO] User login successful for admin@company.com
+2024-01-15 10:30:24 [ERROR] File system error: Permission denied
+2024-01-15 10:30:25 [WARNING] Disk space low: 15% remaining
+2024-01-15 10:30:26 [INFO] Backup process completed
+2024-01-15 10:30:27 [SECURITY] Password change requested for user john.doe
+2024-01-15 10:30:28 [ERROR] Network interface eth0 down
+2024-01-15 10:30:29 [CRITICAL] System memory usage at 95%
+2024-01-15 10:30:30 [INFO] System shutdown initiated

@@ -8,7 +8,7 @@
 import SwiftUI
 import Foundation
 
-// MARK: - Profile Builder View Model
+// MARK: - PPPC Profile Creator View Model
 @MainActor
 final class ProfileBuilderViewModel: ObservableObject {
     // MARK: - Dependencies
@@ -42,16 +42,60 @@ final class ProfileBuilderViewModel: ObservableObject {
     
     func nextStep() {
         guard canAdvanceToNextStep else { return }
-        withAnimation {
+        
+        // Validate current step before advancing
+        if !validateCurrentStep() {
+            return
+        }
+        
+        withAnimation(.easeInOut(duration: 0.3)) {
             wizardStep = min(3, wizardStep + 1)
         }
+        
+        // Update builder model wizard step for consistency
+        builderModel.wizardStep = wizardStep
     }
     
     func previousStep() {
         guard canGoToPreviousStep else { return }
-        withAnimation {
+        
+        withAnimation(.easeInOut(duration: 0.3)) {
             wizardStep = max(1, wizardStep - 1)
         }
+        
+        // Update builder model wizard step for consistency
+        builderModel.wizardStep = wizardStep
+    }
+    
+    func goToStep(_ step: Int) {
+        guard step >= 1 && step <= 3 else { return }
+        
+        // Validate that we can go to the target step
+        if step > wizardStep && !canAdvanceToStep(step) {
+            return
+        }
+        
+        withAnimation(.easeInOut(duration: 0.3)) {
+            wizardStep = step
+        }
+        
+        // Update builder model wizard step for consistency
+        builderModel.wizardStep = wizardStep
+    }
+    
+    func resetWizard() {
+        withAnimation(.easeInOut(duration: 0.3)) {
+            wizardStep = 1
+        }
+        
+        // Clear any existing configurations when resetting
+        builderModel.pppcConfigurations.removeAll()
+        builderModel.suggestedServiceIDs.removeAll()
+        builderModel.dropped.removeAll()
+        builderModel.selectedApp = nil
+        
+        // Update builder model wizard step for consistency
+        builderModel.wizardStep = wizardStep
     }
     
     func togglePayload(_ payload: Payload) {
@@ -114,11 +158,11 @@ final class ProfileBuilderViewModel: ObservableObject {
     var canAdvanceToNextStep: Bool {
         switch wizardStep {
         case 1:
-            return hasPPPCPayload
+            return hasPPPCPayload && hasValidAppSelection
         case 2:
-            return hasConfiguredPermissions
+            return hasConfiguredPermissions && hasValidPermissions
         case 3:
-            return true
+            return hasValidProfileSettings
         default:
             return false
         }
@@ -126,6 +170,21 @@ final class ProfileBuilderViewModel: ObservableObject {
     
     var canGoToPreviousStep: Bool {
         return wizardStep > 1
+    }
+    
+    var canAdvanceToStep: (Int) -> Bool {
+        return { targetStep in
+            switch targetStep {
+            case 1:
+                return true // Always can go to first step
+            case 2:
+                return self.hasPPPCPayload && self.hasValidAppSelection
+            case 3:
+                return self.hasPPPCPayload && self.hasValidAppSelection && self.hasConfiguredPermissions && self.hasValidPermissions
+            default:
+                return false
+            }
+        }
     }
     
     var nextButtonTitle: String {
@@ -136,6 +195,10 @@ final class ProfileBuilderViewModel: ObservableObject {
         return builderModel.dropped.contains { $0.id == "pppc" }
     }
     
+    var hasValidAppSelection: Bool {
+        return builderModel.selectedApp != nil
+    }
+    
     var hasConfiguredPermissions: Bool {
         // Check if PPPC payload is selected and has configurations
         if builderModel.dropped.contains(where: { $0.id == "pppc" }) {
@@ -144,11 +207,45 @@ final class ProfileBuilderViewModel: ObservableObject {
         return true // Other payloads don't need special permission configuration
     }
     
+    var hasValidPermissions: Bool {
+        // Validate that all PPPC configurations have required fields
+        for config in builderModel.pppcConfigurations {
+            if config.identifier.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                return false
+            }
+            
+            if config.service.requiresCodeRequirement && (config.codeRequirement?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true) {
+                return false
+            }
+        }
+        return true
+    }
+    
+    var hasValidProfileSettings: Bool {
+        let settings = builderModel.settings
+        return !settings.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+               !settings.identifier.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+               !settings.organization.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+    
     var humanSummary: [String] {
         return builderModel.humanSummary()
     }
     
     // MARK: - Private Methods
+    
+    private func validateCurrentStep() -> Bool {
+        switch wizardStep {
+        case 1:
+            return hasPPPCPayload && hasValidAppSelection
+        case 2:
+            return hasConfiguredPermissions && hasValidPermissions
+        case 3:
+            return hasValidProfileSettings
+        default:
+            return false
+        }
+    }
     
     private func submitToJAMF(baseURL: URL, clientID: String, clientSecret: String) async {
         isSubmitting = true

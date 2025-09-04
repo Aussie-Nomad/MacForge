@@ -1,4 +1,4 @@
-# MacForge 🚀
+# MacForge
 
 [![macOS](https://img.shields.io/badge/macOS-12.0+-blue.svg)](https://www.apple.com/macos/)
 [![Swift](https://img.shields.io/badge/Swift-6.0-orange.svg)](https://swift.org/)
@@ -6,148 +6,99 @@
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Status](https://img.shields.io/badge/Status-Beta-orange.svg)](https://github.com/Aussie-Nomad/MacForge)
 
-**MacForge** is a professional macOS application for creating and managing configuration profiles, with specialized support for **Privacy Preferences Policy Control (PPPC)** and **MDM integration**. Built with SwiftUI and following Apple's design guidelines, it provides an intuitive wizard-based interface for enterprise administrators and developers.
+A comprehensive macOS MDM toolkit for enterprise administrators. Create configuration profiles, analyze packages, manage devices, and automate Mac administration tasks.
 
-## 🎯 **What is MacForge?**
+## What is MacForge?
 
-MacForge simplifies the creation of macOS configuration profiles, particularly focusing on PPPC profiles that manage app permissions. It provides:
+MacForge is a modern macOS application that provides essential tools for Mac administrators:
 
-- **🔐 Comprehensive PPPC Management**: 50+ privacy services across 7 categories
-- **🏢 MDM Integration**: Direct submission to JAMF Pro and other MDMs
-- **🎨 Modern UI**: Dual theme system (Default + LCARS Star Trek-inspired)
-- **🛠️ Developer Tools**: Package analysis, device management, and automation
-- **📱 Drag & Drop**: Simply drop any .app file for automatic configuration
+- **Profile Workbench (PPPC)** - Create and manage configuration profiles with 50+ privacy services
+- **Package Casting** 📦 - JAMF Composer-inspired package management and repackaging
+- **Log Burner** 🔥 - AI-powered log analysis with smart pattern recognition
+- **Device Foundry** - Device lookup and management tools
+- **Script Smelter** 🤖 - AI-assisted script generation with OpenAI, Anthropic, and Ollama support
+- **MDM Integration** - Direct submission to JAMF Pro, Intune, Kandji, and Mosyle
+- **AI Tool Accounts** - Secure credential management for AI providers
 
 <img width="3360" height="2226" alt="Screenshot 2025-08-28 at 21 37 20" src="https://github.com/user-attachments/assets/656e66a7-2f47-41ab-9527-a8bb3c36381f" />
 
-## 🚀 **Quick Start**
+## Quick Start
 
-### **For End Users**
-1. **Download**: Get the latest release from [Releases](https://github.com/Aussie-Nomad/MacForge/releases)
-2. **Install**: Drag MacForge to your Applications folder
-3. **Launch**: Start building profiles with the intuitive wizard interface
+### For End Users
+1. Download the latest release from [Releases](https://github.com/Aussie-Nomad/MacForge/releases)
+2. Drag MacForge to your Applications folder
+3. Launch and start building profiles
 
-### **For Developers**
-1. **Clone**: `git clone https://github.com/Aussie-Nomad/MacForge.git`
-2. **Open**: `open MacForge/DesktopApp/MacForge.xcodeproj`
-3. **Build**: `xcodebuild -scheme MacForge build`
-4. **Run**: Launch from Xcode or build the app
+### For Developers
+1. Clone: `git clone https://github.com/Aussie-Nomad/MacForge.git`
+2. Open: `open MacForge/DesktopApp/MacForge.xcodeproj`
+3. Build: `xcodebuild -scheme MacForge build`
+4. Run from Xcode
 
-### **For Contributors**
-1. **Fork** the repository
-2. **Check** [Contributor WIKI](DesktopApp/MacForge/Contributor_WIKI.md) for current status
-3. **Review** [Development Guidelines](DesktopApp/MacForge/WIKI.md#development-guidelines)
-4. **Submit** pull requests with tests and documentation
+### For Contributors
+1. Fork the repository
+2. Check [Contributor WIKI](Contributor_WIKI.md) for current status
+3. Review [Feature WIKI](FEATURE_WIKI.md) for detailed information
+4. Submit pull requests with tests
 
-## 📁 **Project Structure**
+## AI Tool Accounts Setup
 
-```
-MacForge/
-├── DesktopApp/              # macOS application
-│   ├── MacForge/           # Main application code
-│   ├── MacForgeTests/      # Unit tests
-│   ├── MacForgeUITests/    # UI tests
-│   └── README.md           # Desktop app documentation
-├── docs/                    # Additional documentation
-├── scripts/                 # Build and deployment scripts
-└── README.md               # This file
-```
+MacForge supports multiple AI providers for script generation and log analysis. Configure your AI accounts in **Settings > AI Tool Accounts**.
 
-## 📚 **Documentation**
+### Supported Providers
 
-| **Document** | **Purpose** | **Audience** |
-|--------------|-------------|--------------|
-| **[DesktopApp README](DesktopApp/README.md)** | Detailed app documentation | Users & Developers |
-| **[Contributor WIKI](DesktopApp/MacForge/Contributor_WIKI.md)** | Development status & guidelines | Contributors |
-| **[Project WIKI](DesktopApp/MacForge/WIKI.md)** | Comprehensive project docs | All users |
-| **[Test Plan](DesktopApp/MacForgeTests/TestPlan.md)** | Testing strategy | Developers |
+- **OpenAI** - GPT models (requires API key)
+- **Anthropic** - Claude models (requires API key)
+- **Ollama** - Local models (no API key required)
+- **Custom** - Any OpenAI-compatible endpoint
 
-## 🏗️ **Architecture**
+### Ollama Setup (Recommended for Testing)
 
-MacForge follows the **MVVM (Model-View-ViewModel)** architecture pattern:
+Ollama provides free, local AI models perfect for testing and development:
 
-- **Models**: Data structures for PPPC services and configurations
-- **Views**: SwiftUI interfaces with dual theme support
-- **ViewModels**: State management and business logic
-- **Services**: MDM integration and profile export
-- **Shared**: Common utilities and theme management
+#### Install Ollama
+1. **Download**: Go to [ollama.com/download](https://ollama.com/download)
+2. **Install**: Download the macOS .dmg and drag the Ollama app into Applications
+3. **Launch**: Launch the app once to start the background service
 
-## 🧪 **Testing**
-
-Comprehensive testing infrastructure with >90% coverage goals:
-
+#### Install Models
 ```bash
-# Run all tests
-xcodebuild test -scheme MacForge -destination 'platform=macOS'
+# Install via Homebrew (alternative)
+brew install ollama
 
-# Run specific test suites
-xcodebuild test -scheme MacForge -destination 'platform=macOS' -only-testing:MacForgeTests
-xcodebuild test -scheme MacForge -destination 'platform=macOS' -only-testing:MacForgeUITests
+# Pull recommended models
+ollama pull mistral:7b-instruct
+ollama pull codellama:7b-instruct
+
+# Verify installation
+curl http://localhost:11434/v1/models
 ```
 
-## 📊 **Current Status**
+#### Configure in MacForge
+1. Open **Settings > AI Tool Accounts**
+2. Click **Add Account**
+3. Select **Ollama** as provider
+4. Set URL to: `http://localhost:11434`
+5. Choose model: `codellama:7b-instruct` or `mistral:7b-instruct`
+6. Set as default for testing
 
-**Version**: 1.1.0 (Beta)  
-**Status**: ✅ **BUILD SUCCESSFUL** - All critical issues resolved  
-**Last Updated**: August 28, 2025  
-**Build Status**: 🟢 **PASSING** - CI/CD ready  
+### API Key Setup (OpenAI/Anthropic)
 
-### **✅ Working Features**
-- Application launch and navigation
-- Profile Builder with PPPC support
-- Application drop zone and bundle ID extraction
-- Template system (Security Baseline, Network, Antivirus)
-- Theme switching (Default + LCARS)
-- Profile export to .mobileconfig
-- JAMF Pro authentication
-- Comprehensive testing infrastructure
-- **NEW**: Fixed theme system and component architecture
-- **NEW**: Resolved all build-blocking issues
+1. Get API keys from [OpenAI](https://platform.openai.com/api-keys) or [Anthropic](https://console.anthropic.com/)
+2. Add account in **Settings > AI Tool Accounts**
+3. Enter API key and preferred model
+4. Test connectivity before setting as default
 
-### **🚧 In Progress**
-- Enhanced PPPC configuration interface
-- Advanced template service configuration
-- Profile validation and preview improvements
-- Complete MDM integration features
-- Performance optimizations and UI refinements
+## Documentation
 
-### **🔧 Recently Fixed**
-- ✅ **Theme System**: Resolved LCARS theme access issues
-- ✅ **Component Architecture**: Fixed missing ThemeSwitcher and component imports
-- ✅ **Build System**: All critical compilation errors resolved
-- ✅ **CI/CD**: GitHub Actions workflow now functional
+- **[Contributor WIKI](Contributor_WIKI.md)** - Development status, roadmap, and contributor guidelines
+- **[Feature WIKI](FEATURE_WIKI.md)** - Detailed feature documentation and rationale
 
-## 🔗 **Related Projects**
-
-- **[Apple Device Management](https://github.com/apple/device-management)**: Apple's device management reference
-- **[NanoMDM](https://github.com/micromdm/nanomdm)**: Minimalist Apple MDM server
-- **[Jamf Pro SDK Python](https://github.com/macadmins/jamf-pro-sdk-python)**: Python client for Jamf Pro
-- **[PPPC Utility](https://github.com/jamf/PPPC-Utility)**: Jamf's PPPC management tool
-
-## 🤝 **Contributing**
-
-We welcome contributions! See our [Contributor WIKI](DesktopApp/MacForge/Contributor_WIKI.md) for:
-
-- Current development status and known issues
-- Areas needing help and contribution guidelines
-- Code standards and architecture patterns
-- Testing requirements and quality metrics
-
-## 📄 **License**
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 📞 **Support & Community**
+## Support
 
-- **GitHub Issues**: [Report bugs](https://github.com/Aussie-Nomad/MacForge/issues) and [request features](https://github.com/Aussie-Nomad/MacForge/issues/new)
-- **GitHub Discussions**: [Join the conversation](https://github.com/Aussie-Nomad/MacForge/discussions)
-- **Documentation**: Check our [WIKI](DesktopApp/MacForge/WIKI.md) for detailed information
-
----
-
-**Made for the macOS community**
-
-[![GitHub stars](https://img.shields.io/github/stars/Aussie-Nomad/MacForge?style=social)](https://github.com/Aussie-Nomad/MacForge/stargazers)
-[![GitHub forks](https://img.shields.io/github/forks/Aussie-Nomad/MacForge?style=social)](https://github.com/Aussie-Nomad/MacForge/network)
-[![GitHub issues](https://img.shields.io/github/issues/Aussie-Nomad/MacForge)](https://github.com/Aussie-Nomad/MacForge/issues)
-[![GitHub pull requests](https://img.shields.io/github/issues-pr/Aussie-Nomad/MacForge)](https://github.com/Aussie-Nomad/MacForge/pulls)
+- **Issues**: [GitHub Issues](https://github.com/Aussie-Nomad/MacForge/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/Aussie-Nomad/MacForge/discussions)

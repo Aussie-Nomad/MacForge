@@ -2,7 +2,7 @@
 //  ProfileBuilderHostView.swift
 //  MacForge
 //
-//  Profile Builder Host View - Uses the comprehensive ProfileBuilderWizard
+//  PPPC Profile Creator Host View - Uses the comprehensive ProfileBuilderWizard
 //  for guided profile creation with 4-step process.
 //
 

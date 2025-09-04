@@ -2,7 +2,7 @@
 //  ProfileBuilderComponents.swift
 //  MacForge
 //
-//  UI Components for the Profile Builder Wizard
+//  UI Components for the PPPC Profile Creator Wizard
 //
 
 import SwiftUI

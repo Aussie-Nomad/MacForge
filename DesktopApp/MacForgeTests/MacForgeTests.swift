@@ -69,115 +69,123 @@ struct ModelTests {
 struct BuilderModelTests {
     
     @Test("BuilderModel should properly manage payloads") func testPayloadManagement() async throws {
-        let model = BuilderModel(
-            authenticationService: JAMFAuthenticationService(),
-            jamfService: nil,
-            profileExportService: MockProfileExportService()
-        )
-        
-        // Test adding payloads
-        let payload = Payload(
-            id: "test",
-            name: "Test Payload",
-            description: "Test Description",
-            platforms: ["macOS"],
-            icon: "test-icon",
-            category: "Test"
-        )
-        
-        model.add(payload)
-        #expect(model.dropped.count == 1)
-        #expect(model.dropped.first?.id == "test")
-        
-        // Test removing payloads
-        model.remove("test")
-        #expect(model.dropped.isEmpty)
+        await MainActor.run {
+            let model = BuilderModel(
+                authenticationService: JAMFAuthenticationService(),
+                jamfService: nil,
+                profileExportService: MockProfileExportService()
+            )
+            
+            // Test adding payloads
+            let payload = Payload(
+                id: "test",
+                name: "Test Payload",
+                description: "Test Description",
+                platforms: ["macOS"],
+                icon: "test-icon",
+                category: "Test"
+            )
+            
+            model.add(payload)
+            #expect(model.dropped.count == 1)
+            #expect(model.dropped.first?.id == "test")
+            
+            // Test removing payloads
+            model.remove("test")
+            #expect(model.dropped.isEmpty)
+        }
     }
     
     @Test("BuilderModel should properly handle PPPC configurations") func testPPPCConfigurationManagement() async throws {
-        let model = BuilderModel(
-            authenticationService: JAMFAuthenticationService(),
-            jamfService: nil,
-            profileExportService: MockProfileExportService()
-        )
-        
-        let service = PPPCService(
-            id: "Accessibility",
-            name: "Accessibility",
-            description: "Accessibility services",
-            category: .accessibility,
-            requiresBundleID: true,
-            requiresCodeRequirement: false,
-            requiresIdentifier: true
-        )
-        
-        let config = PPPCConfiguration(service: service, identifier: "com.test.app")
-        
-        model.pppcConfigurations.append(config)
-        #expect(model.hasConfiguredPermissions() == true)
-        #expect(model.pppcConfigurations.count == 1)
+        await MainActor.run {
+            let model = BuilderModel(
+                authenticationService: JAMFAuthenticationService(),
+                jamfService: nil,
+                profileExportService: MockProfileExportService()
+            )
+            
+            let service = PPPCService(
+                id: "Accessibility",
+                name: "Accessibility",
+                description: "Accessibility services",
+                category: .accessibility,
+                requiresBundleID: true,
+                requiresCodeRequirement: false,
+                requiresIdentifier: true
+            )
+            
+            let config = PPPCConfiguration(service: service, identifier: "com.test.app")
+            
+            model.pppcConfigurations.append(config)
+            #expect(model.hasConfiguredPermissions() == true)
+            #expect(model.pppcConfigurations.count == 1)
+        }
     }
     
     @Test("BuilderModel should properly apply templates") func testTemplateApplication() async throws {
-        let model = BuilderModel(
-            authenticationService: JAMFAuthenticationService(),
-            jamfService: nil,
-            profileExportService: MockProfileExportService()
-        )
-        
-        let template = TemplateProfile(
-            name: "Test Template",
-            description: "Test template description",
-            payloadIDs: ["pppc", "restrictions"]
-        )
-        
-        model.apply(template: template)
-        
-        #expect(model.dropped.count == 2)
-        #expect(model.dropped.contains { $0.id == "pppc" })
-        #expect(model.dropped.contains { $0.id == "restrictions" })
+        await MainActor.run {
+            let model = BuilderModel(
+                authenticationService: JAMFAuthenticationService(),
+                jamfService: nil,
+                profileExportService: MockProfileExportService()
+            )
+            
+            let template = TemplateProfile(
+                name: "Test Template",
+                description: "Test template description",
+                payloadIDs: ["pppc", "restrictions"]
+            )
+            
+            model.apply(template: template)
+            
+            #expect(model.dropped.count == 2)
+            #expect(model.dropped.contains { $0.id == "pppc" })
+            #expect(model.dropped.contains { $0.id == "restrictions" })
+        }
     }
 }
 
-// MARK: - Profile Builder ViewModel Tests
+    // MARK: - PPPC Profile Creator ViewModel Tests
 struct ProfileBuilderViewModelTests {
     
     @Test("ProfileBuilderViewModel should properly manage wizard steps") func testWizardStepManagement() async throws {
-        let model = BuilderModel(
-            authenticationService: JAMFAuthenticationService(),
-            jamfService: nil,
-            profileExportService: MockProfileExportService()
-        )
-        
-        let viewModel = ProfileBuilderViewModel(builderModel: model)
-        
-        #expect(viewModel.currentStep == 1)
-        #expect(viewModel.canAdvanceToNextStep == false)
-        
-        // Add PPPC payload to enable next step
-        model.dropped.append(Payload(
-            id: "pppc",
-            name: "PPPC",
-            description: "Privacy Preferences",
-            platforms: ["macOS"],
-            icon: "lock.shield",
-            category: "Security"
-        ))
-        
-        #expect(viewModel.hasPPPCPayload == true)
-        #expect(viewModel.canAdvanceToNextStep == true)
+        await MainActor.run {
+            let model = BuilderModel(
+                authenticationService: JAMFAuthenticationService(),
+                jamfService: nil,
+                profileExportService: MockProfileExportService()
+            )
+            
+            let viewModel = ProfileBuilderViewModel(builderModel: model)
+            
+            #expect(viewModel.currentStep == 1)
+            #expect(viewModel.canAdvanceToNextStep == false)
+            
+            // Add PPPC payload to enable next step
+            model.dropped.append(Payload(
+                id: "pppc",
+                name: "PPPC",
+                description: "Privacy Preferences",
+                platforms: ["macOS"],
+                icon: "lock.shield",
+                category: "Security"
+            ))
+            
+            #expect(viewModel.hasPPPCPayload == true)
+            #expect(viewModel.canAdvanceToNextStep == true)
+        }
     }
     
     @Test("ProfileBuilderViewModel should properly handle step navigation") func testStepNavigation() async throws {
-        let model = BuilderModel(
-            authenticationService: JAMFAuthenticationService(),
-            jamfService: nil,
-            profileExportService: MockProfileExportService()
-        )
-        
-        let viewModel = ProfileBuilderViewModel(builderModel: model)
-        
         await MainActor.run {
+            let model = BuilderModel(
+                authenticationService: JAMFAuthenticationService(),
+                jamfService: nil,
+                profileExportService: MockProfileExportService()
+            )
+            
+            let viewModel = ProfileBuilderViewModel(builderModel: model)
+            
             // Add PPPC payload
             model.dropped.append(Payload(
                 id: "pppc",
@@ -231,7 +239,7 @@ struct AuthenticationServiceTests {
 }
 
 // MARK: - Mock Services for Testing
-class MockJAMFAuthenticationService: ObservableObject {
+class MockJAMFAuthenticationService: JAMFAuthenticationServiceProtocol {
     @Published var isAuthenticated = false
     @Published var currentToken: String?
     
@@ -243,9 +251,17 @@ class MockJAMFAuthenticationService: ObservableObject {
         return "mock-token"
     }
     
+    func authenticateBasic(username: String, password: String, serverURL: String) async throws -> String {
+        return "mock-token"
+    }
+    
     func logout() {
         currentToken = nil
         isAuthenticated = false
+    }
+    
+    func debugJAMFEndpoints(serverURL: String) async -> String {
+        return "Mock JAMF Debug Info\n✅ Server ping: SUCCESS\n✅ Auth endpoint: REACHABLE\n✅ JSSResource/computers: HTTP 401\n✅ JSSResource/osxconfigurationprofiles: HTTP 401\n✅ JSSResource/accounts: HTTP 401\n\nDebug completed at: \(Date())"
     }
 }
 
@@ -269,3 +285,4 @@ struct TestConfiguration {
     static let testBundleID = "com.test.app"
     static let testAppPath = "/Applications/Test.app"
 }
+
