@@ -10,23 +10,122 @@ import Foundation
 
 // MARK: - JAMF Service Protocol
 protocol JAMFServiceProtocol {
+    // Profile Operations
     func uploadProfile(name: String, xmlData: Data) async throws
     func uploadOrUpdateProfile(name: String, xmlData: Data) async throws
     func findProfileByName(_ name: String) async throws -> JAMFProfile?
+    func getAllConfigurationProfiles() async throws -> [JAMFProfile]
+    func getConfigurationProfile(by id: Int) async throws -> JAMFProfile?
+    
+    // Policy Operations
+    func getAllPolicies() async throws -> [JAMFPolicy]
+    func getPolicy(by id: Int) async throws -> JAMFPolicy?
+    func getPolicy(by name: String) async throws -> JAMFPolicy?
+    
+    // Connection Testing
+    func testConnection() async throws -> Bool
 }
 
 // MARK: - JAMF Profile Model
-struct JAMFProfile: Codable {
+struct JAMFProfile: Codable, Identifiable {
     let id: Int
     let name: String
     let distributionMethod: String?
     let payloads: String?
+    let description: String?
+    let category: String?
+    let site: String?
+    let userRemovable: Bool?
+    let level: String?
+    let redeployOnUpdate: String?
+    let payloadsData: [JAMFPayload]?
     
     enum CodingKeys: String, CodingKey {
         case id
         case name
         case distributionMethod = "distribution_method"
         case payloads
+        case description
+        case category
+        case site
+        case userRemovable = "user_removable"
+        case level
+        case redeployOnUpdate = "redeploy_on_update"
+        case payloadsData = "payloads_data"
+    }
+}
+
+// MARK: - JAMF Policy Model
+struct JAMFPolicy: Codable, Identifiable {
+    let id: Int
+    let name: String
+    let enabled: Bool?
+    let trigger: String?
+    let triggerCheckin: Bool?
+    let triggerEnrollmentComplete: Bool?
+    let triggerLogin: Bool?
+    let triggerLogout: Bool?
+    let triggerNetworkStateChanged: Bool?
+    let triggerStartup: Bool?
+    let triggerOther: String?
+    let frequency: String?
+    let retryEvent: String?
+    let retryAttempts: Int?
+    let notifyOnEachFailedRetry: Bool?
+    let locationUserOnly: Bool?
+    let targetDrive: String?
+    let offline: Bool?
+    let category: String?
+    let site: String?
+    let payloads: [JAMFPayload]?
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case name
+        case enabled
+        case trigger
+        case triggerCheckin = "trigger_checkin"
+        case triggerEnrollmentComplete = "trigger_enrollment_complete"
+        case triggerLogin = "trigger_login"
+        case triggerLogout = "trigger_logout"
+        case triggerNetworkStateChanged = "trigger_network_state_changed"
+        case triggerStartup = "trigger_startup"
+        case triggerOther = "trigger_other"
+        case frequency
+        case retryEvent = "retry_event"
+        case retryAttempts = "retry_attempts"
+        case notifyOnEachFailedRetry = "notify_on_each_failed_retry"
+        case locationUserOnly = "location_user_only"
+        case targetDrive = "target_drive"
+        case offline
+        case category
+        case site
+        case payloads
+    }
+}
+
+// MARK: - JAMF Payload Model
+struct JAMFPayload: Codable {
+    let payloadType: String?
+    let payloadIdentifier: String?
+    let payloadUUID: String?
+    let payloadVersion: Int?
+    let payloadDisplayName: String?
+    let payloadDescription: String?
+    let payloadOrganization: String?
+    let payloadRemovalDisallowed: Bool?
+    let payloadContent: String?
+    
+    enum CodingKeys: String, CodingKey {
+        case payloadType = "PayloadType"
+        case payloadIdentifier = "PayloadIdentifier"
+        case payloadUUID = "PayloadUUID"
+        case payloadVersion = "PayloadVersion"
+        case payloadDisplayName = "PayloadDisplayName"
+        case payloadDescription = "PayloadDescription"
+        case payloadOrganization = "PayloadOrganization"
+        case payloadRemovalDisallowed = "PayloadRemovalDisallowed"
+        case payloadContent = "PayloadContent"
     }
 }
 
@@ -133,6 +232,179 @@ final class JAMFService: JAMFServiceProtocol {
         return profile
     }
     
+    // MARK: - Configuration Profile Retrieval
+    
+    func getAllConfigurationProfiles() async throws -> [JAMFProfile] {
+        let endpoint = "JSSResource/osxconfigurationprofiles"
+        let url = baseURL.appendingPathComponent(endpoint)
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue("MacForge/1.0", forHTTPHeaderField: "User-Agent")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.timeoutInterval = 30.0
+        
+        let (data, response) = try await session.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw JAMFError.invalidResponse
+        }
+        
+        guard httpResponse.statusCode == 200 else {
+            let errorBody = String(data: data, encoding: .utf8) ?? "Unknown error"
+            throw JAMFError.http(httpResponse.statusCode, errorBody)
+        }
+        
+        // Parse the profiles response
+        let profilesResponse = try JSONDecoder().decode(JAMFProfilesResponse.self, from: data)
+        return profilesResponse.osXConfigurationProfiles ?? []
+    }
+    
+    func getConfigurationProfile(by id: Int) async throws -> JAMFProfile? {
+        let endpoint = "JSSResource/osxconfigurationprofiles/id/\(id)"
+        let url = baseURL.appendingPathComponent(endpoint)
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue("MacForge/1.0", forHTTPHeaderField: "User-Agent")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.timeoutInterval = 30.0
+        
+        let (data, response) = try await session.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw JAMFError.invalidResponse
+        }
+        
+        if httpResponse.statusCode == 404 {
+            return nil // Profile doesn't exist
+        }
+        
+        guard httpResponse.statusCode == 200 else {
+            let errorBody = String(data: data, encoding: .utf8) ?? "Unknown error"
+            throw JAMFError.http(httpResponse.statusCode, errorBody)
+        }
+        
+        // Parse the profile response
+        let profile = try JSONDecoder().decode(JAMFProfile.self, from: data)
+        return profile
+    }
+    
+    // MARK: - Policy Operations
+    
+    func getAllPolicies() async throws -> [JAMFPolicy] {
+        let endpoint = "JSSResource/policies"
+        let url = baseURL.appendingPathComponent(endpoint)
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue("MacForge/1.0", forHTTPHeaderField: "User-Agent")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.timeoutInterval = 30.0
+        
+        let (data, response) = try await session.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw JAMFError.invalidResponse
+        }
+        
+        guard httpResponse.statusCode == 200 else {
+            let errorBody = String(data: data, encoding: .utf8) ?? "Unknown error"
+            throw JAMFError.http(httpResponse.statusCode, errorBody)
+        }
+        
+        // Parse the policies response
+        let policiesResponse = try JSONDecoder().decode(JAMFPoliciesResponse.self, from: data)
+        return policiesResponse.policies ?? []
+    }
+    
+    func getPolicy(by id: Int) async throws -> JAMFPolicy? {
+        let endpoint = "JSSResource/policies/id/\(id)"
+        let url = baseURL.appendingPathComponent(endpoint)
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue("MacForge/1.0", forHTTPHeaderField: "User-Agent")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.timeoutInterval = 30.0
+        
+        let (data, response) = try await session.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw JAMFError.invalidResponse
+        }
+        
+        if httpResponse.statusCode == 404 {
+            return nil // Policy doesn't exist
+        }
+        
+        guard httpResponse.statusCode == 200 else {
+            let errorBody = String(data: data, encoding: .utf8) ?? "Unknown error"
+            throw JAMFError.http(httpResponse.statusCode, errorBody)
+        }
+        
+        // Parse the policy response
+        let policy = try JSONDecoder().decode(JAMFPolicy.self, from: data)
+        return policy
+    }
+    
+    func getPolicy(by name: String) async throws -> JAMFPolicy? {
+        let safeName = name.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? name
+        let endpoint = "JSSResource/policies/name/\(safeName)"
+        let url = baseURL.appendingPathComponent(endpoint)
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue("MacForge/1.0", forHTTPHeaderField: "User-Agent")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.timeoutInterval = 30.0
+        
+        let (data, response) = try await session.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw JAMFError.invalidResponse
+        }
+        
+        if httpResponse.statusCode == 404 {
+            return nil // Policy doesn't exist
+        }
+        
+        guard httpResponse.statusCode == 200 else {
+            let errorBody = String(data: data, encoding: .utf8) ?? "Unknown error"
+            throw JAMFError.http(httpResponse.statusCode, errorBody)
+        }
+        
+        // Parse the policy response
+        let policy = try JSONDecoder().decode(JAMFPolicy.self, from: data)
+        return policy
+    }
+    
+    // MARK: - Connection Testing
+    
+    func testConnection() async throws -> Bool {
+        let endpoint = "api/v1/ping"
+        let url = baseURL.appendingPathComponent(endpoint)
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue("MacForge/1.0", forHTTPHeaderField: "User-Agent")
+        request.timeoutInterval = 10.0
+        
+        let (_, response) = try await session.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw JAMFError.invalidResponse
+        }
+        
+        return httpResponse.statusCode == 200
+    }
+    
     // MARK: - Private Methods
     
     private func updateProfileByName(_ name: String, xmlData: Data) async throws {
@@ -173,6 +445,19 @@ final class JAMFService: JAMFServiceProtocol {
             throw JAMFError.http(httpResponse.statusCode, errorBody)
         }
     }
+}
+
+// MARK: - JAMF Response Models
+struct JAMFProfilesResponse: Codable {
+    let osXConfigurationProfiles: [JAMFProfile]?
+    
+    enum CodingKeys: String, CodingKey {
+        case osXConfigurationProfiles = "os_x_configuration_profiles"
+    }
+}
+
+struct JAMFPoliciesResponse: Codable {
+    let policies: [JAMFPolicy]?
 }
 
 // MARK: - JAMF Errors

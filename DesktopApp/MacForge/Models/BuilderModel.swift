@@ -20,12 +20,7 @@ struct JAMFConnection {
     var vendor: String { account.vendor }
 }
 
-enum JAMFConnectionStatus {
-    case disconnected
-    case connecting
-    case connected
-    case failed
-}
+// JAMFConnectionStatus is now defined in JAMFTemplateModels.swift
 
 // MARK: - Profile Settings
 struct ProfileSettings: Codable, Hashable {
