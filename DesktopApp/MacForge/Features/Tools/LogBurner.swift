@@ -176,13 +176,20 @@ class LogAnalysisService: ObservableObject {
     @Published var progress: Double = 0.0
     @Published var currentStep: String = ""
     @Published var showingProgressPopup = false
+    @Published var aiSummary: String = ""
+    @Published var isGeneratingAISummary = false
     
+    private let userSettings: UserSettings
     private let supportedFileTypes: [UTType] = [
         .plainText,
         .log,
         .data,
         .text
     ]
+    
+    init(userSettings: UserSettings) {
+        self.userSettings = userSettings
+    }
     
     func analyzeLogFile(at url: URL) async {
         isLoading = true
@@ -227,6 +234,9 @@ class LogAnalysisService: ObservableObject {
             currentStep = "Analysis complete!"
             progress = 1.0
             try await Task.sleep(nanoseconds: 500_000_000) // Brief pause to show completion
+            
+            // Generate AI summary
+            await generateAISummary(for: result)
             
         } catch {
             errorMessage = "Failed to read log file: \(error.localizedDescription)"
@@ -571,12 +581,115 @@ class LogAnalysisService: ObservableObject {
         }
         return 0
     }
+    
+    // MARK: - AI Summary Generation
+    
+    private func generateAISummary(for result: LogAnalysisResult) async {
+        isGeneratingAISummary = true
+        aiSummary = ""
+        
+        // Create a comprehensive prompt for AI analysis
+        let prompt = createAISummaryPrompt(for: result)
+        
+        // Use the first available AI account or fallback to a basic summary
+        if let userSettings = getCurrentUserSettings(),
+           let aiAccount = userSettings.getDefaultAIAccount() {
+            
+            let config = AIServiceConfig(
+                provider: aiAccount.provider,
+                apiKey: aiAccount.apiKey,
+                model: aiAccount.effectiveModel,
+                baseURL: aiAccount.effectiveBaseURL
+            )
+            
+            let aiService = AIService(config: config)
+            
+            do {
+                aiSummary = try await aiService.generateScript(
+                    prompt: prompt,
+                    language: "text",
+                    systemPrompt: "You are an expert log analyst. Provide clear, technical analysis of log files with actionable insights."
+                )
+            } catch {
+                aiSummary = generateBasicSummary(for: result)
+            }
+        } else {
+            // Fallback to basic analysis if no AI account is configured
+            aiSummary = generateBasicSummary(for: result)
+        }
+        
+        isGeneratingAISummary = false
+    }
+    
+    private func createAISummaryPrompt(for result: LogAnalysisResult) -> String {
+        let errorCount = result.errors.count
+        let warningCount = result.warnings.count
+        let criticalCount = result.summary.criticalIssues
+        let totalLines = result.summary.totalLines
+        
+        return """
+        Analyze this log file and provide a comprehensive summary. The log file "\(result.fileName)" contains \(totalLines) lines with \(errorCount) errors, \(warningCount) warnings, and \(criticalCount) critical issues.
+        
+        Please provide:
+        1. A brief overview of what type of log this is (system log, application log, crash log, etc.)
+        2. The main issues or events found in the log
+        3. Root cause analysis if possible
+        4. Severity assessment and potential impact
+        5. Recommended actions or next steps
+        
+        Focus on the most important findings and explain them in clear, technical language that would be useful for troubleshooting.
+        
+        Log content preview (first 20 lines):
+        \(result.rawContent.components(separatedBy: .newlines).prefix(20).joined(separator: "\n"))
+        """
+    }
+    
+    private func generateBasicSummary(for result: LogAnalysisResult) -> String {
+        let errorCount = result.errors.count
+        let warningCount = result.warnings.count
+        let criticalCount = result.summary.criticalIssues
+        let totalLines = result.summary.totalLines
+        
+        var summary = "**Log Analysis Summary**\n\n"
+        summary += "This log file contains \(totalLines) lines with \(errorCount) errors, \(warningCount) warnings, and \(criticalCount) critical issues.\n\n"
+        
+        if errorCount > 0 {
+            summary += "**Key Issues Found:**\n"
+            for error in result.errors.prefix(3) {
+                summary += "• \(error.message)\n"
+            }
+            if errorCount > 3 {
+                summary += "• ... and \(errorCount - 3) more errors\n"
+            }
+        }
+        
+        if criticalCount > 0 {
+            summary += "\n**Critical Issues:** \(criticalCount) critical errors require immediate attention.\n"
+        }
+        
+        if result.securityEvents.count > 0 {
+            summary += "\n**Security Events:** \(result.securityEvents.count) security-related events detected.\n"
+        }
+        
+        summary += "\n**Recommendation:** Review the detailed error analysis below for specific remediation steps."
+        
+        return summary
+    }
+    
+    private func getCurrentUserSettings() -> UserSettings? {
+        return userSettings
+    }
 }
 
 // MARK: - Log Burner View
 struct LogBurnerView: View {
     var userSettings: UserSettings
-    @StateObject private var logAnalysisService = LogAnalysisService()
+    @StateObject private var logAnalysisService: LogAnalysisService
+    
+    init(userSettings: UserSettings) {
+        self.userSettings = userSettings
+        self._logAnalysisService = StateObject(wrappedValue: LogAnalysisService(userSettings: userSettings))
+    }
     @State private var isDragOver = false
     @State private var showingResults = false
     @State private var uploadedFileName: String? = nil
@@ -758,7 +871,7 @@ struct LogBurnerView: View {
                     }
                     .buttonStyle(.borderedProminent)
                     .sheet(isPresented: $showingResults) {
-                        LogAnalysisResultsView(result: result)
+                        LogAnalysisResultsView(result: result, logAnalysisService: logAnalysisService)
                     }
                 }
                 .padding()
@@ -832,6 +945,7 @@ struct LogBurnerView: View {
 // MARK: - Log Analysis Results View
 struct LogAnalysisResultsView: View {
     let result: LogAnalysisResult
+    let logAnalysisService: LogAnalysisService
     @Environment(\.dismiss) private var dismiss
     @State private var showingReportExport = false
     @State private var rawLogContent: String = ""
@@ -936,6 +1050,12 @@ struct LogAnalysisResultsView: View {
                     .background(
                         RoundedRectangle(cornerRadius: 12)
                             .fill(Color(.controlBackgroundColor))
+                    )
+                    
+                    // AI Summary Section
+                    AISummaryCard(
+                        summary: logAnalysisService.aiSummary,
+                        isGenerating: logAnalysisService.isGeneratingAISummary
                     )
                     
                     // Summary Card
@@ -1722,6 +1842,98 @@ struct LogAnalysisProgressView: View {
             RoundedRectangle(cornerRadius: 20)
                 .fill(Color(.windowBackgroundColor))
                 .shadow(color: .black.opacity(0.2), radius: 20, x: 0, y: 10)
+        )
+    }
+}
+
+// MARK: - AI Summary Card
+struct AISummaryCard: View {
+    let summary: String
+    let isGenerating: Bool
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            // Header with AI icon
+            HStack {
+                Image(systemName: "brain.head.profile")
+                    .font(.title2)
+                    .foregroundColor(.purple)
+                    .symbolEffect(.pulse, isActive: isGenerating)
+                Text("AI Analysis Summary")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                Spacer()
+                if isGenerating {
+                    ProgressView()
+                        .scaleEffect(0.8)
+                }
+            }
+            
+            // Summary content
+            if isGenerating {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text("Generating AI summary...")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                        Spacer()
+                    }
+                    
+                    // Animated placeholder
+                    VStack(alignment: .leading, spacing: 4) {
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(Color.gray.opacity(0.3))
+                            .frame(height: 12)
+                            .frame(maxWidth: .infinity)
+                        
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(Color.gray.opacity(0.2))
+                            .frame(height: 12)
+                            .frame(maxWidth: .infinity * 0.8)
+                        
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(Color.gray.opacity(0.2))
+                            .frame(height: 12)
+                            .frame(maxWidth: .infinity * 0.6)
+                    }
+                    .padding(.vertical, 8)
+                }
+            } else if !summary.isEmpty {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text(summary)
+                            .font(.subheadline)
+                            .lineSpacing(4)
+                            .textSelection(.enabled)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .frame(maxHeight: 200)
+            } else {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Image(systemName: "exclamationmark.triangle")
+                            .foregroundColor(.orange)
+                        Text("AI summary not available")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                        Spacer()
+                    }
+                    
+                    Text("Configure an AI account in Settings to enable intelligent log analysis.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+        }
+        .padding(20)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color.purple.opacity(0.05))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(Color.purple.opacity(0.2), lineWidth: 1)
+                )
         )
     }
 }
