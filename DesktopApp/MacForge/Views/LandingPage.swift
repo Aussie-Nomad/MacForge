@@ -134,10 +134,12 @@ struct LandingPage: View {
                             .font(.body)
                             .foregroundStyle(.primary)
                     }
+                    .padding(.trailing, 8) // Add padding for scrollbar
                 }
-                .frame(maxHeight: 200)
+                .frame(height: 120) // Fixed height instead of maxHeight
             }
         }
+        .frame(height: 200) // Fixed panel height
     }
     
     private var currentWorkSection: some View {
@@ -158,10 +160,12 @@ struct LandingPage: View {
                         workItem("Test Suite Audit & Fixes", status: "NEXT")
                         workItem("Performance Optimizations", status: "NEXT")
                     }
+                    .padding(.trailing, 8) // Add padding for scrollbar
                 }
-                .frame(maxHeight: 300)
+                .frame(height: 200) // Fixed height instead of maxHeight
             }
         }
+        .frame(height: 280) // Fixed panel height
     }
     
     private var contactSection: some View {
@@ -181,6 +185,7 @@ struct LandingPage: View {
                 }
             }
         }
+        .frame(height: 180) // Fixed panel height
     }
     
     private var bugsSection: some View {
@@ -196,14 +201,18 @@ struct LandingPage: View {
                     .background(Color.orange.opacity(0.2))
                     .cornerRadius(8)
                 
-                VStack(alignment: .leading, spacing: 6) {
-                    issueItem("AI Account Display Name Mismatch", severity: "RESOLVED", color: .green)
-                    issueItem("JAMF Email Username Validation", severity: "RESOLVED", color: .green)
-                    issueItem("Package Casting Script Injection", severity: "RESOLVED", color: .green)
-                    issueItem("Log Burner Progress Indicators", severity: "RESOLVED", color: .green)
-                    issueItem("Test Suite Compilation Errors", severity: "PENDING", color: .orange)
-                    issueItem("DDM Tool Duplication", severity: "RESOLVED", color: .green)
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 6) {
+                        issueItem("AI Account Display Name Mismatch", severity: "RESOLVED", color: .green)
+                        issueItem("JAMF Email Username Validation", severity: "RESOLVED", color: .green)
+                        issueItem("Package Casting Script Injection", severity: "RESOLVED", color: .green)
+                        issueItem("Log Burner Progress Indicators", severity: "RESOLVED", color: .green)
+                        issueItem("Test Suite Compilation Errors", severity: "PENDING", color: .orange)
+                        issueItem("DDM Tool Duplication", severity: "RESOLVED", color: .green)
+                    }
+                    .padding(.trailing, 8) // Add padding for scrollbar
                 }
+                .frame(height: 120) // Fixed height for scrollable content
                 
                 Text("Report bugs using the 'REPORT BUG' button above.")
                     .font(.caption)
@@ -211,6 +220,7 @@ struct LandingPage: View {
                     .italic()
             }
         }
+        .frame(height: 220) // Fixed panel height
     }
     
     private var versionSection: some View {
@@ -228,6 +238,7 @@ struct LandingPage: View {
                 }
             }
         }
+        .frame(height: 180) // Fixed panel height
     }
 
     // MARK: - Helper Components
