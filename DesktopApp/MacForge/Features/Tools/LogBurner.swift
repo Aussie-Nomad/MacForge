@@ -173,6 +173,9 @@ class LogAnalysisService: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var analysisResult: LogAnalysisResult?
+    @Published var progress: Double = 0.0
+    @Published var currentStep: String = ""
+    @Published var showingProgressPopup = false
     
     private let supportedFileTypes: [UTType] = [
         .plainText,
@@ -184,12 +187,28 @@ class LogAnalysisService: ObservableObject {
     func analyzeLogFile(at url: URL) async {
         isLoading = true
         errorMessage = nil
+        progress = 0.0
+        currentStep = "Starting analysis..."
+        showingProgressPopup = true
         
-        defer { isLoading = false }
+        defer { 
+            isLoading = false
+            showingProgressPopup = false
+        }
         
         do {
+            // Step 1: Reading file
+            currentStep = "Reading log file..."
+            progress = 0.1
+            try await Task.sleep(nanoseconds: 100_000_000) // Small delay for UI
+            
             let fileData = try Data(contentsOf: url)
             let content = String(data: fileData, encoding: .utf8) ?? ""
+            
+            // Step 2: Parsing content
+            currentStep = "Parsing log content..."
+            progress = 0.3
+            try await Task.sleep(nanoseconds: 100_000_000)
             
             let result = await performLogAnalysis(
                 fileName: url.lastPathComponent,
@@ -197,21 +216,57 @@ class LogAnalysisService: ObservableObject {
                 content: content
             )
             
+            // Step 3: Finalizing results
+            currentStep = "Finalizing analysis..."
+            progress = 0.9
+            try await Task.sleep(nanoseconds: 100_000_000)
+            
             analysisResult = result
+            
+            // Complete
+            currentStep = "Analysis complete!"
+            progress = 1.0
+            try await Task.sleep(nanoseconds: 500_000_000) // Brief pause to show completion
             
         } catch {
             errorMessage = "Failed to read log file: \(error.localizedDescription)"
+            currentStep = "Analysis failed"
+            progress = 0.0
         }
     }
     
     private func performLogAnalysis(fileName: String, fileSize: Int64, content: String) async -> LogAnalysisResult {
         let lines = content.components(separatedBy: .newlines)
         
-        // Parse log content
+        // Update progress during analysis
+        currentStep = "Extracting errors..."
+        progress = 0.4
+        try? await Task.sleep(nanoseconds: 50_000_000)
+        
         let errors = extractErrors(from: lines)
+        
+        currentStep = "Extracting warnings..."
+        progress = 0.5
+        try? await Task.sleep(nanoseconds: 50_000_000)
+        
         let warnings = extractWarnings(from: lines)
+        
+        currentStep = "Analyzing security events..."
+        progress = 0.6
+        try? await Task.sleep(nanoseconds: 50_000_000)
+        
         let securityEvents = extractSecurityEvents(from: lines)
+        
+        currentStep = "Building timeline..."
+        progress = 0.7
+        try? await Task.sleep(nanoseconds: 50_000_000)
+        
         let timeline = extractTimeline(from: lines)
+        
+        currentStep = "Calculating statistics..."
+        progress = 0.8
+        try? await Task.sleep(nanoseconds: 50_000_000)
+        
         let statistics = calculateStatistics(from: lines)
         
         // Generate summary
@@ -720,6 +775,13 @@ struct LogBurnerView: View {
                 handleFilePicker()
                 showingFilePicker = false
             }
+        }
+        .sheet(isPresented: $logAnalysisService.showingProgressPopup) {
+            LogAnalysisProgressView(
+                progress: logAnalysisService.progress,
+                currentStep: logAnalysisService.currentStep,
+                fileName: uploadedFileName ?? "Unknown"
+            )
         }
     }
     
@@ -1546,6 +1608,146 @@ struct TimelineRow: View {
             Spacer()
         }
         .padding(.vertical, 4)
+    }
+}
+
+// MARK: - Progress View
+struct LogAnalysisProgressView: View {
+    let progress: Double
+    let currentStep: String
+    let fileName: String
+    @Environment(\.dismiss) private var dismiss
+    
+    var body: some View {
+        VStack(spacing: 24) {
+            // Header
+            VStack(spacing: 12) {
+                Image(systemName: "flame.circle.fill")
+                    .font(.system(size: 48))
+                    .foregroundColor(.orange)
+                    .symbolEffect(.pulse, isActive: true)
+                
+                Text("Analyzing Log File")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                
+                Text(fileName)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+            }
+            
+            // Progress Section
+            VStack(spacing: 16) {
+                // Progress Bar
+                VStack(spacing: 8) {
+                    HStack {
+                        Text("Progress")
+                            .font(.headline)
+                        Spacer()
+                        Text("\(Int(progress * 100))%")
+                            .font(.headline)
+                            .foregroundColor(.blue)
+                    }
+                    
+                    ProgressView(value: progress)
+                        .progressViewStyle(LinearProgressViewStyle(tint: .blue))
+                        .scaleEffect(y: 2.0)
+                }
+                
+                // Current Step
+                VStack(spacing: 8) {
+                    HStack {
+                        Image(systemName: "gear")
+                            .foregroundColor(.blue)
+                            .symbolEffect(.rotate, isActive: true)
+                        Text("Current Step")
+                            .font(.headline)
+                        Spacer()
+                    }
+                    
+                    Text(currentStep)
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity)
+                }
+            }
+            .padding(20)
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(Color(.controlBackgroundColor))
+                    .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
+            )
+            
+            // Info Section
+            VStack(spacing: 12) {
+                HStack {
+                    Image(systemName: "info.circle")
+                        .foregroundColor(.blue)
+                    Text("Analysis Information")
+                        .font(.headline)
+                    Spacer()
+                }
+                
+                VStack(alignment: .leading, spacing: 8) {
+                    LogAnalysisInfoRow(icon: "doc.text", title: "File Type", value: "Log File")
+                    LogAnalysisInfoRow(icon: "clock", title: "Estimated Time", value: "30-60 seconds")
+                    LogAnalysisInfoRow(icon: "chart.bar", title: "Analysis Type", value: "AI-Powered")
+                }
+            }
+            .padding(20)
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(Color.blue.opacity(0.05))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(Color.blue.opacity(0.2), lineWidth: 1)
+                    )
+            )
+            
+            // Cancel Button (if needed)
+            if progress < 1.0 {
+                Button("Cancel Analysis") {
+                    dismiss()
+                }
+                .buttonStyle(.bordered)
+                .foregroundColor(.red)
+            }
+        }
+        .padding(24)
+        .frame(maxWidth: 400)
+        .background(
+            RoundedRectangle(cornerRadius: 20)
+                .fill(Color(.windowBackgroundColor))
+                .shadow(color: .black.opacity(0.2), radius: 20, x: 0, y: 10)
+        )
+    }
+}
+
+// MARK: - Log Analysis Info Row Component
+struct LogAnalysisInfoRow: View {
+    let icon: String
+    let title: String
+    let value: String
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: icon)
+                .foregroundColor(.blue)
+                .frame(width: 16)
+            
+            Text(title)
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+            
+            Spacer()
+            
+            Text(value)
+                .font(.subheadline)
+                .fontWeight(.medium)
+        }
     }
 }
 
