@@ -159,7 +159,11 @@ class UserSettings: ObservableObject {
             
             do {
                 // Load account from keychain
-                let account = try keychainService.retrieveAIAccount(id: accountId)
+                var account = try keychainService.retrieveAIAccount(id: accountId)
+                
+                // Migrate display name if it doesn't match the provider
+                account = migrateAIAccountDisplayName(account)
+                
                 loadedAccounts.append(account)
                 
             } catch {
@@ -169,6 +173,25 @@ class UserSettings: ObservableObject {
         }
         
         aiAccounts = loadedAccounts
+        
+        // Save migrated accounts back to keychain
+        if !loadedAccounts.isEmpty {
+            saveAIAccountsToKeychain()
+        }
+    }
+    
+    private func migrateAIAccountDisplayName(_ account: AIAccount) -> AIAccount {
+        // Check if display name matches the provider
+        let expectedDisplayName = "\(account.provider.displayName) Account"
+        
+        // If display name doesn't match provider, update it
+        if account.displayName != expectedDisplayName {
+            var updatedAccount = account
+            updatedAccount.displayName = expectedDisplayName
+            return updatedAccount
+        }
+        
+        return account
     }
     
     // MARK: - MDM Account Management

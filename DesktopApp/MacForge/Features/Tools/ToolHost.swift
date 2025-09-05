@@ -244,6 +244,9 @@ struct ScriptBuilderSettingsView: View {
                 Picker("", selection: $vm.config.provider) {
                     ForEach(AIProviderType.allCases) { p in Text(p.displayName).tag(p) }
                 }.pickerStyle(.segmented)
+                .onChange(of: vm.config.provider) { _, newProvider in
+                    updateProviderDefaults(for: newProvider)
+                }
 
                 if vm.config.provider == .openai || vm.config.provider == .anthropic {
                     ThemedField(title: "API Key", text: $vm.config.apiKey, secure: true)
@@ -288,6 +291,29 @@ struct ScriptBuilderSettingsView: View {
             if let defaultAccount = userSettings.getDefaultAIAccount() {
                 vm.selectedAccountId = defaultAccount.id
                 vm.loadAccountSettings(from: userSettings, accountId: defaultAccount.id)
+            } else {
+                // Set defaults for manual configuration
+                updateProviderDefaults(for: vm.config.provider)
+            }
+        }
+    }
+    
+    private func updateProviderDefaults(for provider: AIProviderType) {
+        // Only update if fields are empty or contain placeholder values
+        if vm.config.model.isEmpty || vm.config.model == "codellama:7b-instruct" {
+            switch provider {
+            case .openai:
+                vm.config.model = "gpt-4o-mini"
+                vm.config.baseURL = "https://api.openai.com/v1"
+            case .anthropic:
+                vm.config.model = "claude-3-5-sonnet-20240620"
+                vm.config.baseURL = "https://api.anthropic.com/v1"
+            case .ollama:
+                vm.config.model = "codellama:7b-instruct"
+                vm.config.baseURL = "http://localhost:11434"
+            case .custom:
+                vm.config.model = ""
+                vm.config.baseURL = ""
             }
         }
     }
