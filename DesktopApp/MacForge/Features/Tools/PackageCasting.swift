@@ -913,24 +913,20 @@ struct SecurityAnalysisCard: View {
                 Spacer()
             }
             
-            HStack {
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack {
-                        Image(systemName: securityInfo.isSigned ? "checkmark.circle.fill" : "xmark.circle.fill")
-                            .foregroundColor(securityInfo.isSigned ? .green : .red)
-                        Text("Code Signed: \(securityInfo.isSigned ? "Yes" : "No")")
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-                    }
-                    
-                    if securityInfo.needsSigning {
-                        Text("⚠️ Package requires code signing for MDM deployment")
-                            .font(.caption)
-                            .foregroundColor(.orange)
-                    }
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Image(systemName: securityInfo.isSigned ? "checkmark.circle.fill" : "xmark.circle.fill")
+                        .foregroundColor(securityInfo.isSigned ? .green : .red)
+                    Text("Code Signed: \(securityInfo.isSigned ? "Yes" : "No")")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
                 }
                 
-                Spacer()
+                if securityInfo.needsSigning {
+                    Text("⚠️ Package requires code signing for MDM deployment")
+                        .font(.caption)
+                        .foregroundColor(.orange)
+                }
             }
         }
         .padding(20)
@@ -1524,55 +1520,61 @@ struct ScriptEditorView: View {
     
     var body: some View {
         NavigationView {
-            VStack(alignment: .leading, spacing: 16) {
-                // Script Name
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Script Name")
-                        .font(.headline)
-                    TextField("Enter script name", text: $script.name)
-                        .textFieldStyle(.roundedBorder)
-                }
-                
-                // Script Type
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Script Type")
-                        .font(.headline)
-                    Picker("Type", selection: $script.type) {
-                        ForEach(PackageScriptType.allCases) { type in
-                            Text(type.rawValue).tag(type)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    // Script Name
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Script Name")
+                            .font(.headline)
+                        TextField("Enter script name", text: $script.name)
+                            .textFieldStyle(.roundedBorder)
+                    }
+                    
+                    // Script Type
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Script Type")
+                            .font(.headline)
+                        Picker("Type", selection: $script.type) {
+                            ForEach(PackageScriptType.allCases) { type in
+                                Text(type.rawValue).tag(type)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                    }
+                    
+                    // Script Content
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Script Content")
+                            .font(.headline)
+                        TextEditor(text: $script.content)
+                            .font(.system(.body, design: .monospaced))
+                            .frame(minHeight: 300)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                            )
+                    }
+                    
+                    // Script Info
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Script Information")
+                            .font(.headline)
+                        
+                        VStack(spacing: 12) {
+                            HStack {
+                                Toggle("Executable", isOn: $script.isExecutable)
+                                Spacer()
+                            }
+                            
+                            HStack {
+                                Toggle("Needs Modification", isOn: $script.needsModification)
+                                Spacer()
+                            }
                         }
                     }
-                    .pickerStyle(.segmented)
                 }
-                
-                // Script Content
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Script Content")
-                        .font(.headline)
-                    TextEditor(text: $script.content)
-                        .font(.system(.body, design: .monospaced))
-                        .frame(minHeight: 200)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-                        )
-                }
-                
-                // Script Info
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Script Information")
-                        .font(.headline)
-                    
-                    HStack {
-                        Toggle("Executable", isOn: $script.isExecutable)
-                        Spacer()
-                        Toggle("Needs Modification", isOn: $script.needsModification)
-                    }
-                }
-                
-                Spacer()
+                .padding(20)
             }
-            .padding()
             .navigationTitle("Script Editor")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -1590,7 +1592,7 @@ struct ScriptEditorView: View {
                 }
             }
         }
-        .frame(minWidth: 600, minHeight: 500)
+        .frame(minWidth: 700, minHeight: 600)
     }
 }
 

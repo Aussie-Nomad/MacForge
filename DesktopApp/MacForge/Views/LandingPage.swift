@@ -124,13 +124,18 @@ struct LandingPage: View {
             VStack(alignment: .leading, spacing: 12) {
                 sectionHeader("AUTHORS NOTES", color: LcarsTheme.orange)
                 
-                Text("MacForge is a cutting-edge toolbox for building and managing Apple MDM payloads.")
-                    .font(.headline)
-                    .foregroundStyle(LcarsTheme.amber)
-                
-                Text("This application streamlines the creation of configuration profiles for macOS and iOS devices. Whether you're managing PPPC permissions, Wi-Fi settings, or security policies, MacForge provides an intuitive LCARS-inspired interface for building production-ready profiles.")
-                    .font(.body)
-                    .foregroundStyle(.primary)
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("MacForge is a cutting-edge toolbox for building and managing Apple MDM payloads.")
+                            .font(.headline)
+                            .foregroundStyle(LcarsTheme.amber)
+                        
+                        Text("This application streamlines the creation of configuration profiles for macOS and iOS devices. Whether you're managing PPPC permissions, Wi-Fi settings, or security policies, MacForge provides an intuitive LCARS-inspired interface for building production-ready profiles.")
+                            .font(.body)
+                            .foregroundStyle(.primary)
+                    }
+                }
+                .frame(maxHeight: 200)
             }
         }
     }
@@ -140,18 +145,21 @@ struct LandingPage: View {
             VStack(alignment: .leading, spacing: 12) {
                 sectionHeader("CURRENTLY WORKING ON", color: Color.blue)
                 
-                VStack(alignment: .leading, spacing: 8) {
-                    workItem("AI Tool Accounts Integration", status: "COMPLETED")
-                    workItem("Ollama AI Provider Support", status: "COMPLETED")
-                    workItem("Script Builder Output Modes", status: "COMPLETED")
-                    workItem("Log Burner AI Analysis", status: "COMPLETED")
-                    workItem("Package Casting Enhancements", status: "COMPLETED")
-                    workItem("Welcome Tutorial System", status: "COMPLETED")
-                    workItem("JAMF Username Validation Fix", status: "COMPLETED")
-                    workItem("Package Casting MUT Alternative", status: "IN PROGRESS")
-                    workItem("Test Suite Audit & Fixes", status: "NEXT")
-                    workItem("Performance Optimizations", status: "NEXT")
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 8) {
+                        workItem("AI Tool Accounts Integration", status: "COMPLETED")
+                        workItem("Ollama AI Provider Support", status: "COMPLETED")
+                        workItem("Script Builder Output Modes", status: "COMPLETED")
+                        workItem("Log Burner AI Analysis", status: "COMPLETED")
+                        workItem("Package Casting Enhancements", status: "COMPLETED")
+                        workItem("Welcome Tutorial System", status: "COMPLETED")
+                        workItem("JAMF Username Validation Fix", status: "COMPLETED")
+                        workItem("Package Casting MUT Alternative", status: "IN PROGRESS")
+                        workItem("Test Suite Audit & Fixes", status: "NEXT")
+                        workItem("Performance Optimizations", status: "NEXT")
+                    }
                 }
+                .frame(maxHeight: 300)
             }
         }
     }
