@@ -118,8 +118,8 @@ final class ValidationService {
             throw ValidationError.invalidUsernameLength
         }
         
-        // Check for valid characters (alphanumeric, dots, hyphens, underscores)
-        let validCharacterSet = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: ".-_"))
+        // Check for valid characters (alphanumeric, dots, hyphens, underscores, @ for email addresses)
+        let validCharacterSet = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: ".-_@"))
         guard trimmed.rangeOfCharacter(from: validCharacterSet.inverted) == nil else {
             throw ValidationError.invalidUsernameCharacters
         }
@@ -390,7 +390,7 @@ enum ValidationError: LocalizedError {
         case .invalidUsernameLength:
             return "Username must be between 3 and 64 characters"
         case .invalidUsernameCharacters:
-            return "Username can only contain letters, numbers, dots, hyphens, and underscores"
+            return "Username can only contain letters, numbers, dots, hyphens, underscores, and @ symbols"
         case .emptyPassword:
             return "Password cannot be empty"
         case .invalidPasswordLength:
