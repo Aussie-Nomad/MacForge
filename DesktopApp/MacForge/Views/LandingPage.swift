@@ -141,16 +141,16 @@ struct LandingPage: View {
                 sectionHeader("CURRENTLY WORKING ON", color: Color.blue)
                 
                 VStack(alignment: .leading, spacing: 8) {
-                    workItem("LCARS Theme System", status: "COMPLETED")
-                    workItem("Application Drop Zone", status: "COMPLETED")
-                    workItem("Working Download Button", status: "COMPLETED")
-                    workItem("Template System", status: "COMPLETED")
-                    workItem("Build System Fixes", status: "COMPLETED")
-                    workItem("Theme Component Architecture", status: "COMPLETED")
-                    workItem("CI/CD Pipeline", status: "COMPLETED")
-                    workItem("MDM Authentication Flow", status: "IN PROGRESS")
-                    workItem("JAMF Pro Integration", status: "NEXT")
-                    workItem("UI Layout Improvements", status: "COMPLETED")
+                    workItem("AI Tool Accounts Integration", status: "COMPLETED")
+                    workItem("Ollama AI Provider Support", status: "COMPLETED")
+                    workItem("Script Builder Output Modes", status: "COMPLETED")
+                    workItem("Log Burner AI Analysis", status: "COMPLETED")
+                    workItem("Package Casting Enhancements", status: "COMPLETED")
+                    workItem("Welcome Tutorial System", status: "COMPLETED")
+                    workItem("JAMF Username Validation Fix", status: "COMPLETED")
+                    workItem("Package Casting MUT Alternative", status: "IN PROGRESS")
+                    workItem("Test Suite Audit & Fixes", status: "NEXT")
+                    workItem("Performance Optimizations", status: "NEXT")
                 }
             }
         }
@@ -180,19 +180,21 @@ struct LandingPage: View {
             VStack(alignment: .leading, spacing: 12) {
                 sectionHeader("REPORTED BUGS & KNOWN ISSUES", color: Color.red)
                 
-                Text("CURRENT STATUS: RESOLVED")
+                Text("CURRENT STATUS: MOSTLY RESOLVED")
                     .font(.caption)
-                    .foregroundStyle(Color.green)
+                    .foregroundStyle(Color.orange)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
-                    .background(Color.green.opacity(0.2))
+                    .background(Color.orange.opacity(0.2))
                     .cornerRadius(8)
                 
                 VStack(alignment: .leading, spacing: 6) {
-                    issueItem("All critical security vulnerabilities", severity: "RESOLVED", color: .green)
-                    issueItem("GDPR compliance implementation", severity: "RESOLVED", color: .green)
-                    issueItem("Build system and compilation errors", severity: "RESOLVED", color: .green)
-                    issueItem("Accessibility improvements", severity: "RESOLVED", color: .green)
+                    issueItem("AI Account Display Name Mismatch", severity: "RESOLVED", color: .green)
+                    issueItem("JAMF Email Username Validation", severity: "RESOLVED", color: .green)
+                    issueItem("Package Casting Script Injection", severity: "RESOLVED", color: .green)
+                    issueItem("Log Burner Progress Indicators", severity: "RESOLVED", color: .green)
+                    issueItem("Test Suite Compilation Errors", severity: "PENDING", color: .orange)
+                    issueItem("DDM Tool Duplication", severity: "RESOLVED", color: .green)
                 }
                 
                 Text("Report bugs using the 'REPORT BUG' button above.")
@@ -209,10 +211,11 @@ struct LandingPage: View {
                 sectionHeader("SYSTEM VERSION", color: LcarsTheme.amber)
                 
                 VStack(spacing: 8) {
-                    infoRow("VERSION", "1.1.0 (Beta)")
-                    infoRow("BUILD DATE", "August 28, 2025")
+                    infoRow("VERSION", "1.2.0 (Beta)")
+                    infoRow("BUILD DATE", "September 5, 2025")
                     infoRow("PLATFORMS", "macOS 12+")
                     infoRow("STATUS", "BUILD SUCCESSFUL")
+                    infoRow("AI PROVIDERS", "OpenAI, Anthropic, Ollama, Custom")
                     infoRow("CI/CD", "FUNCTIONAL")
                 }
             }
