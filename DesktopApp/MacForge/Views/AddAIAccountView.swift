@@ -108,6 +108,16 @@ struct AddAIAccountView: View {
         .onAppear {
             setupDefaults()
         }
+        .onChange(of: provider) { _, newProvider in
+            updateDisplayName(for: newProvider)
+        }
+    }
+    
+    private func updateDisplayName(for provider: AIProviderType) {
+        // Only update if the display name is still the default format
+        if displayName.isEmpty || displayName.hasSuffix(" Account") {
+            displayName = "\(provider.displayName) Account"
+        }
     }
     
     private func setupDefaults() {
