@@ -56,6 +56,8 @@ class ScriptBuilderModel: ObservableObject {
     @Published var isRunning = false
     @Published var errorText: String?
     @Published var selectedAccountId: UUID?
+    @Published var showingLoadingPopup = false
+    @Published var currentOperation = ""
     
     struct Config {
         var provider: AIProviderType = .openai
@@ -102,11 +104,24 @@ class ScriptBuilderModel: ObservableObject {
         await MainActor.run {
             isRunning = true
             errorText = nil
+            showingLoadingPopup = true
+            
+            // Set operation description based on system prompt
+            if system.contains("Generate") {
+                currentOperation = "Generating script..."
+            } else if system.contains("Explain") {
+                currentOperation = "Analyzing script..."
+            } else if system.contains("Harden") {
+                currentOperation = "Hardening script..."
+            } else {
+                currentOperation = "Processing request..."
+            }
         }
         
         defer {
             Task { @MainActor in
                 isRunning = false
+                showingLoadingPopup = false
             }
         }
         
@@ -134,7 +149,7 @@ class ScriptBuilderModel: ObservableObject {
                 )
             } else if system.contains("Explain") {
                 result = try await aiService.explainScript(
-                    script: script,
+                    script: prompt,
                     systemPrompt: system
                 )
             } else if system.contains("Harden") {
@@ -342,6 +357,12 @@ struct ScriptBuilderMainView: View {
 
             ScriptBuilderActionButtonsView(vm: vm)
         }
+        .sheet(isPresented: $vm.showingLoadingPopup) {
+            ScriptBuilderLoadingView(
+                operation: vm.currentOperation,
+                isVisible: vm.showingLoadingPopup
+            )
+        }
     }
 }
 
@@ -411,6 +432,76 @@ struct ScriptBuilderActionButtonsView: View {
         if let dir = fm.urls(for: .downloadsDirectory, in: .userDomainMask).first {
             let url = dir.appendingPathComponent("macforge_script_\(Int(Date().timeIntervalSince1970)).\(ext)")
             try? text.data(using: .utf8)?.write(to: url)
+        }
+    }
+}
+
+// MARK: - Script Builder Loading View
+struct ScriptBuilderLoadingView: View {
+    let operation: String
+    let isVisible: Bool
+    @Environment(\.dismiss) private var dismiss
+    
+    var body: some View {
+        VStack(spacing: 24) {
+            // Header
+            HStack {
+                Image(systemName: "brain.head.profile")
+                    .font(.title)
+                    .foregroundColor(.purple)
+                    .symbolEffect(.pulse, isActive: isVisible)
+                Text("AI Processing")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                Spacer()
+            }
+            
+            // Progress Section
+            VStack(spacing: 16) {
+                ProgressView()
+                    .scaleEffect(1.5)
+                    .progressViewStyle(CircularProgressViewStyle(tint: .purple))
+                
+                Text(operation)
+                    .font(.headline)
+                    .foregroundColor(.primary)
+                
+                Text("Please wait while the AI processes your request...")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+            
+            // AI Provider Info
+            VStack(spacing: 8) {
+                HStack {
+                    Image(systemName: "sparkles")
+                        .foregroundColor(.blue)
+                    Text("Powered by AI")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                
+                Text("This may take a few moments depending on the complexity of your request.")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+        }
+        .padding(32)
+        .frame(maxWidth: 400)
+        .background(
+            RoundedRectangle(cornerRadius: 20)
+                .fill(Color(.windowBackgroundColor))
+                .shadow(color: .black.opacity(0.2), radius: 20, x: 0, y: 10)
+        )
+        .onAppear {
+            // Auto-close after 30 seconds as a safety measure
+            DispatchQueue.main.asyncAfter(deadline: .now() + 30) {
+                if isVisible {
+                    dismiss()
+                }
+            }
         }
     }
 }
