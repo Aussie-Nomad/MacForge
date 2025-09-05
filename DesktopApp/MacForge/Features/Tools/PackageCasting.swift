@@ -91,11 +91,11 @@ struct PackageScript: Identifiable, Codable {
     enum CodingKeys: String, CodingKey {
         case name, type, content, isExecutable, needsModification
     }
-    let name: String
-    let type: PackageScriptType
-    let content: String
-    let isExecutable: Bool
-    let needsModification: Bool
+    var name: String
+    var type: PackageScriptType
+    var content: String
+    var isExecutable: Bool
+    var needsModification: Bool
 }
 
 struct PackageDependency: Identifiable, Codable {
@@ -148,7 +148,6 @@ enum PackageType: String, CaseIterable, Codable {
     case dmg = "DMG"
     case app = "APP"
     case zip = "ZIP"
-    case unknown = "UNKNOWN"
     
     var icon: String {
         switch self {
@@ -156,7 +155,6 @@ enum PackageType: String, CaseIterable, Codable {
         case .dmg: return "opticaldisc.fill"
         case .app: return "app.fill"
         case .zip: return "archivebox.fill"
-        case .unknown: return "questionmark.folder.fill"
         }
     }
     
@@ -166,18 +164,19 @@ enum PackageType: String, CaseIterable, Codable {
         case .dmg: return .green
         case .app: return .purple
         case .zip: return .orange
-        case .unknown: return .gray
         }
     }
 }
 
-enum PackageScriptType: String, CaseIterable, Codable {
+enum PackageScriptType: String, CaseIterable, Codable, Identifiable {
     case preinstall = "Preinstall"
     case postinstall = "Postinstall"
     case preuninstall = "Preuninstall"
     case postuninstall = "Postuninstall"
     case preupgrade = "Preupgrade"
     case postupgrade = "Postupgrade"
+    
+    var id: String { rawValue }
     
     var icon: String {
         switch self {
@@ -303,6 +302,46 @@ class PackageAnalysisService: ObservableObject {
         repackagingResult = result
     }
     
+    private func performRepackaging(analysis: PackageAnalysis, options: RepackagingOptions) async -> RepackagingResult {
+        // Simulate repackaging process
+        try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds
+        
+        let outputPath = generateOutputPath(for: analysis, options: options)
+        
+        return RepackagingResult(
+            success: true,
+            outputPath: outputPath,
+            errorMessage: nil,
+            warnings: generateRepackagingWarnings(options: options),
+            newPackageInfo: analysis
+        )
+    }
+    
+    private func generateOutputPath(for analysis: PackageAnalysis, options: RepackagingOptions) -> String {
+        let baseName = analysis.fileName.components(separatedBy: ".").first ?? "repackaged"
+        let outputName = options.outputName.isEmpty ? baseName : options.outputName
+        let fileExtension = options.outputFormat.rawValue.lowercased()
+        return "~/Desktop/\(outputName).\(fileExtension)"
+    }
+    
+    private func generateRepackagingWarnings(options: RepackagingOptions) -> [String] {
+        var warnings: [String] = []
+        
+        if options.signPackage && options.certificateID?.isEmpty != false {
+            warnings.append("Code signing enabled but no certificate selected")
+        }
+        
+        if options.addPPPCProfile && options.pppcServices.isEmpty {
+            warnings.append("PPPC profile enabled but no services configured")
+        }
+        
+        if options.addScripts.isEmpty {
+            warnings.append("No custom scripts added")
+        }
+        
+        return warnings
+    }
+    
     private func performPackageAnalysis(url: URL) async -> PackageAnalysis {
         let fileName = url.lastPathComponent
         let fileSize = getFileSize(url: url)
@@ -357,26 +396,6 @@ class PackageAnalysisService: ObservableObject {
         )
     }
     
-    private func performRepackaging(analysis: PackageAnalysis, options: RepackagingOptions) async -> RepackagingResult {
-        // Simulate repackaging process
-        // In real implementation, this would:
-        // 1. Extract the original package
-        // 2. Apply modifications (scripts, permissions, etc.)
-        // 3. Sign the package if requested
-        // 4. Create new package in specified format
-        // 5. Generate PPPC profile if requested
-        
-        let outputPath = "/tmp/\(options.outputName.isEmpty ? analysis.fileName : options.outputName).\(options.outputFormat.rawValue.lowercased())"
-        
-        // Simulate successful repackaging
-        return RepackagingResult(
-            success: true,
-            outputPath: outputPath,
-            errorMessage: nil,
-            warnings: ["Package successfully repackaged"],
-            newPackageInfo: nil // Would contain analysis of new package
-        )
-    }
     
     // MARK: - Helper Methods
     
@@ -396,7 +415,7 @@ class PackageAnalysisService: ObservableObject {
         case "dmg": return .dmg
         case "app": return .app
         case "zip": return .zip
-        default: return .unknown
+        default: return .pkg // Default to PKG for unknown types
         }
     }
     
@@ -505,7 +524,8 @@ struct PackageCastingView: View {
                 Image(systemName: "shippingbox.circle.fill")
                     .font(.system(size: 48))
                     .foregroundColor(.blue)
-                    .imageAccessibility(label: "Package Casting icon", hint: "Package analysis and repackaging tool")
+                    .accessibilityLabel("Package Casting icon")
+                    .accessibilityHint("Package analysis and repackaging tool")
                 
                 Text("Package Casting")
                     .font(.largeTitle)
@@ -778,6 +798,7 @@ struct PackageRepackagingView: View {
     let analysis: PackageAnalysis
     @ObservedObject var analysisService: PackageAnalysisService
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject var userSettings: UserSettings
     
     @State private var options = RepackagingOptions()
     @State private var showingPPPCGenerator = false
@@ -1075,6 +1096,14 @@ struct RepackagingOptionsCard: View {
 
 struct ScriptInjectionCard: View {
     @Binding var options: RepackagingOptions
+    @State private var showingScriptEditor = false
+    @State private var newScript = PackageScript(
+        name: "",
+        type: .postinstall,
+        content: "",
+        isExecutable: true,
+        needsModification: false
+    )
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -1092,8 +1121,33 @@ struct ScriptInjectionCard: View {
                 .font(.caption)
                 .foregroundColor(.secondary)
             
+            // Existing Scripts
+            if !options.addScripts.isEmpty {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Added Scripts:")
+                        .font(.headline)
+                        .foregroundColor(.primary)
+                    
+                    ForEach(options.addScripts) { script in
+                        HStack {
+                            Image(systemName: script.type == .preinstall ? "arrow.down.circle" : "arrow.up.circle")
+                                .foregroundColor(script.type == .preinstall ? .blue : .green)
+                            Text(script.name.isEmpty ? "Unnamed Script" : script.name)
+                                .font(.subheadline)
+                            Spacer()
+                            Button("Remove") {
+                                options.addScripts.removeAll { $0.id == script.id }
+                            }
+                            .buttonStyle(.bordered)
+                            .controlSize(.small)
+                        }
+                        .padding(.vertical, 4)
+                    }
+                }
+            }
+            
             Button("Add Script") {
-                // TODO: Implement script addition
+                showingScriptEditor = true
             }
             .buttonStyle(.bordered)
         }
@@ -1103,6 +1157,18 @@ struct ScriptInjectionCard: View {
                 .fill(Color(.controlBackgroundColor))
                 .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
         )
+        .sheet(isPresented: $showingScriptEditor) {
+            ScriptEditorView(script: $newScript) { editedScript in
+                options.addScripts.append(editedScript)
+                newScript = PackageScript(
+                    name: "",
+                    type: .postinstall,
+                    content: "",
+                    isExecutable: true,
+                    needsModification: false
+                )
+            }
+        }
     }
 }
 
@@ -1121,14 +1187,71 @@ struct CodeSigningCard: View {
                 Spacer()
             }
             
+            Toggle("Sign Package", isOn: $options.signPackage)
+                .toggleStyle(.switch)
+            
             if options.signPackage {
-                VStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 12) {
                     Picker("Certificate", selection: $options.certificateID) {
                         Text("Select Certificate").tag("")
                         Text("Developer ID Application").tag("dev-id-app")
                         Text("Developer ID Installer").tag("dev-id-installer")
                     }
                     .pickerStyle(.menu)
+                    
+                    // Certificate Information
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Certificate Types:")
+                            .font(.headline)
+                            .foregroundColor(.primary)
+                        
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack {
+                                Text("Developer ID Application")
+                                    .font(.subheadline)
+                                    .fontWeight(.semibold)
+                                Spacer()
+                                Text("For .app bundles")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            Text("• Used for signing macOS applications")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            Text("• Required for distribution outside App Store")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            Text("• Bypasses Gatekeeper warnings")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        .padding(.leading, 8)
+                        
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack {
+                                Text("Developer ID Installer")
+                                    .font(.subheadline)
+                                    .fontWeight(.semibold)
+                                Spacer()
+                                Text("For .pkg installers")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            Text("• Used for signing installer packages")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            Text("• Required for .pkg distribution")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            Text("• Prevents 'unidentified developer' warnings")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        .padding(.leading, 8)
+                    }
+                    .padding(.top, 8)
                 }
             }
         }
@@ -1144,6 +1267,7 @@ struct CodeSigningCard: View {
 struct PPPCProfileCard: View {
     @Binding var options: RepackagingOptions
     @Binding var showingPPPCGenerator: Bool
+    @EnvironmentObject var userSettings: UserSettings
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -1157,16 +1281,37 @@ struct PPPCProfileCard: View {
                 Spacer()
             }
             
+            Text("Generate Privacy Preferences Policy Control profiles for MDM deployment")
+                .font(.caption)
+                .foregroundColor(.secondary)
+            
+            Toggle("Generate PPPC Profile", isOn: $options.addPPPCProfile)
+                .toggleStyle(.switch)
+            
             if options.addPPPCProfile {
-                VStack(spacing: 12) {
-                    Text("Automatically generate PPPC profile for MDM deployment")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    
+                VStack(alignment: .leading, spacing: 12) {
                     Button("Configure PPPC Services") {
                         showingPPPCGenerator = true
                     }
                     .buttonStyle(.bordered)
+                    
+                    if !userSettings.aiAccounts.isEmpty {
+                        HStack {
+                            Image(systemName: "sparkles")
+                                .foregroundColor(.blue)
+                            Text("AI-powered suggestions available")
+                                .font(.caption)
+                                .foregroundColor(.blue)
+                        }
+                    } else {
+                        HStack {
+                            Image(systemName: "exclamationmark.triangle")
+                                .foregroundColor(.orange)
+                            Text("Configure AI accounts in Settings for smart suggestions")
+                                .font(.caption)
+                                .foregroundColor(.orange)
+                        }
+                    }
                 }
             }
         }
@@ -1368,6 +1513,84 @@ struct PPPCGeneratorView: View {
             }
         }
         .frame(minWidth: 600, minHeight: 400)
+    }
+}
+
+// MARK: - Script Editor View
+struct ScriptEditorView: View {
+    @Binding var script: PackageScript
+    let onSave: (PackageScript) -> Void
+    @Environment(\.dismiss) private var dismiss
+    
+    var body: some View {
+        NavigationView {
+            VStack(alignment: .leading, spacing: 16) {
+                // Script Name
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Script Name")
+                        .font(.headline)
+                    TextField("Enter script name", text: $script.name)
+                        .textFieldStyle(.roundedBorder)
+                }
+                
+                // Script Type
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Script Type")
+                        .font(.headline)
+                    Picker("Type", selection: $script.type) {
+                        ForEach(PackageScriptType.allCases) { type in
+                            Text(type.rawValue).tag(type)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                }
+                
+                // Script Content
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Script Content")
+                        .font(.headline)
+                    TextEditor(text: $script.content)
+                        .font(.system(.body, design: .monospaced))
+                        .frame(minHeight: 200)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                        )
+                }
+                
+                // Script Info
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Script Information")
+                        .font(.headline)
+                    
+                    HStack {
+                        Toggle("Executable", isOn: $script.isExecutable)
+                        Spacer()
+                        Toggle("Needs Modification", isOn: $script.needsModification)
+                    }
+                }
+                
+                Spacer()
+            }
+            .padding()
+            .navigationTitle("Script Editor")
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+                
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        onSave(script)
+                        dismiss()
+                    }
+                    .disabled(script.name.isEmpty || script.content.isEmpty)
+                }
+            }
+        }
+        .frame(minWidth: 600, minHeight: 500)
     }
 }
 
