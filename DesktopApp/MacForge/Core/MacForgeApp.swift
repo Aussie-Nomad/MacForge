@@ -43,6 +43,7 @@ struct MacForgeApp: App {
     // Avoid injecting a second, competing instance here.
     
     @StateObject private var userSettings = UserSettings()
+    @StateObject private var themeManager = ThemeManager()
 
     @Environment(\.scenePhase) private var scenePhase
 
@@ -52,7 +53,13 @@ struct MacForgeApp: App {
             ContentView()
                 .environmentObject(userSettings)
                 .preferredColorScheme(.dark)
-                .environment(\.themeManager, ThemeManager())
+                .environment(\.themeManager, themeManager)
+                .onAppear {
+                    themeManager.updateThemePreferences(userSettings.themePreferences)
+                }
+                .onChange(of: userSettings.themePreferences) { _, newPreferences in
+                    themeManager.updateThemePreferences(newPreferences)
+                }
 
                 /// Scene phase → broadcast so models can refresh, invalidate tokens, etc.
                 .onChange(of: scenePhase, initial: true) { oldPhase, newPhase in

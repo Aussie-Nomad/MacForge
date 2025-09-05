@@ -385,13 +385,13 @@ struct ProfileDefaults: Codable {
 }
 
 // MARK: - Theme Preferences
-struct ThemePreferences: Codable {
+struct ThemePreferences: Codable, Equatable {
     var isLCARSActive: Bool = true
     var panelOpacity: Double = 0.3
     var animationSpeed: AnimationSpeed = .normal
     var accentColor: AccentColor = .amber
     
-    enum AnimationSpeed: String, CaseIterable, Codable {
+    enum AnimationSpeed: String, CaseIterable, Codable, Equatable {
         case slow = "Slow"
         case normal = "Normal"
         case fast = "Fast"
@@ -405,7 +405,7 @@ struct ThemePreferences: Codable {
         }
     }
     
-    enum AccentColor: String, CaseIterable, Codable {
+    enum AccentColor: String, CaseIterable, Codable, Equatable {
         case amber = "Amber"
         case orange = "Orange"
         case purple = "Purple"

@@ -893,7 +893,9 @@ struct LogBurnerView: View {
             LogAnalysisProgressView(
                 progress: logAnalysisService.progress,
                 currentStep: logAnalysisService.currentStep,
-                fileName: uploadedFileName ?? "Unknown"
+                fileName: uploadedFileName ?? "Unknown",
+                analysisResult: logAnalysisService.analysisResult,
+                logAnalysisService: logAnalysisService
             )
         }
     }
@@ -1736,7 +1738,10 @@ struct LogAnalysisProgressView: View {
     let progress: Double
     let currentStep: String
     let fileName: String
+    let analysisResult: LogAnalysisResult?
+    let logAnalysisService: LogAnalysisService
     @Environment(\.dismiss) private var dismiss
+    @State private var showingResults = false
     
     var body: some View {
         VStack(spacing: 24) {
@@ -1827,13 +1832,38 @@ struct LogAnalysisProgressView: View {
                     )
             )
             
-            // Cancel Button (if needed)
+            // Action Buttons
             if progress < 1.0 {
                 Button("Cancel Analysis") {
                     dismiss()
                 }
                 .buttonStyle(.bordered)
                 .foregroundColor(.red)
+            } else if let result = analysisResult {
+                VStack(spacing: 12) {
+                    HStack {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.green)
+                        Text("Analysis Complete!")
+                            .font(.headline)
+                            .foregroundColor(.green)
+                    }
+                    
+                    Button("View Analysis Results") {
+                        showingResults = true
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.large)
+                }
+                .padding()
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color.green.opacity(0.1))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.green.opacity(0.3), lineWidth: 1)
+                        )
+                )
             }
         }
         .padding(24)
@@ -1843,6 +1873,11 @@ struct LogAnalysisProgressView: View {
                 .fill(Color(.windowBackgroundColor))
                 .shadow(color: .black.opacity(0.2), radius: 20, x: 0, y: 10)
         )
+        .sheet(isPresented: $showingResults) {
+            if let result = analysisResult {
+                LogAnalysisResultsView(result: result, logAnalysisService: logAnalysisService)
+            }
+        }
     }
 }
 

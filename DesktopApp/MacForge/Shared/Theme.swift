@@ -17,10 +17,15 @@ struct LCARSTheme {
     static let surface = Color(red: 0.08, green: 0.08, blue: 0.12)         // Better contrast with background
     static let panel = Color(red: 0.12, green: 0.12, blue: 0.18)           // Improved panel contrast
     
-    // Accent Colors - Enhanced visibility
+    // Accent Colors - Enhanced visibility (default values)
     static let primary = Color(red: 0.85, green: 0.45, blue: 0.0)          // Brighter orange
     static let secondary = Color(red: 0.65, green: 0.35, blue: 0.85)       // Enhanced purple
     static let accent = Color(red: 1.0, green: 0.6, blue: 0.0)             // Brighter amber
+    
+    // Dynamic accent color based on user preference
+    static func accentColor(for themePreferences: ThemePreferences) -> Color {
+        return themePreferences.accentColor.color
+    }
     
     // Text Colors - Improved readability
     static let textPrimary = Color.white
