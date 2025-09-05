@@ -49,7 +49,8 @@ struct ContentView: View {
                 selectedMDM: selectedMDM,
                 onChangeMDM: { resetMDM() },
                 onPickMDM:   { selectedMDM = $0 },   // keep sidebar open
-                onHome:      { resetTool() }
+                onHome:      { resetTool() },
+                showingWelcome: $showingWelcome
             )
             .themeAwareBackground()
         }

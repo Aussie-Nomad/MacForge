@@ -16,6 +16,7 @@ struct LandingPage: View {
     var onChangeMDM: () -> Void
     var onPickMDM: (MDMVendor) -> Void
     var onHome: () -> Void
+    @Binding var showingWelcome: Bool
     
     var body: some View {
         ZStack {
@@ -88,6 +89,32 @@ struct LandingPage: View {
             Text("Choose an MDM from the left to begin.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
+            
+            // Tutorial Button
+            Button(action: {
+                showingWelcome = true
+            }) {
+                HStack(spacing: 8) {
+                    Image(systemName: "play.circle.fill")
+                        .font(.system(size: 16, weight: .semibold))
+                    Text("START TUTORIAL")
+                        .font(.system(size: 14, weight: .bold, design: .monospaced))
+                }
+                .foregroundStyle(.white)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 10)
+                .background(
+                    RoundedRectangle(cornerRadius: 20)
+                        .fill(LCARSTheme.accent)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 20)
+                                .stroke(LCARSTheme.accent, lineWidth: 2)
+                        )
+                )
+                .shadow(color: LCARSTheme.accent.opacity(0.4), radius: 6)
+            }
+            .buttonStyle(.plain)
+            .contentShape(Rectangle())
         }
     }
     
