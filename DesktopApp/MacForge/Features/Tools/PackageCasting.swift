@@ -749,7 +749,29 @@ struct PackageAnalysisView: View {
     @Environment(\.dismiss) private var dismiss
     
     var body: some View {
-        NavigationView {
+        VStack(spacing: 0) {
+            // Header
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Package Analysis")
+                        .font(.title)
+                        .fontWeight(.bold)
+                    Text(analysis.fileName)
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+                
+                Spacer()
+                
+                Button("Done") {
+                    dismiss()
+                }
+                .buttonStyle(.borderedProminent)
+            }
+            .padding(24)
+            .background(Color(.controlBackgroundColor))
+            
+            // Content
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
                     // Package Info Header
@@ -776,17 +798,7 @@ struct PackageAnalysisView: View {
                         DependenciesCard(dependencies: analysis.dependencies)
                     }
                 }
-                .padding(20)
-            }
-            .navigationTitle("Package Analysis")
-            .navigationSubtitle(analysis.fileName)
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                    .buttonStyle(.borderedProminent)
-                }
+                .padding(24)
             }
         }
         .frame(minWidth: 800, minHeight: 600)
