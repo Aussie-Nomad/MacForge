@@ -53,8 +53,12 @@ class ScriptBuilderModel: ObservableObject {
     @Published var script = ""
     @Published var language = "zsh"
     @Published var outputMode = "script"
+    @Published var enableCLI = false
     @Published var isRunning = false
     @Published var errorText: String?
+    @Published var selectedAccountId: UUID?
+    @Published var showingLoadingPopup = false
+    @Published var currentOperation = ""
     
     struct Config {
         var provider: AIProviderType = .openai
@@ -64,6 +68,23 @@ class ScriptBuilderModel: ObservableObject {
     }
     
     @Published var config = Config()
+    
+    init() {
+        // Initialize with default account if available
+        selectedAccountId = nil
+    }
+    
+    func loadAccountSettings(from userSettings: UserSettings, accountId: UUID?) {
+        guard let accountId = accountId,
+              let account = userSettings.aiAccounts.first(where: { $0.id == accountId }) else {
+            return
+        }
+        
+        config.provider = account.provider
+        config.apiKey = account.apiKey
+        config.model = account.model
+        config.baseURL = account.baseURL
+    }
     
     func getOutputModeDescription() -> String {
         switch outputMode {
@@ -84,11 +105,24 @@ class ScriptBuilderModel: ObservableObject {
         await MainActor.run {
             isRunning = true
             errorText = nil
+            showingLoadingPopup = true
+            
+            // Set operation description based on system prompt
+            if system.contains("Generate") {
+                currentOperation = "Generating script..."
+            } else if system.contains("Explain") {
+                currentOperation = "Analyzing script..."
+            } else if system.contains("Harden") {
+                currentOperation = "Hardening script..."
+            } else {
+                currentOperation = "Processing request..."
+            }
         }
         
         defer {
             Task { @MainActor in
                 isRunning = false
+                showingLoadingPopup = false
             }
         }
         
@@ -116,7 +150,7 @@ class ScriptBuilderModel: ObservableObject {
                 )
             } else if system.contains("Explain") {
                 result = try await aiService.explainScript(
-                    script: script,
+                    script: prompt,
                     systemPrompt: system
                 )
             } else if system.contains("Harden") {
@@ -176,11 +210,12 @@ class ScriptBuilderModel: ObservableObject {
 struct HammeringScriptsHostView: View {
     var model: BuilderModel
     var selectedMDM: MDMVendor?
+    var userSettings: UserSettings
     @StateObject private var vm = ScriptBuilderModel()
 
     var body: some View {
         HStack(spacing: 16) {
-            ScriptBuilderSettingsView(vm: vm)
+            ScriptBuilderSettingsView(vm: vm, userSettings: userSettings)
             ScriptBuilderMainView(vm: vm)
         }
         .padding(24)
@@ -190,6 +225,7 @@ struct HammeringScriptsHostView: View {
 
 struct ScriptBuilderSettingsView: View {
     @ObservedObject var vm: ScriptBuilderModel
+    var userSettings: UserSettings
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -197,10 +233,36 @@ struct ScriptBuilderSettingsView: View {
             Text("Generate, fix and explain admin scripts with AI").foregroundStyle(.secondary)
 
             Group {
+                // AI Account Selection
+                Text("AI ACCOUNT").lcarsPill()
+                if userSettings.aiAccounts.isEmpty {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("No AI accounts configured")
+                            .foregroundStyle(.secondary)
+                        Text("Go to Settings > AI Tool Accounts to add your AI provider credentials")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(.vertical, 8)
+                } else {
+                    Picker("", selection: $vm.selectedAccountId) {
+                        ForEach(userSettings.getActiveAIAccounts()) { account in
+                            Text(account.displayName).tag(account.id)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .onChange(of: vm.selectedAccountId) { _, newId in
+                        vm.loadAccountSettings(from: userSettings, accountId: newId)
+                    }
+                }
+                
                 Text("AI PROVIDER").lcarsPill()
                 Picker("", selection: $vm.config.provider) {
                     ForEach(AIProviderType.allCases) { p in Text(p.displayName).tag(p) }
                 }.pickerStyle(.segmented)
+                .onChange(of: vm.config.provider) { _, newProvider in
+                    updateProviderDefaults(for: newProvider)
+                }
 
                 if vm.config.provider == .openai || vm.config.provider == .anthropic {
                     ThemedField(title: "API Key", text: $vm.config.apiKey, secure: true)
@@ -233,6 +295,10 @@ struct ScriptBuilderSettingsView: View {
                     Text("One-liner").tag("one_liner")
                     Text("Function").tag("function")
                 }.pickerStyle(.segmented)
+                
+                Text("CLI INTERFACE").lcarsPill()
+                Toggle("Enable CLI Tools & Automation", isOn: $vm.enableCLI)
+                    .toggleStyle(SwitchToggleStyle())
             }
             Spacer()
         }
@@ -240,6 +306,36 @@ struct ScriptBuilderSettingsView: View {
         .padding(16)
         .background(LCARSTheme.panel)
         .clipShape(RoundedRectangle(cornerRadius: 14))
+        .onAppear {
+            // Load default account if available
+            if let defaultAccount = userSettings.getDefaultAIAccount() {
+                vm.selectedAccountId = defaultAccount.id
+                vm.loadAccountSettings(from: userSettings, accountId: defaultAccount.id)
+            } else {
+                // Set defaults for manual configuration
+                updateProviderDefaults(for: vm.config.provider)
+            }
+        }
+    }
+    
+    private func updateProviderDefaults(for provider: AIProviderType) {
+        // Only update if fields are empty or contain placeholder values
+        if vm.config.model.isEmpty || vm.config.model == "codellama:7b-instruct" {
+            switch provider {
+            case .openai:
+                vm.config.model = "gpt-4o-mini"
+                vm.config.baseURL = "https://api.openai.com/v1"
+            case .anthropic:
+                vm.config.model = "claude-3-5-sonnet-20240620"
+                vm.config.baseURL = "https://api.anthropic.com/v1"
+            case .ollama:
+                vm.config.model = "codellama:7b-instruct"
+                vm.config.baseURL = "http://localhost:11434"
+            case .custom:
+                vm.config.model = ""
+                vm.config.baseURL = ""
+            }
+        }
     }
 }
 
@@ -247,24 +343,101 @@ struct ScriptBuilderMainView: View {
     @ObservedObject var vm: ScriptBuilderModel
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("PROMPT").lcarsPill()
-            TextEditor(text: $vm.prompt)
-                .font(.system(.body, design: .monospaced))
-                .frame(minHeight: 120)
-                .overlay(RoundedRectangle(cornerRadius: 8).stroke(LCARSTheme.primary, lineWidth: 1))
+        Group {
+            if vm.enableCLI {
+                // Split interface with CLI
+                VStack(alignment: .leading, spacing: 12) {
+                    // Top row: Prompt and CLI Interface
+                    HStack(spacing: 12) {
+                        // Left: Prompt
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("PROMPT").lcarsPill()
+                            TextEditor(text: $vm.prompt)
+                                .font(.system(.body, design: .monospaced))
+                                .frame(minHeight: 120)
+                                .overlay(RoundedRectangle(cornerRadius: 8).stroke(LCARSTheme.primary, lineWidth: 1))
+                        }
+                        
+                        // Right: CLI Interface
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("CLI INTERFACE").lcarsPill()
+                            VStack(spacing: 8) {
+                                HStack {
+                                    Text("$")
+                                        .foregroundColor(.green)
+                                        .font(.system(.body, design: .monospaced))
+                                    Text("macforge script --help")
+                                        .font(.system(.body, design: .monospaced))
+                                        .foregroundColor(.secondary)
+                                }
+                                .padding(8)
+                                .background(Color.black.opacity(0.1))
+                                .cornerRadius(4)
+                                
+                                Text("CLI Commands:")
+                                    .font(.caption)
+                                    .fontWeight(.semibold)
+                                
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("• macforge script generate \"prompt\"")
+                                    Text("• macforge script explain \"script\"")
+                                    Text("• macforge script harden \"script\"")
+                                    Text("• macforge script --output-mode script")
+                                    Text("• macforge script --language bash")
+                                }
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                
+                                Spacer()
+                            }
+                            .frame(minHeight: 120)
+                            .padding(8)
+                            .background(Color.black.opacity(0.05))
+                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(LCARSTheme.primary, lineWidth: 1))
+                        }
+                    }
+                    
+                    ScriptBuilderButtonsView(vm: vm)
+                    
+                    if let err = vm.errorText { Text(err).foregroundStyle(.red).font(.footnote) }
+                    
+                    // Bottom: Script output
+                    Text("SCRIPT OUTPUT").lcarsPill()
+                    TextEditor(text: $vm.script)
+                        .font(.system(.body, design: .monospaced))
+                        .frame(minHeight: 200)
+                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(LCARSTheme.primary, lineWidth: 1))
+                    
+                    ScriptBuilderActionButtonsView(vm: vm)
+                }
+            } else {
+                // Standard interface
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("PROMPT").lcarsPill()
+                    TextEditor(text: $vm.prompt)
+                        .font(.system(.body, design: .monospaced))
+                        .frame(minHeight: 120)
+                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(LCARSTheme.primary, lineWidth: 1))
 
-            ScriptBuilderButtonsView(vm: vm)
+                    ScriptBuilderButtonsView(vm: vm)
 
-            if let err = vm.errorText { Text(err).foregroundStyle(.red).font(.footnote) }
+                    if let err = vm.errorText { Text(err).foregroundStyle(.red).font(.footnote) }
 
-            Text("SCRIPT").lcarsPill()
-            TextEditor(text: $vm.script)
-                .font(.system(.body, design: .monospaced))
-                .frame(minHeight: 260)
-                .overlay(RoundedRectangle(cornerRadius: 8).stroke(LCARSTheme.primary, lineWidth: 1))
+                    Text("SCRIPT").lcarsPill()
+                    TextEditor(text: $vm.script)
+                        .font(.system(.body, design: .monospaced))
+                        .frame(minHeight: 260)
+                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(LCARSTheme.primary, lineWidth: 1))
 
-            ScriptBuilderActionButtonsView(vm: vm)
+                    ScriptBuilderActionButtonsView(vm: vm)
+                }
+            }
+        }
+        .sheet(isPresented: $vm.showingLoadingPopup) {
+            ScriptBuilderLoadingView(
+                operation: vm.currentOperation,
+                isVisible: vm.showingLoadingPopup
+            )
         }
     }
 }
@@ -339,6 +512,76 @@ struct ScriptBuilderActionButtonsView: View {
     }
 }
 
+// MARK: - Script Builder Loading View
+struct ScriptBuilderLoadingView: View {
+    let operation: String
+    let isVisible: Bool
+    @Environment(\.dismiss) private var dismiss
+    
+    var body: some View {
+        VStack(spacing: 24) {
+            // Header
+            HStack {
+                Image(systemName: "brain.head.profile")
+                    .font(.title)
+                    .foregroundColor(.purple)
+                    .symbolEffect(.pulse, isActive: isVisible)
+                Text("AI Processing")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                Spacer()
+            }
+            
+            // Progress Section
+            VStack(spacing: 16) {
+                ProgressView()
+                    .scaleEffect(1.5)
+                    .progressViewStyle(CircularProgressViewStyle(tint: .purple))
+                
+                Text(operation)
+                    .font(.headline)
+                    .foregroundColor(.primary)
+                
+                Text("Please wait while the AI processes your request...")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+            
+            // AI Provider Info
+            VStack(spacing: 8) {
+                HStack {
+                    Image(systemName: "sparkles")
+                        .foregroundColor(.blue)
+                    Text("Powered by AI")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                
+                Text("This may take a few moments depending on the complexity of your request.")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+        }
+        .padding(32)
+        .frame(maxWidth: 400)
+        .background(
+            RoundedRectangle(cornerRadius: 20)
+                .fill(Color(.windowBackgroundColor))
+                .shadow(color: .black.opacity(0.2), radius: 20, x: 0, y: 10)
+        )
+        .onAppear {
+            // Auto-close after 30 seconds as a safety measure
+            DispatchQueue.main.asyncAfter(deadline: .now() + 30) {
+                if isVisible {
+                    dismiss()
+                }
+            }
+        }
+    }
+}
+
 // MARK: - Package Info Model
 struct PackageInfo {
     let name: String
@@ -369,9 +612,21 @@ struct DeviceFoundryHostView: View {
 struct LogBurnerHostView: View {
     var model: BuilderModel
     var selectedMDM: MDMVendor?
+    var userSettings: UserSettings
 
     var body: some View {
-        LogBurnerView()
+        LogBurnerView(userSettings: userSettings)
+    }
+}
+
+// MARK: - The Blacksmith
+struct BlacksmithHostView: View {
+    var model: BuilderModel
+    var selectedMDM: MDMVendor?
+    var userSettings: UserSettings
+
+    var body: some View {
+        BlacksmithView()
     }
 }
 

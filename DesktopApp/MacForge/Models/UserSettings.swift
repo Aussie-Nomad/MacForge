@@ -15,6 +15,7 @@ class UserSettings: ObservableObject {
     @Published var mdmAccounts: [MDMAccount]
     @Published var aiAccounts: [AIAccount]
     @Published var generalSettings: GeneralSettings
+    @Published var hasSeenWelcome: Bool
     
     private let keychainService = KeychainService.shared
     private let secureLogger = SecureLogger.shared
@@ -25,6 +26,7 @@ class UserSettings: ObservableObject {
         self.mdmAccounts = []
         self.aiAccounts = []
         self.generalSettings = GeneralSettings()
+        self.hasSeenWelcome = UserDefaults.standard.bool(forKey: "hasSeenWelcome")
         loadSettings()
     }
     
@@ -40,6 +42,7 @@ class UserSettings: ObservableObject {
         if let encoded = try? JSONEncoder().encode(generalSettings) {
             UserDefaults.standard.set(encoded, forKey: "generalSettings")
         }
+        UserDefaults.standard.set(hasSeenWelcome, forKey: "hasSeenWelcome")
         
         // Save sensitive accounts to Keychain
         saveMDMAccountsToKeychain()
@@ -156,7 +159,11 @@ class UserSettings: ObservableObject {
             
             do {
                 // Load account from keychain
-                let account = try keychainService.retrieveAIAccount(id: accountId)
+                var account = try keychainService.retrieveAIAccount(id: accountId)
+                
+                // Migrate display name if it doesn't match the provider
+                account = migrateAIAccountDisplayName(account)
+                
                 loadedAccounts.append(account)
                 
             } catch {
@@ -166,6 +173,25 @@ class UserSettings: ObservableObject {
         }
         
         aiAccounts = loadedAccounts
+        
+        // Save migrated accounts back to keychain
+        if !loadedAccounts.isEmpty {
+            saveAIAccountsToKeychain()
+        }
+    }
+    
+    private func migrateAIAccountDisplayName(_ account: AIAccount) -> AIAccount {
+        // Check if display name matches the provider
+        let expectedDisplayName = "\(account.provider.displayName) Account"
+        
+        // If display name doesn't match provider, update it
+        if account.displayName != expectedDisplayName {
+            var updatedAccount = account
+            updatedAccount.displayName = expectedDisplayName
+            return updatedAccount
+        }
+        
+        return account
     }
     
     // MARK: - MDM Account Management
@@ -252,6 +278,12 @@ class UserSettings: ObservableObject {
             aiAccounts[index].isDefault = true
             saveSettings()
         }
+    }
+    
+    // MARK: - Welcome Management
+    func markWelcomeAsSeen() {
+        hasSeenWelcome = true
+        saveSettings()
     }
     
     // MARK: - GDPR Compliance Methods
@@ -353,13 +385,13 @@ struct ProfileDefaults: Codable {
 }
 
 // MARK: - Theme Preferences
-struct ThemePreferences: Codable {
+struct ThemePreferences: Codable, Equatable {
     var isLCARSActive: Bool = true
     var panelOpacity: Double = 0.3
     var animationSpeed: AnimationSpeed = .normal
     var accentColor: AccentColor = .amber
     
-    enum AnimationSpeed: String, CaseIterable, Codable {
+    enum AnimationSpeed: String, CaseIterable, Codable, Equatable {
         case slow = "Slow"
         case normal = "Normal"
         case fast = "Fast"
@@ -373,7 +405,7 @@ struct ThemePreferences: Codable {
         }
     }
     
-    enum AccentColor: String, CaseIterable, Codable {
+    enum AccentColor: String, CaseIterable, Codable, Equatable {
         case amber = "Amber"
         case orange = "Orange"
         case purple = "Purple"

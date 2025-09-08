@@ -173,7 +173,13 @@ class LogAnalysisService: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var analysisResult: LogAnalysisResult?
+    @Published var progress: Double = 0.0
+    @Published var currentStep: String = ""
+    @Published var showingProgressPopup = false
+    @Published var aiSummary: String = ""
+    @Published var isGeneratingAISummary = false
     
+    private let userSettings: UserSettings
     private let supportedFileTypes: [UTType] = [
         .plainText,
         .log,
@@ -181,15 +187,35 @@ class LogAnalysisService: ObservableObject {
         .text
     ]
     
+    init(userSettings: UserSettings) {
+        self.userSettings = userSettings
+    }
+    
     func analyzeLogFile(at url: URL) async {
         isLoading = true
         errorMessage = nil
+        progress = 0.0
+        currentStep = "Starting analysis..."
+        showingProgressPopup = true
         
-        defer { isLoading = false }
+        defer { 
+            isLoading = false
+            showingProgressPopup = false
+        }
         
         do {
+            // Step 1: Reading file
+            currentStep = "Reading log file..."
+            progress = 0.1
+            try await Task.sleep(nanoseconds: 100_000_000) // Small delay for UI
+            
             let fileData = try Data(contentsOf: url)
             let content = String(data: fileData, encoding: .utf8) ?? ""
+            
+            // Step 2: Parsing content
+            currentStep = "Parsing log content..."
+            progress = 0.3
+            try await Task.sleep(nanoseconds: 100_000_000)
             
             let result = await performLogAnalysis(
                 fileName: url.lastPathComponent,
@@ -197,21 +223,60 @@ class LogAnalysisService: ObservableObject {
                 content: content
             )
             
+            // Step 3: Finalizing results
+            currentStep = "Finalizing analysis..."
+            progress = 0.9
+            try await Task.sleep(nanoseconds: 100_000_000)
+            
             analysisResult = result
+            
+            // Complete
+            currentStep = "Analysis complete!"
+            progress = 1.0
+            try await Task.sleep(nanoseconds: 500_000_000) // Brief pause to show completion
+            
+            // Generate AI summary
+            await generateAISummary(for: result)
             
         } catch {
             errorMessage = "Failed to read log file: \(error.localizedDescription)"
+            currentStep = "Analysis failed"
+            progress = 0.0
         }
     }
     
     private func performLogAnalysis(fileName: String, fileSize: Int64, content: String) async -> LogAnalysisResult {
         let lines = content.components(separatedBy: .newlines)
         
-        // Parse log content
+        // Update progress during analysis
+        currentStep = "Extracting errors..."
+        progress = 0.4
+        try? await Task.sleep(nanoseconds: 50_000_000)
+        
         let errors = extractErrors(from: lines)
+        
+        currentStep = "Extracting warnings..."
+        progress = 0.5
+        try? await Task.sleep(nanoseconds: 50_000_000)
+        
         let warnings = extractWarnings(from: lines)
+        
+        currentStep = "Analyzing security events..."
+        progress = 0.6
+        try? await Task.sleep(nanoseconds: 50_000_000)
+        
         let securityEvents = extractSecurityEvents(from: lines)
+        
+        currentStep = "Building timeline..."
+        progress = 0.7
+        try? await Task.sleep(nanoseconds: 50_000_000)
+        
         let timeline = extractTimeline(from: lines)
+        
+        currentStep = "Calculating statistics..."
+        progress = 0.8
+        try? await Task.sleep(nanoseconds: 50_000_000)
+        
         let statistics = calculateStatistics(from: lines)
         
         // Generate summary
@@ -516,11 +581,115 @@ class LogAnalysisService: ObservableObject {
         }
         return 0
     }
+    
+    // MARK: - AI Summary Generation
+    
+    private func generateAISummary(for result: LogAnalysisResult) async {
+        isGeneratingAISummary = true
+        aiSummary = ""
+        
+        // Create a comprehensive prompt for AI analysis
+        let prompt = createAISummaryPrompt(for: result)
+        
+        // Use the first available AI account or fallback to a basic summary
+        if let userSettings = getCurrentUserSettings(),
+           let aiAccount = userSettings.getDefaultAIAccount() {
+            
+            let config = AIServiceConfig(
+                provider: aiAccount.provider,
+                apiKey: aiAccount.apiKey,
+                model: aiAccount.effectiveModel,
+                baseURL: aiAccount.effectiveBaseURL
+            )
+            
+            let aiService = AIService(config: config)
+            
+            do {
+                aiSummary = try await aiService.generateScript(
+                    prompt: prompt,
+                    language: "text",
+                    systemPrompt: "You are an expert log analyst. Provide clear, technical analysis of log files with actionable insights."
+                )
+            } catch {
+                aiSummary = generateBasicSummary(for: result)
+            }
+        } else {
+            // Fallback to basic analysis if no AI account is configured
+            aiSummary = generateBasicSummary(for: result)
+        }
+        
+        isGeneratingAISummary = false
+    }
+    
+    private func createAISummaryPrompt(for result: LogAnalysisResult) -> String {
+        let errorCount = result.errors.count
+        let warningCount = result.warnings.count
+        let criticalCount = result.summary.criticalIssues
+        let totalLines = result.summary.totalLines
+        
+        return """
+        Analyze this log file and provide a comprehensive summary. The log file "\(result.fileName)" contains \(totalLines) lines with \(errorCount) errors, \(warningCount) warnings, and \(criticalCount) critical issues.
+        
+        Please provide:
+        1. A brief overview of what type of log this is (system log, application log, crash log, etc.)
+        2. The main issues or events found in the log
+        3. Root cause analysis if possible
+        4. Severity assessment and potential impact
+        5. Recommended actions or next steps
+        
+        Focus on the most important findings and explain them in clear, technical language that would be useful for troubleshooting.
+        
+        Log content preview (first 20 lines):
+        \(result.rawContent.components(separatedBy: .newlines).prefix(20).joined(separator: "\n"))
+        """
+    }
+    
+    private func generateBasicSummary(for result: LogAnalysisResult) -> String {
+        let errorCount = result.errors.count
+        let warningCount = result.warnings.count
+        let criticalCount = result.summary.criticalIssues
+        let totalLines = result.summary.totalLines
+        
+        var summary = "**Log Analysis Summary**\n\n"
+        summary += "This log file contains \(totalLines) lines with \(errorCount) errors, \(warningCount) warnings, and \(criticalCount) critical issues.\n\n"
+        
+        if errorCount > 0 {
+            summary += "**Key Issues Found:**\n"
+            for error in result.errors.prefix(3) {
+                summary += "• \(error.message)\n"
+            }
+            if errorCount > 3 {
+                summary += "• ... and \(errorCount - 3) more errors\n"
+            }
+        }
+        
+        if criticalCount > 0 {
+            summary += "\n**Critical Issues:** \(criticalCount) critical errors require immediate attention.\n"
+        }
+        
+        if result.securityEvents.count > 0 {
+            summary += "\n**Security Events:** \(result.securityEvents.count) security-related events detected.\n"
+        }
+        
+        summary += "\n**Recommendation:** Review the detailed error analysis below for specific remediation steps."
+        
+        return summary
+    }
+    
+    private func getCurrentUserSettings() -> UserSettings? {
+        return userSettings
+    }
 }
 
 // MARK: - Log Burner View
 struct LogBurnerView: View {
-    @StateObject private var logAnalysisService = LogAnalysisService()
+    var userSettings: UserSettings
+    @StateObject private var logAnalysisService: LogAnalysisService
+    
+    init(userSettings: UserSettings) {
+        self.userSettings = userSettings
+        self._logAnalysisService = StateObject(wrappedValue: LogAnalysisService(userSettings: userSettings))
+    }
     @State private var isDragOver = false
     @State private var showingResults = false
     @State private var uploadedFileName: String? = nil
@@ -702,7 +871,7 @@ struct LogBurnerView: View {
                     }
                     .buttonStyle(.borderedProminent)
                     .sheet(isPresented: $showingResults) {
-                        LogAnalysisResultsView(result: result)
+                        LogAnalysisResultsView(result: result, logAnalysisService: logAnalysisService)
                     }
                 }
                 .padding()
@@ -719,6 +888,15 @@ struct LogBurnerView: View {
                 handleFilePicker()
                 showingFilePicker = false
             }
+        }
+        .sheet(isPresented: $logAnalysisService.showingProgressPopup) {
+            LogAnalysisProgressView(
+                progress: logAnalysisService.progress,
+                currentStep: logAnalysisService.currentStep,
+                fileName: uploadedFileName ?? "Unknown",
+                analysisResult: logAnalysisService.analysisResult,
+                logAnalysisService: logAnalysisService
+            )
         }
     }
     
@@ -769,6 +947,7 @@ struct LogBurnerView: View {
 // MARK: - Log Analysis Results View
 struct LogAnalysisResultsView: View {
     let result: LogAnalysisResult
+    let logAnalysisService: LogAnalysisService
     @Environment(\.dismiss) private var dismiss
     @State private var showingReportExport = false
     @State private var rawLogContent: String = ""
@@ -873,6 +1052,12 @@ struct LogAnalysisResultsView: View {
                     .background(
                         RoundedRectangle(cornerRadius: 12)
                             .fill(Color(.controlBackgroundColor))
+                    )
+                    
+                    // AI Summary Section
+                    AISummaryCard(
+                        summary: logAnalysisService.aiSummary,
+                        isGenerating: logAnalysisService.isGeneratingAISummary
                     )
                     
                     // Summary Card
@@ -1548,6 +1733,271 @@ struct TimelineRow: View {
     }
 }
 
+// MARK: - Progress View
+struct LogAnalysisProgressView: View {
+    let progress: Double
+    let currentStep: String
+    let fileName: String
+    let analysisResult: LogAnalysisResult?
+    let logAnalysisService: LogAnalysisService
+    @Environment(\.dismiss) private var dismiss
+    @State private var showingResults = false
+    
+    var body: some View {
+        VStack(spacing: 24) {
+            // Header
+            VStack(spacing: 12) {
+                Image(systemName: "flame.circle.fill")
+                    .font(.system(size: 48))
+                    .foregroundColor(.orange)
+                    .symbolEffect(.pulse, isActive: true)
+                
+                Text("Analyzing Log File")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                
+                Text(fileName)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+            }
+            
+            // Progress Section
+            VStack(spacing: 16) {
+                // Progress Bar
+                VStack(spacing: 8) {
+                    HStack {
+                        Text("Progress")
+                            .font(.headline)
+                        Spacer()
+                        Text("\(Int(progress * 100))%")
+                            .font(.headline)
+                            .foregroundColor(.blue)
+                    }
+                    
+                    ProgressView(value: progress)
+                        .progressViewStyle(LinearProgressViewStyle(tint: .blue))
+                        .scaleEffect(y: 2.0)
+                }
+                
+                // Current Step
+                VStack(spacing: 8) {
+                    HStack {
+                        Image(systemName: "gear")
+                            .foregroundColor(.blue)
+                            .symbolEffect(.rotate, isActive: true)
+                        Text("Current Step")
+                            .font(.headline)
+                        Spacer()
+                    }
+                    
+                    Text(currentStep)
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity)
+                }
+            }
+            .padding(20)
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(Color(.controlBackgroundColor))
+                    .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
+            )
+            
+            // Info Section
+            VStack(spacing: 12) {
+                HStack {
+                    Image(systemName: "info.circle")
+                        .foregroundColor(.blue)
+                    Text("Analysis Information")
+                        .font(.headline)
+                    Spacer()
+                }
+                
+                VStack(alignment: .leading, spacing: 8) {
+                    LogAnalysisInfoRow(icon: "doc.text", title: "File Type", value: "Log File")
+                    LogAnalysisInfoRow(icon: "clock", title: "Estimated Time", value: "30-60 seconds")
+                    LogAnalysisInfoRow(icon: "chart.bar", title: "Analysis Type", value: "AI-Powered")
+                }
+            }
+            .padding(20)
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(Color.blue.opacity(0.05))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(Color.blue.opacity(0.2), lineWidth: 1)
+                    )
+            )
+            
+            // Action Buttons
+            if progress < 1.0 {
+                Button("Cancel Analysis") {
+                    dismiss()
+                }
+                .buttonStyle(.bordered)
+                .foregroundColor(.red)
+            } else if let result = analysisResult {
+                VStack(spacing: 12) {
+                    HStack {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.green)
+                        Text("Analysis Complete!")
+                            .font(.headline)
+                            .foregroundColor(.green)
+                    }
+                    
+                    Button("View Analysis Results") {
+                        showingResults = true
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.large)
+                }
+                .padding()
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color.green.opacity(0.1))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.green.opacity(0.3), lineWidth: 1)
+                        )
+                )
+            }
+        }
+        .padding(24)
+        .frame(maxWidth: 400)
+        .background(
+            RoundedRectangle(cornerRadius: 20)
+                .fill(Color(.windowBackgroundColor))
+                .shadow(color: .black.opacity(0.2), radius: 20, x: 0, y: 10)
+        )
+        .sheet(isPresented: $showingResults) {
+            if let result = analysisResult {
+                LogAnalysisResultsView(result: result, logAnalysisService: logAnalysisService)
+            }
+        }
+    }
+}
+
+// MARK: - AI Summary Card
+struct AISummaryCard: View {
+    let summary: String
+    let isGenerating: Bool
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            // Header with AI icon
+            HStack {
+                Image(systemName: "brain.head.profile")
+                    .font(.title2)
+                    .foregroundColor(.purple)
+                    .symbolEffect(.pulse, isActive: isGenerating)
+                Text("AI Analysis Summary")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                Spacer()
+                if isGenerating {
+                    ProgressView()
+                        .scaleEffect(0.8)
+                }
+            }
+            
+            // Summary content
+            if isGenerating {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text("Generating AI summary...")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                        Spacer()
+                    }
+                    
+                    // Animated placeholder
+                    VStack(alignment: .leading, spacing: 4) {
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(Color.gray.opacity(0.3))
+                            .frame(height: 12)
+                            .frame(maxWidth: .infinity)
+                        
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(Color.gray.opacity(0.2))
+                            .frame(height: 12)
+                            .frame(maxWidth: .infinity * 0.8)
+                        
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(Color.gray.opacity(0.2))
+                            .frame(height: 12)
+                            .frame(maxWidth: .infinity * 0.6)
+                    }
+                    .padding(.vertical, 8)
+                }
+            } else if !summary.isEmpty {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text(summary)
+                            .font(.subheadline)
+                            .lineSpacing(4)
+                            .textSelection(.enabled)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .frame(maxHeight: 200)
+            } else {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Image(systemName: "exclamationmark.triangle")
+                            .foregroundColor(.orange)
+                        Text("AI summary not available")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                        Spacer()
+                    }
+                    
+                    Text("Configure an AI account in Settings to enable intelligent log analysis.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+        }
+        .padding(20)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color.purple.opacity(0.05))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(Color.purple.opacity(0.2), lineWidth: 1)
+                )
+        )
+    }
+}
+
+// MARK: - Log Analysis Info Row Component
+struct LogAnalysisInfoRow: View {
+    let icon: String
+    let title: String
+    let value: String
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: icon)
+                .foregroundColor(.blue)
+                .frame(width: 16)
+            
+            Text(title)
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+            
+            Spacer()
+            
+            Text(value)
+                .font(.subheadline)
+                .fontWeight(.medium)
+        }
+    }
+}
+
 #Preview {
-    LogBurnerView()
+    LogBurnerView(userSettings: UserSettings())
 }

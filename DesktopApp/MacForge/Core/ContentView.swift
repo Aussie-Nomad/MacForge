@@ -12,7 +12,9 @@ struct ContentView: View {
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
     @State private var selectedMDM: MDMVendor? = nil
     @State private var showingAccountSettings = false
+    @State private var showingWelcome = false
     @StateObject private var model = BuilderModel()
+    @EnvironmentObject var userSettings: UserSettings
 
     // MARK: - Layout
     private let sidebarWidth: CGFloat = LCARSTheme.Sidebar.width
@@ -31,17 +33,17 @@ struct ContentView: View {
             case .deviceFoundry:
                 DeviceFoundryHostView(model: model, selectedMDM: selectedMDM)
 
-            case .blueprintBuilder:
-                DDMBlueprintsHostView(model: model, selectedMDM: selectedMDM)
-
             case .ddmBlueprints:
                 DDMBlueprintsHostView(model: model, selectedMDM: selectedMDM)
 
             case .hammeringScripts:
-                HammeringScriptsHostView(model: model, selectedMDM: selectedMDM)
+                HammeringScriptsHostView(model: model, selectedMDM: selectedMDM, userSettings: userSettings)
 
             case .logBurner:
-                LogBurnerHostView(model: model, selectedMDM: selectedMDM)
+                LogBurnerHostView(model: model, selectedMDM: selectedMDM, userSettings: userSettings)
+                
+            case .blacksmith:
+                BlacksmithHostView(model: model, selectedMDM: selectedMDM, userSettings: userSettings)
             }
         } else {
             // No tool chosen yet → landing / author notes
@@ -50,7 +52,8 @@ struct ContentView: View {
                 selectedMDM: selectedMDM,
                 onChangeMDM: { resetMDM() },
                 onPickMDM:   { selectedMDM = $0 },   // keep sidebar open
-                onHome:      { resetTool() }
+                onHome:      { resetTool() },
+                showingWelcome: $showingWelcome
             )
             .themeAwareBackground()
         }
@@ -146,6 +149,20 @@ struct ContentView: View {
         }
         .sheet(isPresented: $showingAccountSettings) {
             SettingsView(userSettings: UserSettings())
+        }
+        .sheet(isPresented: $showingWelcome) {
+            WelcomeView(isPresented: $showingWelcome)
+                .onDisappear {
+                    userSettings.markWelcomeAsSeen()
+                }
+        }
+        .onAppear {
+            // Show welcome popup for first-time users
+            if !userSettings.hasSeenWelcome {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    showingWelcome = true
+                }
+            }
         }
     }
 

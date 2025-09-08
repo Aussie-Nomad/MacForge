@@ -16,6 +16,7 @@ struct LandingPage: View {
     var onChangeMDM: () -> Void
     var onPickMDM: (MDMVendor) -> Void
     var onHome: () -> Void
+    @Binding var showingWelcome: Bool
     
     var body: some View {
         ZStack {
@@ -88,6 +89,32 @@ struct LandingPage: View {
             Text("Choose an MDM from the left to begin.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
+            
+            // Tutorial Button
+            Button(action: {
+                showingWelcome = true
+            }) {
+                HStack(spacing: 8) {
+                    Image(systemName: "play.circle.fill")
+                        .font(.system(size: 16, weight: .semibold))
+                    Text("START TUTORIAL")
+                        .font(.system(size: 14, weight: .bold, design: .monospaced))
+                }
+                .foregroundStyle(.white)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 10)
+                .background(
+                    RoundedRectangle(cornerRadius: 20)
+                        .fill(LCARSTheme.accent)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 20)
+                                .stroke(LCARSTheme.accent, lineWidth: 2)
+                        )
+                )
+                .shadow(color: LCARSTheme.accent.opacity(0.4), radius: 6)
+            }
+            .buttonStyle(.plain)
+            .contentShape(Rectangle())
         }
     }
     
@@ -97,15 +124,22 @@ struct LandingPage: View {
             VStack(alignment: .leading, spacing: 12) {
                 sectionHeader("AUTHORS NOTES", color: LcarsTheme.orange)
                 
-                Text("MacForge is a cutting-edge toolbox for building and managing Apple MDM payloads.")
-                    .font(.headline)
-                    .foregroundStyle(LcarsTheme.amber)
-                
-                Text("This application streamlines the creation of configuration profiles for macOS and iOS devices. Whether you're managing PPPC permissions, Wi-Fi settings, or security policies, MacForge provides an intuitive LCARS-inspired interface for building production-ready profiles.")
-                    .font(.body)
-                    .foregroundStyle(.primary)
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("MacForge v2.1.1 'Meet the Blacksmith' - Complete Package Management Suite")
+                            .font(.headline)
+                            .foregroundStyle(LcarsTheme.amber)
+                        
+                        Text("Release 2.1.1 delivers a comprehensive package management solution that rivals commercial alternatives. Featuring The Blacksmith with Yorkshire personality, six specialized Package Management Tools, Template Systems, Advanced Repackaging, and AI-powered analysis. MacForge now provides enterprise-grade functionality for any MDM system, making it the ultimate toolkit for Mac administrators.")
+                            .font(.body)
+                            .foregroundStyle(.primary)
+                    }
+                    .padding(.trailing, 8) // Add padding for scrollbar
+                }
+                .frame(height: 120) // Fixed height instead of maxHeight
             }
         }
+        .frame(height: 200) // Fixed panel height
     }
     
     private var currentWorkSection: some View {
@@ -113,20 +147,29 @@ struct LandingPage: View {
             VStack(alignment: .leading, spacing: 12) {
                 sectionHeader("CURRENTLY WORKING ON", color: Color.blue)
                 
-                VStack(alignment: .leading, spacing: 8) {
-                    workItem("LCARS Theme System", status: "COMPLETED")
-                    workItem("Application Drop Zone", status: "COMPLETED")
-                    workItem("Working Download Button", status: "COMPLETED")
-                    workItem("Template System", status: "COMPLETED")
-                    workItem("Build System Fixes", status: "COMPLETED")
-                    workItem("Theme Component Architecture", status: "COMPLETED")
-                    workItem("CI/CD Pipeline", status: "COMPLETED")
-                    workItem("MDM Authentication Flow", status: "IN PROGRESS")
-                    workItem("JAMF Pro Integration", status: "NEXT")
-                    workItem("UI Layout Improvements", status: "COMPLETED")
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 8) {
+                        workItem("Package Management Tools Suite", status: "COMPLETED")
+                        workItem("The Blacksmith MDM Wizard", status: "COMPLETED")
+                        workItem("AI-Powered Package Analysis", status: "COMPLETED")
+                        workItem("Script Builder CLI Integration", status: "COMPLETED")
+                        workItem("Package Casting UI Enhancements", status: "COMPLETED")
+                        workItem("Blacksmith Yorkshire Personality", status: "COMPLETED")
+                        workItem("Package Tool Navigation System", status: "COMPLETED")
+                        workItem("Advanced Package Repackaging", status: "COMPLETED")
+                        workItem("Template Systems Implementation", status: "COMPLETED")
+                        workItem("System Lifecycle Management", status: "COMPLETED")
+                        workItem("Blacksmith Package Wizard", status: "COMPLETED")
+                        workItem("Release 2.1.1 Documentation", status: "COMPLETED")
+                        workItem("Performance Optimization", status: "NEXT")
+                        workItem("Enhanced Error Handling", status: "NEXT")
+                    }
+                    .padding(.trailing, 8) // Add padding for scrollbar
                 }
+                .frame(height: 200) // Fixed height instead of maxHeight
             }
         }
+        .frame(height: 280) // Fixed panel height
     }
     
     private var contactSection: some View {
@@ -146,6 +189,7 @@ struct LandingPage: View {
                 }
             }
         }
+        .frame(height: 180) // Fixed panel height
     }
     
     private var bugsSection: some View {
@@ -153,7 +197,7 @@ struct LandingPage: View {
             VStack(alignment: .leading, spacing: 12) {
                 sectionHeader("REPORTED BUGS & KNOWN ISSUES", color: Color.red)
                 
-                Text("CURRENT STATUS: RESOLVED")
+                Text("CURRENT STATUS: ALL MAJOR ISSUES RESOLVED")
                     .font(.caption)
                     .foregroundStyle(Color.green)
                     .padding(.horizontal, 8)
@@ -161,12 +205,22 @@ struct LandingPage: View {
                     .background(Color.green.opacity(0.2))
                     .cornerRadius(8)
                 
-                VStack(alignment: .leading, spacing: 6) {
-                    issueItem("All critical security vulnerabilities", severity: "RESOLVED", color: .green)
-                    issueItem("GDPR compliance implementation", severity: "RESOLVED", color: .green)
-                    issueItem("Build system and compilation errors", severity: "RESOLVED", color: .green)
-                    issueItem("Accessibility improvements", severity: "RESOLVED", color: .green)
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 6) {
+                        issueItem("Blacksmith MDM Wizard UI Layout", severity: "RESOLVED", color: .green)
+                        issueItem("Package Analysis AI Integration", severity: "RESOLVED", color: .green)
+                        issueItem("Package Management Tools Visibility", severity: "RESOLVED", color: .green)
+                        issueItem("AISummaryCard Naming Conflict", severity: "RESOLVED", color: .green)
+                        issueItem("Package Tool Navigation System", severity: "RESOLVED", color: .green)
+                        issueItem("Template Systems Implementation", severity: "RESOLVED", color: .green)
+                        issueItem("Advanced Repackaging Tool", severity: "RESOLVED", color: .green)
+                        issueItem("Blacksmith Package Wizard", severity: "RESOLVED", color: .green)
+                        issueItem("Compilation Errors", severity: "RESOLVED", color: .green)
+                        issueItem("Documentation Updates", severity: "RESOLVED", color: .green)
+                    }
+                    .padding(.trailing, 8) // Add padding for scrollbar
                 }
+                .frame(height: 120) // Fixed height for scrollable content
                 
                 Text("Report bugs using the 'REPORT BUG' button above.")
                     .font(.caption)
@@ -174,6 +228,7 @@ struct LandingPage: View {
                     .italic()
             }
         }
+        .frame(height: 220) // Fixed panel height
     }
     
     private var versionSection: some View {
@@ -182,14 +237,16 @@ struct LandingPage: View {
                 sectionHeader("SYSTEM VERSION", color: LcarsTheme.amber)
                 
                 VStack(spacing: 8) {
-                    infoRow("VERSION", "1.1.0 (Beta)")
-                    infoRow("BUILD DATE", "August 28, 2025")
+                    infoRow("VERSION", "2.1.1 (Beta) - Meet the Blacksmith")
+                    infoRow("BUILD DATE", "January 15, 2025")
                     infoRow("PLATFORMS", "macOS 12+")
                     infoRow("STATUS", "BUILD SUCCESSFUL")
+                    infoRow("AI PROVIDERS", "OpenAI, Anthropic, Ollama, Custom")
                     infoRow("CI/CD", "FUNCTIONAL")
                 }
             }
         }
+        .frame(height: 180) // Fixed panel height
     }
 
     // MARK: - Helper Components
