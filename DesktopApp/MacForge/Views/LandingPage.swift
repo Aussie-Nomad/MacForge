@@ -126,11 +126,11 @@ struct LandingPage: View {
                 
                 ScrollView {
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("MacForge has evolved into a comprehensive MDM toolkit with AI-powered features.")
+                        Text("MacForge v2.1.1 'Meet the Blacksmith' - Complete Package Management Suite")
                             .font(.headline)
                             .foregroundStyle(LcarsTheme.amber)
                         
-                        Text("The latest release introduces The Blacksmith - a conversational AI wizard for MDM setup, plus six specialized Package Management Tools with AI-powered analysis. MacForge now provides intelligent assistance for package creation, security assessment, and deployment recommendations, making it the ultimate toolkit for Mac administrators.")
+                        Text("Release 2.1.1 delivers a comprehensive package management solution that rivals commercial alternatives. Featuring The Blacksmith with Yorkshire personality, six specialized Package Management Tools, Template Systems, Advanced Repackaging, and AI-powered analysis. MacForge now provides enterprise-grade functionality for any MDM system, making it the ultimate toolkit for Mac administrators.")
                             .font(.body)
                             .foregroundStyle(.primary)
                     }
@@ -156,9 +156,13 @@ struct LandingPage: View {
                         workItem("Package Casting UI Enhancements", status: "COMPLETED")
                         workItem("Blacksmith Yorkshire Personality", status: "COMPLETED")
                         workItem("Package Tool Navigation System", status: "COMPLETED")
-                        workItem("Advanced Package Repackaging", status: "IN PROGRESS")
-                        workItem("Template Systems Implementation", status: "NEXT")
-                        workItem("System Lifecycle Management", status: "NEXT")
+                        workItem("Advanced Package Repackaging", status: "COMPLETED")
+                        workItem("Template Systems Implementation", status: "COMPLETED")
+                        workItem("System Lifecycle Management", status: "COMPLETED")
+                        workItem("Blacksmith Package Wizard", status: "COMPLETED")
+                        workItem("Release 2.1.1 Documentation", status: "COMPLETED")
+                        workItem("Performance Optimization", status: "NEXT")
+                        workItem("Enhanced Error Handling", status: "NEXT")
                     }
                     .padding(.trailing, 8) // Add padding for scrollbar
                 }
@@ -193,12 +197,12 @@ struct LandingPage: View {
             VStack(alignment: .leading, spacing: 12) {
                 sectionHeader("REPORTED BUGS & KNOWN ISSUES", color: Color.red)
                 
-                Text("CURRENT STATUS: MOSTLY RESOLVED")
+                Text("CURRENT STATUS: ALL MAJOR ISSUES RESOLVED")
                     .font(.caption)
-                    .foregroundStyle(Color.orange)
+                    .foregroundStyle(Color.green)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
-                    .background(Color.orange.opacity(0.2))
+                    .background(Color.green.opacity(0.2))
                     .cornerRadius(8)
                 
                 ScrollView {
@@ -208,7 +212,11 @@ struct LandingPage: View {
                         issueItem("Package Management Tools Visibility", severity: "RESOLVED", color: .green)
                         issueItem("AISummaryCard Naming Conflict", severity: "RESOLVED", color: .green)
                         issueItem("Package Tool Navigation System", severity: "RESOLVED", color: .green)
-                        issueItem("Test Suite Compilation Errors", severity: "PENDING", color: .orange)
+                        issueItem("Template Systems Implementation", severity: "RESOLVED", color: .green)
+                        issueItem("Advanced Repackaging Tool", severity: "RESOLVED", color: .green)
+                        issueItem("Blacksmith Package Wizard", severity: "RESOLVED", color: .green)
+                        issueItem("Compilation Errors", severity: "RESOLVED", color: .green)
+                        issueItem("Documentation Updates", severity: "RESOLVED", color: .green)
                     }
                     .padding(.trailing, 8) // Add padding for scrollbar
                 }
