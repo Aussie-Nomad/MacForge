@@ -53,6 +53,7 @@ class ScriptBuilderModel: ObservableObject {
     @Published var script = ""
     @Published var language = "zsh"
     @Published var outputMode = "script"
+    @Published var enableCLI = false
     @Published var isRunning = false
     @Published var errorText: String?
     @Published var selectedAccountId: UUID?
@@ -294,6 +295,10 @@ struct ScriptBuilderSettingsView: View {
                     Text("One-liner").tag("one_liner")
                     Text("Function").tag("function")
                 }.pickerStyle(.segmented)
+                
+                Text("CLI INTERFACE").lcarsPill()
+                Toggle("Enable CLI Tools & Automation", isOn: $vm.enableCLI)
+                    .toggleStyle(SwitchToggleStyle())
             }
             Spacer()
         }
@@ -338,24 +343,95 @@ struct ScriptBuilderMainView: View {
     @ObservedObject var vm: ScriptBuilderModel
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("PROMPT").lcarsPill()
-            TextEditor(text: $vm.prompt)
-                .font(.system(.body, design: .monospaced))
-                .frame(minHeight: 120)
-                .overlay(RoundedRectangle(cornerRadius: 8).stroke(LCARSTheme.primary, lineWidth: 1))
+        Group {
+            if vm.enableCLI {
+                // Split interface with CLI
+                VStack(alignment: .leading, spacing: 12) {
+                    // Top row: Prompt and CLI Interface
+                    HStack(spacing: 12) {
+                        // Left: Prompt
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("PROMPT").lcarsPill()
+                            TextEditor(text: $vm.prompt)
+                                .font(.system(.body, design: .monospaced))
+                                .frame(minHeight: 120)
+                                .overlay(RoundedRectangle(cornerRadius: 8).stroke(LCARSTheme.primary, lineWidth: 1))
+                        }
+                        
+                        // Right: CLI Interface
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("CLI INTERFACE").lcarsPill()
+                            VStack(spacing: 8) {
+                                HStack {
+                                    Text("$")
+                                        .foregroundColor(.green)
+                                        .font(.system(.body, design: .monospaced))
+                                    Text("macforge script --help")
+                                        .font(.system(.body, design: .monospaced))
+                                        .foregroundColor(.secondary)
+                                }
+                                .padding(8)
+                                .background(Color.black.opacity(0.1))
+                                .cornerRadius(4)
+                                
+                                Text("CLI Commands:")
+                                    .font(.caption)
+                                    .fontWeight(.semibold)
+                                
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("• macforge script generate \"prompt\"")
+                                    Text("• macforge script explain \"script\"")
+                                    Text("• macforge script harden \"script\"")
+                                    Text("• macforge script --output-mode script")
+                                    Text("• macforge script --language bash")
+                                }
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                
+                                Spacer()
+                            }
+                            .frame(minHeight: 120)
+                            .padding(8)
+                            .background(Color.black.opacity(0.05))
+                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(LCARSTheme.primary, lineWidth: 1))
+                        }
+                    }
+                    
+                    ScriptBuilderButtonsView(vm: vm)
+                    
+                    if let err = vm.errorText { Text(err).foregroundStyle(.red).font(.footnote) }
+                    
+                    // Bottom: Script output
+                    Text("SCRIPT OUTPUT").lcarsPill()
+                    TextEditor(text: $vm.script)
+                        .font(.system(.body, design: .monospaced))
+                        .frame(minHeight: 200)
+                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(LCARSTheme.primary, lineWidth: 1))
+                    
+                    ScriptBuilderActionButtonsView(vm: vm)
+                }
+            } else {
+                // Standard interface
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("PROMPT").lcarsPill()
+                    TextEditor(text: $vm.prompt)
+                        .font(.system(.body, design: .monospaced))
+                        .frame(minHeight: 120)
+                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(LCARSTheme.primary, lineWidth: 1))
 
-            ScriptBuilderButtonsView(vm: vm)
+                    ScriptBuilderButtonsView(vm: vm)
 
-            if let err = vm.errorText { Text(err).foregroundStyle(.red).font(.footnote) }
+                    if let err = vm.errorText { Text(err).foregroundStyle(.red).font(.footnote) }
 
-            Text("SCRIPT").lcarsPill()
-            TextEditor(text: $vm.script)
-                .font(.system(.body, design: .monospaced))
-                .frame(minHeight: 260)
-                .overlay(RoundedRectangle(cornerRadius: 8).stroke(LCARSTheme.primary, lineWidth: 1))
+                    Text("SCRIPT").lcarsPill()
+                    TextEditor(text: $vm.script)
+                        .font(.system(.body, design: .monospaced))
+                        .frame(minHeight: 260)
+                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(LCARSTheme.primary, lineWidth: 1))
 
-            ScriptBuilderActionButtonsView(vm: vm)
+                    ScriptBuilderActionButtonsView(vm: vm)
+                }
+            }
         }
         .sheet(isPresented: $vm.showingLoadingPopup) {
             ScriptBuilderLoadingView(

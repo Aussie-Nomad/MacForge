@@ -1,5 +1,51 @@
 import SwiftUI
 
+// MARK: - System Config Button Component
+struct SystemConfigButton: View {
+    let title: String
+    let description: String
+    let icon: String
+    let color: Color
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 12) {
+                Image(systemName: icon)
+                    .font(.system(size: 28))
+                    .foregroundColor(color)
+                
+                VStack(spacing: 4) {
+                    Text(title)
+                        .font(.headline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.primary)
+                        .multilineTextAlignment(.center)
+                    
+                    Text(description)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(2)
+                }
+            }
+            .frame(maxWidth: .infinity, minHeight: 100)
+            .padding(16)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color(.controlBackgroundColor))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(color.opacity(0.3), lineWidth: 1)
+                    )
+            )
+        }
+        .buttonStyle(PlainButtonStyle())
+        .scaleEffect(1.0)
+        .animation(.easeInOut(duration: 0.1), value: false)
+    }
+}
+
 /// DDM Blueprints Tool - Device Data Management Blueprint Editor
 struct DDMBlueprintsView: View {
     
@@ -119,50 +165,121 @@ struct DDMBlueprintsView: View {
     // MARK: - Welcome View
     
     private var welcomeView: some View {
-        VStack(spacing: 30) {
-            Image(systemName: "doc.text.magnifyingglass")
-                .font(.system(size: 80))
-                .foregroundStyle(.secondary)
-            
-            VStack(spacing: 16) {
+        VStack(spacing: 24) {
+            // Header
+            VStack(spacing: 12) {
+                Image(systemName: "doc.text.magnifyingglass")
+                    .font(.system(size: 64))
+                    .foregroundColor(.blue)
+                
                 Text("DDM Blueprints")
                     .font(.largeTitle)
                     .fontWeight(.bold)
                 
-                Text("Create and manage device configuration blueprints")
-                    .font(.title2)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
+                Text("Device Configuration & System Management")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
             }
+            .padding(.top)
             
-            VStack(spacing: 12) {
-                Text("Get started by:")
+            // System Configuration Tools
+            VStack(spacing: 16) {
+                Text("System Configuration Tools")
                     .font(.headline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.primary)
                 
-                VStack(alignment: .leading, spacing: 8) {
-                    Label("Creating a new blueprint", systemImage: "plus.circle")
-                    Label("Browsing template library", systemImage: "doc.on.doc")
-                    Label("Importing existing blueprints", systemImage: "square.and.arrow.down")
-                    Label("Searching for specific configurations", systemImage: "magnifyingglass")
+                LazyVGrid(columns: [
+                    GridItem(.flexible()),
+                    GridItem(.flexible()),
+                    GridItem(.flexible())
+                ], spacing: 16) {
+                    SystemConfigButton(
+                        title: "Device Management",
+                        description: "Configure device settings and policies",
+                        icon: "laptopcomputer",
+                        color: .blue
+                    ) {
+                        // TODO: Implement device management
+                    }
+                    
+                    SystemConfigButton(
+                        title: "Security Policies",
+                        description: "Set up security and compliance rules",
+                        icon: "shield.fill",
+                        color: .red
+                    ) {
+                        // TODO: Implement security policies
+                    }
+                    
+                    SystemConfigButton(
+                        title: "Network Configuration",
+                        description: "Wi-Fi, VPN, and network settings",
+                        icon: "wifi",
+                        color: .green
+                    ) {
+                        // TODO: Implement network configuration
+                    }
+                    
+                    SystemConfigButton(
+                        title: "Application Management",
+                        description: "App deployment and restrictions",
+                        icon: "app.fill",
+                        color: .orange
+                    ) {
+                        // TODO: Implement application management
+                    }
+                    
+                    SystemConfigButton(
+                        title: "User Experience",
+                        description: "Customize user interface and settings",
+                        icon: "person.fill",
+                        color: .purple
+                    ) {
+                        // TODO: Implement user experience
+                    }
+                    
+                    SystemConfigButton(
+                        title: "Compliance Rules",
+                        description: "Set up compliance and monitoring",
+                        icon: "checkmark.shield.fill",
+                        color: .teal
+                    ) {
+                        // TODO: Implement compliance rules
+                    }
                 }
-                .font(.body)
-                .foregroundStyle(.secondary)
+            }
+            .padding(.horizontal)
+            
+            // Quick Actions
+            VStack(spacing: 12) {
+                Text("Quick Actions")
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                
+                HStack(spacing: 16) {
+                    Button("Create Blueprint") {
+                        showingCreateBlueprint = true
+                    }
+                    .buttonStyle(.borderedProminent)
+                    
+                    Button("Browse Templates") {
+                        showingTemplateLibrary = true
+                    }
+                    .buttonStyle(.bordered)
+                    
+                    Button("Import Blueprint") {
+                        showingImportBlueprint = true
+                    }
+                    .buttonStyle(.bordered)
+                }
             }
             
-            HStack(spacing: 16) {
-                Button("Create Blueprint") {
-                    showingCreateBlueprint = true
-                }
-                .buttonStyle(.borderedProminent)
-                
-                Button("Browse Templates") {
-                    showingTemplateLibrary = true
-                }
-                .buttonStyle(.bordered)
-            }
+            Spacer()
         }
         .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(LCARSTheme.background)
     }
     
     // MARK: - Blueprint Detail View

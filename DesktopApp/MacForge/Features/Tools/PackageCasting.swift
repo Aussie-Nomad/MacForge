@@ -10,6 +10,52 @@ import SwiftUI
 import Foundation
 import UniformTypeIdentifiers
 
+// MARK: - Tool Summary Button Component
+struct ToolSummaryButton: View {
+    let title: String
+    let description: String
+    let icon: String
+    let color: Color
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 12) {
+                Image(systemName: icon)
+                    .font(.system(size: 32))
+                    .foregroundColor(color)
+                
+                VStack(spacing: 4) {
+                    Text(title)
+                        .font(.headline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.primary)
+                        .multilineTextAlignment(.center)
+                    
+                    Text(description)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(2)
+                }
+            }
+            .frame(maxWidth: .infinity, minHeight: 120)
+            .padding(16)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color(.controlBackgroundColor))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(color.opacity(0.3), lineWidth: 1)
+                    )
+            )
+        }
+        .buttonStyle(PlainButtonStyle())
+        .scaleEffect(1.0)
+        .animation(.easeInOut(duration: 0.1), value: false)
+    }
+}
+
 // MARK: - Package Analysis Models
 struct PackageAnalysis: Identifiable, Codable {
     let id = UUID()
@@ -678,6 +724,77 @@ struct PackageCastingView: View {
                 .padding()
                 .background(Color.red.opacity(0.1))
                 .cornerRadius(8)
+            }
+            
+            // Tool Summary Buttons
+            if uploadedFileName == nil {
+                VStack(spacing: 16) {
+                    Text("Package Management Tools")
+                        .font(.headline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.primary)
+                    
+                    LazyVGrid(columns: [
+                        GridItem(.flexible()),
+                        GridItem(.flexible()),
+                        GridItem(.flexible())
+                    ], spacing: 16) {
+                        ToolSummaryButton(
+                            title: "New Package Creation",
+                            description: "Create packages from apps, DMGs, or archives",
+                            icon: "plus.circle.fill",
+                            color: .green
+                        ) {
+                            // TODO: Implement new package creation
+                        }
+                        
+                        ToolSummaryButton(
+                            title: "Package Analysis",
+                            description: "Analyze existing packages for security and structure",
+                            icon: "magnifyingglass.circle.fill",
+                            color: .blue
+                        ) {
+                            // TODO: Implement package analysis
+                        }
+                        
+                        ToolSummaryButton(
+                            title: "Simple Package Builder",
+                            description: "Quick package creation with templates",
+                            icon: "hammer.circle.fill",
+                            color: .orange
+                        ) {
+                            // TODO: Implement simple package builder
+                        }
+                        
+                        ToolSummaryButton(
+                            title: "System Lifecycle Management",
+                            description: "Manage software versions and deployments",
+                            icon: "arrow.triangle.2.circlepath.circle.fill",
+                            color: .purple
+                        ) {
+                            // TODO: Implement lifecycle management
+                        }
+                        
+                        ToolSummaryButton(
+                            title: "Template Systems",
+                            description: "Pre-built package templates and configurations",
+                            icon: "doc.text.fill",
+                            color: .teal
+                        ) {
+                            // TODO: Implement template systems
+                        }
+                        
+                        ToolSummaryButton(
+                            title: "Advanced Repackaging",
+                            description: "Modify existing packages with scripts and signing",
+                            icon: "gearshape.2.fill",
+                            color: .red
+                        ) {
+                            // TODO: Implement advanced repackaging
+                        }
+                    }
+                }
+                .padding(.horizontal)
             }
             
             Spacer()
