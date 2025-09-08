@@ -820,6 +820,7 @@ struct PackageCreationSuccessView: View {
 struct PackageAnalysisSelectionView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var showingFilePicker = false
+    @State private var selectedFile: URL?
     @State private var isAnalyzing = false
     @State private var analysisResult: PackageAnalysis?
     @State private var errorMessage: String?
@@ -1556,6 +1557,26 @@ struct TemplateSystemsView: View {
     }
 }
 
+// MARK: - Package Detail Row
+struct PackageDetailRow: View {
+    let label: String
+    let value: String
+    
+    var body: some View {
+        HStack {
+            Text(label)
+                .font(.caption)
+                .foregroundColor(.secondary)
+            
+            Spacer()
+            
+            Text(value)
+                .font(.caption)
+                .fontWeight(.medium)
+        }
+    }
+}
+
 struct PackageTemplateCard: View {
     let template: PackageTemplate
     let index: Int
@@ -1712,10 +1733,10 @@ struct TemplateDetailsView: View {
                             .fontWeight(.semibold)
                         
                         VStack(alignment: .leading, spacing: 8) {
-                            PackageDetailRow(label: "Install Location", value: template.installLocation)
-                            PackageDetailRow(label: "Package Type", value: template.rawValue)
-                            PackageDetailRow(label: "Compatibility", value: "macOS 10.15+")
-                            PackageDetailRow(label: "Architecture", value: "Universal (Intel + Apple Silicon)")
+                            PackagePackageDetailRow(label: "Install Location", value: template.installLocation)
+                            PackagePackageDetailRow(label: "Package Type", value: template.rawValue)
+                            PackagePackageDetailRow(label: "Compatibility", value: "macOS 10.15+")
+                            PackagePackageDetailRow(label: "Architecture", value: "Universal (Intel + Apple Silicon)")
                         }
                         .padding()
                         .background(Color(.controlBackgroundColor))
@@ -1773,7 +1794,7 @@ struct FeatureCard: View {
     }
 }
 
-struct PackageDetailRow: View {
+struct PackagePackageDetailRow: View {
     let label: String
     let value: String
     
@@ -1990,7 +2011,7 @@ struct AdvancedRepackagingSelectionView: View {
             .padding()
             .background(Color(.controlBackgroundColor))
             
-            if let selectedFile = selectedFile {
+            if let file = selectedFile {
                 // File Selected View
                 VStack(spacing: 20) {
                     HStack {
@@ -1999,7 +2020,7 @@ struct AdvancedRepackagingSelectionView: View {
                             .foregroundColor(.blue)
                         
                         VStack(alignment: .leading, spacing: 4) {
-                            Text(selectedFile.lastPathComponent)
+                            Text(file.lastPathComponent)
                                 .font(.headline)
                                 .fontWeight(.semibold)
                             
@@ -2109,10 +2130,7 @@ struct AdvancedRepackagingSelectionView: View {
         }
         .sheet(isPresented: $showingAdvancedRepackaging) {
             if let analysis = analysisResult {
-                AdvancedRepackagingView(
-                    analysis: analysis,
-                    onDismiss: { showingAdvancedRepackaging = false }
-                )
+                AdvancedRepackagingView(analysis: analysis)
             }
         }
     }
@@ -2143,10 +2161,14 @@ struct AdvancedRepackagingSelectionView: View {
                 
                 // Create mock analysis result
                 let mockMetadata = PackageMetadata(
+                    bundleIdentifier: "com.example.sample",
+                    version: "1.0.0",
                     displayName: "Sample Application",
                     description: "A sample application for testing",
                     author: "MacForge",
                     installLocation: "/Applications",
+                    minimumOSVersion: "12.0",
+                    architecture: ["arm64"],
                     creationDate: Date(),
                     modificationDate: Date()
                 )
@@ -2535,12 +2557,12 @@ struct SigningTabView: View {
                 
                 if analysis.securityInfo.isSigned {
                     VStack(alignment: .leading, spacing: 8) {
-                        DetailRow(label: "Signed", value: "Yes")
-                        DetailRow(label: "Valid", value: analysis.securityInfo.signatureValid ? "Yes" : "No")
+                        PackageDetailRow(label: "Signed", value: "Yes")
+                        PackageDetailRow(label: "Valid", value: analysis.securityInfo.signatureValid ? "Yes" : "No")
                         if let cert = analysis.securityInfo.certificateInfo {
-                            DetailRow(label: "Certificate", value: cert.commonName)
-                            DetailRow(label: "Organization", value: cert.organization)
-                            DetailRow(label: "Developer ID", value: cert.isDeveloperID ? "Yes" : "No")
+                            PackageDetailRow(label: "Certificate", value: cert.commonName)
+                            PackageDetailRow(label: "Organization", value: cert.organization)
+                            PackageDetailRow(label: "Developer ID", value: cert.isDeveloperID ? "Yes" : "No")
                         }
                     }
                     .padding()
@@ -2644,11 +2666,11 @@ struct ReviewTabView: View {
                         .font(.subheadline)
                         .fontWeight(.medium)
                     
-                    DetailRow(label: "Original Package", value: analysis.fileName)
-                    DetailRow(label: "Package Type", value: analysis.packageType.rawValue)
-                    DetailRow(label: "File Size", value: ByteCountFormatter.string(fromByteCount: analysis.fileSize, countStyle: .file))
-                    DetailRow(label: "Scripts Added", value: "\(scripts.count)")
-                    DetailRow(label: "Will Re-sign", value: signingOptions.shouldResign ? "Yes" : "No")
+                    PackageDetailRow(label: "Original Package", value: analysis.fileName)
+                    PackageDetailRow(label: "Package Type", value: analysis.packageType.rawValue)
+                    PackageDetailRow(label: "File Size", value: ByteCountFormatter.string(fromByteCount: analysis.fileSize, countStyle: .file))
+                    PackageDetailRow(label: "Scripts Added", value: "\(scripts.count)")
+                    PackageDetailRow(label: "Will Re-sign", value: signingOptions.shouldResign ? "Yes" : "No")
                 }
                 .padding()
                 .background(Color(.controlBackgroundColor))
@@ -2698,7 +2720,7 @@ struct ReviewTabView: View {
                 let result = RepackagingResult(
                     originalPath: analysis.filePath,
                     outputPath: "/tmp/repackaged.pkg",
-                    packageName: repackagingOptions.packageName.isEmpty ? analysis.fileName : repackagingOptions.packageName,
+                    packageName: analysis.fileName,
                     scriptsAdded: scripts.count,
                     wasResigned: signingOptions.shouldResign,
                     outputSize: analysis.fileSize + 1024 * 1024 // Add 1MB for scripts
@@ -2749,10 +2771,10 @@ struct RepackagingSuccessView: View {
                     .fontWeight(.semibold)
                 
                 VStack(alignment: .leading, spacing: 8) {
-                    DetailRow(label: "Output Package", value: result.packageName)
-                    DetailRow(label: "Output Size", value: ByteCountFormatter.string(fromByteCount: result.outputSize, countStyle: .file))
-                    DetailRow(label: "Scripts Added", value: "\(result.scriptsAdded)")
-                    DetailRow(label: "Re-signed", value: result.wasResigned ? "Yes" : "No")
+                    PackageDetailRow(label: "Output Package", value: result.packageName)
+                    PackageDetailRow(label: "Output Size", value: ByteCountFormatter.string(fromByteCount: result.outputSize, countStyle: .file))
+                    PackageDetailRow(label: "Scripts Added", value: "\(result.scriptsAdded)")
+                    PackageDetailRow(label: "Re-signed", value: result.wasResigned ? "Yes" : "No")
                 }
                 .padding()
                 .background(Color(.controlBackgroundColor))
@@ -3083,6 +3105,10 @@ struct RepackagingOptions {
     var outputName: String = ""
     var version: String = ""
     var bundleID: String = ""
+    var preserveOriginal: Bool = true
+    var packageName: String = ""
+    var createBackup: Bool = true
+    var validatePackage: Bool = true
 }
 
 
@@ -3131,11 +3157,12 @@ class PackageAnalysisService: ObservableObject {
         let outputPath = generateOutputPath(for: analysis, options: options)
         
         return RepackagingResult(
-            success: true,
+            originalPath: analysis.filePath,
             outputPath: outputPath,
-            errorMessage: nil,
-            warnings: generateRepackagingWarnings(options: options),
-            newPackageInfo: analysis
+            packageName: analysis.fileName,
+            scriptsAdded: options.addScripts.count,
+            wasResigned: options.signPackage,
+            outputSize: 0
         )
     }
     
@@ -3706,7 +3733,7 @@ struct PackageAnalysisView: View {
                         analysis: analysis,
                         aiSummary: $aiSummary,
                         isGenerating: $isGeneratingAISummary,
-                        onGenerate: generateAISummary
+                        onGenerate: { }
                     )
                     
                     // Package Info Header
@@ -3768,7 +3795,7 @@ struct PackageAISummaryCard: View {
                         generateAISummary()
                     }
                     .buttonStyle(.borderedProminent)
-                    .disabled(selectedAccountId == nil)
+                    .disabled(false)
                 }
             }
             

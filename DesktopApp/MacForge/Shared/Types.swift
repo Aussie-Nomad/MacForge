@@ -366,6 +366,25 @@ struct MDMAccount: Codable, Identifiable, Hashable {
     }
 }
 
+// MARK: - AI Provider Type
+enum AIProviderType: String, CaseIterable, Identifiable, Codable {
+    case openai = "openai"
+    case anthropic = "anthropic"
+    case ollama = "ollama"
+    case custom = "custom"
+    
+    var id: String { rawValue }
+    
+    var displayName: String {
+        switch self {
+        case .openai: return "OpenAI"
+        case .anthropic: return "Anthropic"
+        case .ollama: return "Ollama"
+        case .custom: return "Custom"
+        }
+    }
+}
+
 // MARK: - AI Account
 struct AIAccount: Codable, Identifiable, Hashable {
     var id = UUID()
@@ -419,6 +438,575 @@ struct AIAccount: Codable, Identifiable, Hashable {
             }
         }
         return model
+    }
+}
+
+// MARK: - Profile Defaults
+struct ProfileDefaults: Codable {
+    var organization: String
+    var identifierPrefix: String
+    var description: String
+    
+    init() {
+        self.organization = "Your Organization"
+        self.identifierPrefix = "com.yourorganization"
+        self.description = "Configuration Profile"
+    }
+}
+
+// MARK: - Theme Preferences
+struct ThemePreferences: Codable, Equatable {
+    var selectedTheme: ThemeType
+    var accentColor: AccentColor
+    var animationSpeed: AnimationSpeed
+    
+    init() {
+        self.selectedTheme = .default
+        self.accentColor = .blue
+        self.animationSpeed = .normal
+    }
+}
+
+enum ThemeType: String, CaseIterable, Codable {
+    case `default` = "Default"
+    case lcars = "LCARS"
+    
+    var displayName: String { rawValue }
+}
+
+enum AccentColor: String, CaseIterable, Codable, Equatable {
+    case blue = "Blue"
+    case green = "Green"
+    case orange = "Orange"
+    case red = "Red"
+    case purple = "Purple"
+    case pink = "Pink"
+    
+    var displayName: String { rawValue }
+    
+    var color: Color {
+        switch self {
+        case .blue: return .blue
+        case .green: return .green
+        case .orange: return .orange
+        case .red: return .red
+        case .purple: return .purple
+        case .pink: return .pink
+        }
+    }
+}
+
+enum AnimationSpeed: String, CaseIterable, Codable, Equatable {
+    case slow = "Slow"
+    case normal = "Normal"
+    case fast = "Fast"
+    
+    var displayName: String { rawValue }
+}
+
+// MARK: - General Settings
+struct GeneralSettings: Codable {
+    var autoSave: Bool
+    var showWelcomeOnLaunch: Bool
+    var enableAnalytics: Bool
+    var logLevel: LogLevel
+    
+    init() {
+        self.autoSave = true
+        self.showWelcomeOnLaunch = true
+        self.enableAnalytics = false
+        self.logLevel = .info
+    }
+}
+
+enum LogLevel: String, CaseIterable, Codable {
+    case debug = "Debug"
+    case info = "Info"
+    case warning = "Warning"
+    case error = "Error"
+    
+    var displayName: String { rawValue }
+}
+
+// MARK: - User Data Export
+struct UserDataExport: Codable {
+    let profileDefaults: ProfileDefaults
+    let themePreferences: ThemePreferences
+    let generalSettings: GeneralSettings
+    let mdmAccounts: [MDMAccount]
+    let aiAccounts: [AIAccount]
+    let exportDate: Date
+    let version: String
+    
+    init(profileDefaults: ProfileDefaults, themePreferences: ThemePreferences, generalSettings: GeneralSettings, mdmAccounts: [MDMAccount], aiAccounts: [AIAccount]) {
+        self.profileDefaults = profileDefaults
+        self.themePreferences = themePreferences
+        self.generalSettings = generalSettings
+        self.mdmAccounts = mdmAccounts
+        self.aiAccounts = aiAccounts
+        self.exportDate = Date()
+        self.version = "2.1.1"
+    }
+}
+
+// MARK: - Tool Module
+enum ToolModule: String, CaseIterable, Identifiable {
+    case profileBuilder = "Profile Builder"
+    case packageCasting = "Package Casting"
+    case deviceFoundry = "Device Foundry"
+    case ddmBlueprints = "DDM Blueprints"
+    case scriptSmelter = "Script Smelter"
+    case logBurner = "Log Burner"
+    case blacksmith = "The Blacksmith"
+    
+    var id: String { rawValue }
+    
+    var icon: String {
+        switch self {
+        case .profileBuilder: return "doc.text.fill"
+        case .packageCasting: return "shippingbox.fill"
+        case .deviceFoundry: return "laptopcomputer"
+        case .ddmBlueprints: return "blueprint"
+        case .scriptSmelter: return "hammer.fill"
+        case .logBurner: return "flame.fill"
+        case .blacksmith: return "hammer.circle.fill"
+        }
+    }
+}
+
+// MARK: - Package Script Type
+enum PackageScriptType: String, CaseIterable, Identifiable, Codable {
+    case preinstall = "Pre-install"
+    case postinstall = "Post-install"
+    case preuninstall = "Pre-uninstall"
+    case postuninstall = "Post-uninstall"
+    
+    var id: String { rawValue }
+    var displayName: String { rawValue }
+}
+
+// MARK: - Package Script
+struct PackageScript: Identifiable, Codable {
+    var id = UUID()
+    var name: String
+    var type: PackageScriptType
+    var content: String
+    var isExecutable: Bool
+    var needsModification: Bool
+    
+    init(name: String, type: PackageScriptType, content: String, isExecutable: Bool = true, needsModification: Bool = false) {
+        self.name = name
+        self.type = type
+        self.content = content
+        self.isExecutable = isExecutable
+        self.needsModification = needsModification
+    }
+}
+
+// MARK: - Package Type
+enum PackageType: String, CaseIterable, Codable {
+    case pkg = "PKG"
+    case dmg = "DMG"
+    case app = "APP"
+    
+    var displayName: String { rawValue }
+}
+
+// MARK: - File Permission
+struct FilePermission: Identifiable, Codable {
+    var id = UUID()
+    var path: String
+    var permission: String
+    var recursive: Bool
+    
+    init(path: String, permission: String, recursive: Bool = false) {
+        self.path = path
+        self.permission = permission
+        self.recursive = recursive
+    }
+}
+
+// MARK: - Package Analysis Models
+struct PackageAnalysis: Codable {
+    let fileName: String
+    let filePath: String
+    let fileSize: Int64
+    let packageType: PackageType
+    let metadata: PackageMetadata
+    let contents: PackageContents
+    let securityInfo: SecurityInfo
+    let scripts: [PackageScript]
+    let dependencies: [PackageDependency]
+    let recommendations: [PackageRecommendation]
+}
+
+struct PackageMetadata: Codable {
+    let bundleIdentifier: String
+    let version: String
+    let displayName: String
+    let description: String
+    let author: String
+    let installLocation: String
+    let minimumOSVersion: String
+    let architecture: [String]
+    let creationDate: Date
+    let modificationDate: Date
+}
+
+struct PackageContents: Codable {
+    let totalFiles: Int
+    let totalSize: Int64
+    let installSize: Int64
+}
+
+struct SecurityInfo: Codable {
+    let isSigned: Bool
+    let signatureValid: Bool
+    let certificateInfo: CertificateInfo?
+}
+
+struct CertificateInfo: Codable {
+    let commonName: String
+    let organization: String
+    let validityStart: Date
+    let validityEnd: Date
+    let isDeveloperID: Bool
+}
+
+struct PackageDependency: Identifiable, Codable {
+    var id = UUID()
+    let name: String
+    let version: String
+    let required: Bool
+}
+
+struct PackageRecommendation: Identifiable, Codable {
+    var id = UUID()
+    let type: RecommendationType
+    let message: String
+    let severity: RecommendationSeverity
+}
+
+enum RecommendationType: String, Codable {
+    case security = "Security"
+    case performance = "Performance"
+    case compatibility = "Compatibility"
+    case bestPractice = "Best Practice"
+}
+
+enum RecommendationSeverity: String, Codable {
+    case low = "Low"
+    case medium = "Medium"
+    case high = "High"
+    case critical = "Critical"
+}
+
+// MARK: - AI Service Models
+struct AIServiceConfig: Codable {
+    let provider: AIProviderType
+    let apiKey: String
+    let model: String
+    let baseURL: String
+    let temperature: Double
+    let maxTokens: Int
+    
+    init(provider: AIProviderType, apiKey: String = "", model: String = "", baseURL: String = "", temperature: Double = 0.7, maxTokens: Int = 2000) {
+        self.provider = provider
+        self.apiKey = apiKey
+        self.model = model
+        self.baseURL = baseURL
+        self.temperature = temperature
+        self.maxTokens = maxTokens
+    }
+}
+
+enum AIError: LocalizedError {
+    case invalidConfiguration
+    case networkError(Error)
+    case apiError(String)
+    case rateLimitExceeded
+    case invalidResponse
+    
+    var errorDescription: String? {
+        switch self {
+        case .invalidConfiguration:
+            return "Invalid AI service configuration"
+        case .networkError(let error):
+            return "Network error: \(error.localizedDescription)"
+        case .apiError(let message):
+            return "API error: \(message)"
+        case .rateLimitExceeded:
+            return "Rate limit exceeded. Please try again later."
+        case .invalidResponse:
+            return "Invalid response from AI service"
+        }
+    }
+}
+
+// MARK: - LCARS Theme
+struct LCARSTheme {
+    static let primary = Color(red: 0.0, green: 0.2, blue: 0.4)
+    static let secondary = Color(red: 0.8, green: 0.4, blue: 0.0)
+    static let accent = Color(red: 0.0, green: 0.8, blue: 0.8)
+    static let background = Color(red: 0.0, green: 0.0, blue: 0.1)
+    static let surface = Color(red: 0.1, green: 0.1, blue: 0.2)
+    
+    static func accentColor(for themePreferences: ThemePreferences) -> Color {
+        return themePreferences.accentColor.color
+    }
+}
+
+// MARK: - Lcars Theme (Alternative naming)
+typealias LcarsTheme = LCARSTheme
+
+// MARK: - Lcars Header
+struct LcarsHeader: View {
+    let title: String
+    let color: Color
+    
+    var body: some View {
+        Text(title)
+            .font(.system(size: 16, weight: .bold, design: .monospaced))
+            .foregroundColor(color)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(color.opacity(0.2))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 4)
+                            .stroke(color, lineWidth: 1)
+                    )
+            )
+    }
+}
+
+// MARK: - Themed Field
+struct ThemedField: View {
+    let title: String
+    @Binding var text: String
+    let placeholder: String
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title)
+                .font(.caption)
+                .foregroundColor(.secondary)
+            
+            TextField(placeholder, text: $text)
+                .textFieldStyle(RoundedBorderTextFieldStyle())
+        }
+    }
+}
+
+// MARK: - Text Extensions
+extension Text {
+    func lcarsPill(color: Color = .blue) -> some View {
+        self
+            .font(.system(size: 12, weight: .bold, design: .monospaced))
+            .foregroundColor(.white)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(color)
+            )
+    }
+}
+
+// MARK: - View Extensions
+extension View {
+    func themeAwareBackground() -> some View {
+        self.background(Color(.controlBackgroundColor))
+    }
+}
+
+// MARK: - Lcars Panel
+struct LcarsPanel<Content: View>: View {
+    let color: Color
+    let content: Content
+    
+    init(color: Color, @ViewBuilder content: () -> Content) {
+        self.color = color
+        self.content = content()
+    }
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            content
+        }
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(color.opacity(0.1))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(color, lineWidth: 2)
+                )
+        )
+    }
+}
+
+// MARK: - Section Header
+struct SectionHeader: View {
+    let title: String
+    let color: Color
+    
+    var body: some View {
+        LcarsHeader(title: title, color: color)
+    }
+}
+
+// MARK: - Info Row
+struct InfoRow: View {
+    let label: String
+    let value: String
+    
+    var body: some View {
+        HStack {
+            Text(label)
+                .font(.caption)
+                .foregroundColor(.secondary)
+            
+            Spacer()
+            
+            Text(value)
+                .font(.caption)
+                .fontWeight(.medium)
+        }
+    }
+}
+
+// MARK: - Work Item
+struct WorkItem: View {
+    let title: String
+    let status: String
+    
+    var body: some View {
+        HStack {
+            Text(title)
+                .font(.caption)
+                .foregroundColor(.primary)
+            
+            Spacer()
+            
+            Text(status)
+                .font(.caption)
+                .fontWeight(.bold)
+                .foregroundColor(statusColor)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 2)
+                .background(
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(statusColor.opacity(0.2))
+                )
+        }
+    }
+    
+    private var statusColor: Color {
+        switch status {
+        case "COMPLETED": return .green
+        case "IN PROGRESS": return .orange
+        case "NEXT": return .blue
+        case "PENDING": return .gray
+        default: return .gray
+        }
+    }
+}
+
+// MARK: - Issue Item
+struct IssueItem: View {
+    let title: String
+    let severity: String
+    let color: Color
+    
+    var body: some View {
+        HStack {
+            Text(title)
+                .font(.caption)
+                .foregroundColor(.primary)
+            
+            Spacer()
+            
+            Text(severity)
+                .font(.caption)
+                .fontWeight(.bold)
+                .foregroundColor(color)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 2)
+                .background(
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(color.opacity(0.2))
+                )
+        }
+    }
+}
+
+// MARK: - Contact Button
+struct ContactButton: View {
+    let title: String
+    let destination: String
+    let color: Color
+    
+    var body: some View {
+        Button(action: {
+            if let url = URL(string: destination) {
+                NSWorkspace.shared.open(url)
+            }
+        }) {
+            Text(title)
+                .font(.caption)
+                .fontWeight(.bold)
+                .foregroundColor(.white)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(
+                    RoundedRectangle(cornerRadius: 6)
+                        .fill(color)
+                )
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+// MARK: - Animated Background
+struct AnimatedBackground: View {
+    @State private var animationOffset: CGFloat = 0
+    
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack {
+                // Base gradient
+                LinearGradient(
+                    colors: [
+                        Color(red: 0.0, green: 0.0, blue: 0.1),
+                        Color(red: 0.0, green: 0.1, blue: 0.2),
+                        Color(red: 0.0, green: 0.0, blue: 0.1)
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                
+                // Animated particles
+                ForEach(0..<20, id: \.self) { index in
+                    Circle()
+                        .fill(Color.blue.opacity(0.1))
+                        .frame(width: CGFloat.random(in: 2...8))
+                        .position(
+                            x: CGFloat.random(in: 0...geometry.size.width),
+                            y: animationOffset + CGFloat.random(in: 0...geometry.size.height)
+                        )
+                        .animation(
+                            Animation.linear(duration: Double.random(in: 10...20))
+                                .repeatForever(autoreverses: false),
+                            value: animationOffset
+                        )
+                }
+            }
+        }
+        .onAppear {
+            animationOffset = -1000
+        }
     }
 }
 
