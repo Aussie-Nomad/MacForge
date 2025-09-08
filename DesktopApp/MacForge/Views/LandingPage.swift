@@ -126,11 +126,11 @@ struct LandingPage: View {
                 
                 ScrollView {
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("MacForge is a cutting-edge toolbox for building and managing Apple MDM payloads.")
+                        Text("MacForge has evolved into a comprehensive MDM toolkit with AI-powered features.")
                             .font(.headline)
                             .foregroundStyle(LcarsTheme.amber)
                         
-                        Text("This application streamlines the creation of configuration profiles for macOS and iOS devices. Whether you're managing PPPC permissions, Wi-Fi settings, or security policies, MacForge provides an intuitive LCARS-inspired interface for building production-ready profiles.")
+                        Text("The latest release introduces The Blacksmith - a conversational AI wizard for MDM setup, plus six specialized Package Management Tools with AI-powered analysis. MacForge now provides intelligent assistance for package creation, security assessment, and deployment recommendations, making it the ultimate toolkit for Mac administrators.")
                             .font(.body)
                             .foregroundStyle(.primary)
                     }
@@ -149,16 +149,16 @@ struct LandingPage: View {
                 
                 ScrollView {
                     VStack(alignment: .leading, spacing: 8) {
-                        workItem("AI Tool Accounts Integration", status: "COMPLETED")
-                        workItem("Ollama AI Provider Support", status: "COMPLETED")
-                        workItem("Script Builder Output Modes", status: "COMPLETED")
-                        workItem("Log Burner AI Analysis", status: "COMPLETED")
-                        workItem("Package Casting Enhancements", status: "COMPLETED")
-                        workItem("Welcome Tutorial System", status: "COMPLETED")
-                        workItem("JAMF Username Validation Fix", status: "COMPLETED")
-                        workItem("Package Casting MUT Alternative", status: "IN PROGRESS")
-                        workItem("Test Suite Audit & Fixes", status: "NEXT")
-                        workItem("Performance Optimizations", status: "NEXT")
+                        workItem("Package Management Tools Suite", status: "COMPLETED")
+                        workItem("The Blacksmith MDM Wizard", status: "COMPLETED")
+                        workItem("AI-Powered Package Analysis", status: "COMPLETED")
+                        workItem("Script Builder CLI Integration", status: "COMPLETED")
+                        workItem("Package Casting UI Enhancements", status: "COMPLETED")
+                        workItem("Blacksmith Yorkshire Personality", status: "COMPLETED")
+                        workItem("Package Tool Navigation System", status: "COMPLETED")
+                        workItem("Advanced Package Repackaging", status: "IN PROGRESS")
+                        workItem("Template Systems Implementation", status: "NEXT")
+                        workItem("System Lifecycle Management", status: "NEXT")
                     }
                     .padding(.trailing, 8) // Add padding for scrollbar
                 }
@@ -203,12 +203,12 @@ struct LandingPage: View {
                 
                 ScrollView {
                     VStack(alignment: .leading, spacing: 6) {
-                        issueItem("AI Account Display Name Mismatch", severity: "RESOLVED", color: .green)
-                        issueItem("JAMF Email Username Validation", severity: "RESOLVED", color: .green)
-                        issueItem("Package Casting Script Injection", severity: "RESOLVED", color: .green)
-                        issueItem("Log Burner Progress Indicators", severity: "RESOLVED", color: .green)
+                        issueItem("Blacksmith MDM Wizard UI Layout", severity: "RESOLVED", color: .green)
+                        issueItem("Package Analysis AI Integration", severity: "RESOLVED", color: .green)
+                        issueItem("Package Management Tools Visibility", severity: "RESOLVED", color: .green)
+                        issueItem("AISummaryCard Naming Conflict", severity: "RESOLVED", color: .green)
+                        issueItem("Package Tool Navigation System", severity: "RESOLVED", color: .green)
                         issueItem("Test Suite Compilation Errors", severity: "PENDING", color: .orange)
-                        issueItem("DDM Tool Duplication", severity: "RESOLVED", color: .green)
                     }
                     .padding(.trailing, 8) // Add padding for scrollbar
                 }
@@ -229,8 +229,8 @@ struct LandingPage: View {
                 sectionHeader("SYSTEM VERSION", color: LcarsTheme.amber)
                 
                 VStack(spacing: 8) {
-                    infoRow("VERSION", "1.2.0 (Beta)")
-                    infoRow("BUILD DATE", "September 5, 2025")
+                    infoRow("VERSION", "2.1.1 (Beta) - Meet the Blacksmith")
+                    infoRow("BUILD DATE", "January 15, 2025")
                     infoRow("PLATFORMS", "macOS 12+")
                     infoRow("STATUS", "BUILD SUCCESSFUL")
                     infoRow("AI PROVIDERS", "OpenAI, Anthropic, Ollama, Custom")

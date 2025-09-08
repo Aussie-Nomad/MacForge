@@ -41,6 +41,9 @@ struct ContentView: View {
 
             case .logBurner:
                 LogBurnerHostView(model: model, selectedMDM: selectedMDM, userSettings: userSettings)
+                
+            case .blacksmith:
+                BlacksmithHostView(model: model, selectedMDM: selectedMDM, userSettings: userSettings)
             }
         } else {
             // No tool chosen yet → landing / author notes

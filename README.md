@@ -13,10 +13,11 @@ A comprehensive macOS MDM toolkit for enterprise administrators. Create configur
 MacForge is a modern macOS application that provides essential tools for Mac administrators:
 
 - **Profile Workbench (PPPC)** - Create and manage configuration profiles with 50+ privacy services
-- **Package Casting** 📦 - JAMF Composer-inspired package management and repackaging
+- **Package Casting** 📦 - Comprehensive package management with AI-powered analysis and 6 specialized tools
 - **Log Burner** 🔥 - AI-powered log analysis with smart pattern recognition
 - **Device Foundry** - Device lookup and management tools
-- **Script Smelter** 🤖 - AI-assisted script generation with OpenAI, Anthropic, and Ollama support
+- **Script Smelter** 🤖 - AI-assisted script generation with CLI tools and automation features
+- **The Blacksmith** 🔨 - Conversational AI wizard for MDM setup and management with Yorkshire personality
 - **MDM Integration** - Direct submission to JAMF Pro, Intune, Kandji, and Mosyle
 - **AI Tool Accounts** - Secure credential management for AI providers
 

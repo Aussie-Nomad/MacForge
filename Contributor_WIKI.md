@@ -6,7 +6,7 @@ MacForge is a comprehensive macOS MDM toolkit for enterprise administrators. Thi
 
 ## 📋 **Current Status: FULLY OPERATIONAL ✅**
 
-**Version**: 1.4.0 (Beta)  
+**Version**: 2.1.1 (Beta) - "Meet the Blacksmith"  
 **Build Date**: January 15, 2025  
 **Platform**: macOS 12+ (Sonoma, Ventura, Monterey)  
 **Swift Version**: Swift 6 compatible  
@@ -34,8 +34,14 @@ MacForge is a comprehensive macOS MDM toolkit for enterprise administrators. Thi
 - **NEW: Code Signing** - Apple Developer ID certificate integration
 - **NEW: PPPC Auto-Generation** - Automatic privacy profile creation for MDM deployment
 - **NEW: AI Tool Accounts** - Secure credential management for AI providers (OpenAI, Anthropic, Ollama, Custom)
-- **NEW: Script Smelter Enhancement** - AI-assisted script generation with multiple provider support
+- **NEW: Script Smelter Enhancement** - AI-assisted script generation with CLI tools and automation features
 - **NEW: Ollama Integration** - Local AI model support for testing and development
+- **NEW: The Blacksmith Tool** - Conversational AI wizard for MDM setup and management with Yorkshire personality
+- **NEW: Package Management Tools** - Six specialized tools for comprehensive package lifecycle management
+- **NEW: AI-Powered Package Analysis** - Intelligent package analysis with security assessment and deployment recommendations
+- **NEW: Template Systems** - Pre-built package templates and configurations for rapid deployment
+- **NEW: Advanced Repackaging** - Enhanced package modification with script injection and code signing
+- **NEW: Blacksmith Package Wizard** - Complete package creation workflow with spinning hammer animation
 
 #### **Phase 2: Improvements & Security Hardening** 🚧 IN PROGRESS
 **Current Focus:**
@@ -94,7 +100,8 @@ MacForge is a comprehensive macOS MDM toolkit for enterprise administrators. Thi
 - ✅ **Package Casting** - Complete with JAMF Composer-inspired workflow
 - ✅ **Log Burner** - Complete with AI-powered analysis and split-view results
 - ✅ **Device Foundry** - Complete with serial number lookup and device database
-- ✅ **Script Smelter** - Complete with AI provider integration
+- ✅ **Script Smelter** - Complete with AI provider integration and CLI tools
+- ✅ **The Blacksmith** - Complete with conversational AI wizard and MDM setup
 - ✅ **Apple DDM Builder** - Complete with template system
 
 ### **Infrastructure**
@@ -383,6 +390,20 @@ xcodebuild test -scheme MacForge -destination 'platform=macOS' -only-testing:Mac
 
 ## 📝 **Changelog**
 
+### **Version 2.1.1 (Beta) - "Meet the Blacksmith" - January 15, 2025**
+- ✅ **NEW: Template Systems Tool** - Pre-built package templates and configurations
+- ✅ **NEW: Advanced Repackaging Tool** - Enhanced package modification with script injection and code signing
+- ✅ **NEW: Blacksmith Package Wizard** - Complete package creation workflow with spinning hammer animation
+- ✅ **NEW: Package Template Library** - Comprehensive template management system
+- ✅ **NEW: Multi-Step Repackaging** - 4-tab interface for comprehensive package modification
+- ✅ **NEW: Script Management** - Add, edit, and delete pre-install, post-install, and uninstall scripts
+- ✅ **NEW: Code Signing Options** - Re-sign packages with different certificate types
+- ✅ **NEW: Template Categories** - Applications, Frameworks, System Extensions, Preference Panes, Kernel Extensions, Custom
+- ✅ **NEW: Package Creation Service** - Template-based package creation with proper error handling
+- ✅ **NEW: Yorkshire Personality** - Authentic regional dialect and MDM expertise in The Blacksmith
+- ✅ **COMPLETE: All Package Management Tools** - Six specialized tools fully functional
+- ✅ **COMPLETE: Package Casting Enhancement** - Superior alternative to JAMF Admin's Composer and MUT
+
 ### **Version 1.3.0 (Beta) - January 15, 2025**
 - ✅ **NEW: Log Burner Tool** - AI-powered log analysis with drag & drop interface
 - ✅ **NEW: Split-view Results** - Raw log sidebar with interactive line highlighting
@@ -434,6 +455,38 @@ xcodebuild test -scheme MacForge -destination 'platform=macOS' -only-testing:Mac
 - **AIAccount Model** (`Types.swift`) - Codable struct with provider-specific configuration
 - **UserSettings Integration** - Secure keychain storage with GDPR compliance
 - **AIService** - Unified interface for OpenAI, Anthropic, Ollama, and custom endpoints
+
+### **Package Management Tools Implementation**
+
+#### **Core Architecture**
+- **PackageCastingView** - Main container with drag-and-drop interface
+- **ToolSummaryButton** - Reusable component for tool navigation
+- **Six Specialized Tools**:
+  - **New Package Creation** - Create packages from apps, DMGs, or archives
+  - **Package Analysis** - Enhanced analysis with AI integration
+  - **Simple Package Builder** - Template-based package creation
+  - **System Lifecycle Management** - Software version management
+  - **Template Systems** - Pre-built package templates
+  - **Advanced Repackaging** - Enhanced repackaging features
+
+#### **AI Integration**
+- **PackageAISummaryCard** - AI-powered package analysis with security assessment
+- **Intelligent Recommendations** - Deployment readiness and risk assessment
+- **Security Analysis** - Code signing validation and vulnerability detection
+
+### **The Blacksmith Tool Implementation**
+
+#### **Core Components**
+- **BlacksmithView** - Main conversational interface with AI account selection
+- **BlacksmithChatModel** - Chat management with Yorkshire MDM specialist personality
+- **MDMSetupWizard** - 7-step guided setup process for any MDM platform
+- **AI Personality System** - Custom system prompts for Yorkshire MDM expertise
+
+#### **Features**
+- **Conversational Interface** - Natural language MDM setup guidance
+- **Multi-Step Wizard** - Guided setup for JAMF, Intune, Kandji, Mosyle, and custom MDMs
+- **AI Account Integration** - Uses saved AI accounts for intelligent responses
+- **Yorkshire Personality** - Authentic regional dialect and MDM expertise
 - **Settings UI** - Tab-based account management with provider-specific forms
 
 #### **Security Features**

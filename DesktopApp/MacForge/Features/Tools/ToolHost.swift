@@ -619,6 +619,17 @@ struct LogBurnerHostView: View {
     }
 }
 
+// MARK: - The Blacksmith
+struct BlacksmithHostView: View {
+    var model: BuilderModel
+    var selectedMDM: MDMVendor?
+    var userSettings: UserSettings
+
+    var body: some View {
+        BlacksmithView()
+    }
+}
+
 // MARK: - DDM Blueprints
 struct DDMBlueprintsHostView: View {
     var model: BuilderModel

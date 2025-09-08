@@ -43,6 +43,7 @@ enum ToolModule: String, CaseIterable, Identifiable {
     case ddmBlueprints
     case hammeringScripts
     case logBurner
+    case blacksmith
 
     var id: String { self.rawValue }
 
@@ -54,6 +55,7 @@ enum ToolModule: String, CaseIterable, Identifiable {
         case .ddmBlueprints: return "Apple DDM Builder"
         case .hammeringScripts: return "Script Smelter"
         case .logBurner: return "Log Burner"
+        case .blacksmith: return "The Blacksmith"
         }
     }
 
@@ -65,6 +67,7 @@ enum ToolModule: String, CaseIterable, Identifiable {
         case .ddmBlueprints: return "network.badge.shield.half.filled"
         case .hammeringScripts: return "hammer"
         case .logBurner: return "flame.circle.fill"
+        case .blacksmith: return "hammer.circle.fill"
         }
     }
 }
