@@ -6,7 +6,7 @@
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Status](https://img.shields.io/badge/Status-Beta-orange.svg)](https://github.com/Aussie-Nomad/MacForge)
 
-A comprehensive macOS MDM toolkit for enterprise administrators. Create configuration profiles, analyze packages, manage devices, and automate Mac administration tasks.
+A comprehensive macOS MDM toolkit for enterprise administrators. Create configuration profiles, analyze packages, manage devices, and automate Mac administration tasks with 7 specialized tools.
 
 ## What is MacForge?
 
@@ -18,6 +18,7 @@ MacForge is a modern macOS application that provides essential tools for Mac adm
 - **Device Foundry** - Device lookup and management tools
 - **Script Smelter** 🤖 - AI-assisted script generation with CLI tools and automation features
 - **The Blacksmith** 🔨 - Conversational AI wizard for MDM setup and management with Yorkshire personality
+- **DDM Blueprints** 📋 - Device configuration and system management blueprints with templates
 - **MDM Integration** - Direct submission to JAMF Pro, Intune, Kandji, and Mosyle
 - **AI Tool Accounts** - Secure credential management for AI providers
 
