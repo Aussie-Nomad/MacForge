@@ -108,7 +108,7 @@ MacForge is a comprehensive macOS MDM toolkit for enterprise administrators. Thi
 - ✅ **Device Foundry** - Complete with serial number lookup and device database
 - ✅ **Script Smelter** - Complete with AI provider integration and CLI tools
 - ✅ **The Blacksmith** - Complete with conversational AI wizard and MDM setup
-- ✅ **Apple DDM Builder** - Complete with template system
+- ✅ **DDM Blueprints** - Complete with comprehensive device configuration and system management
 
 ### **Infrastructure**
 - ✅ **Authentication & MDM Integration** - JAMF Pro, Intune, Kandji, Mosyle support
